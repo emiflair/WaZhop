@@ -1,0 +1,171 @@
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema({
+  shop: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Shop',
+    required: true
+  },
+  name: {
+    type: String,
+    required: [true, 'Product name is required'],
+    trim: true,
+    minlength: [2, 'Product name must be at least 2 characters'],
+    maxlength: [200, 'Product name cannot exceed 200 characters']
+  },
+  description: {
+    type: String,
+    required: [true, 'Product description is required'],
+    maxlength: [2000, 'Description cannot exceed 2000 characters']
+  },
+  price: {
+    type: Number,
+    required: [true, 'Product price is required'],
+    min: [0, 'Price cannot be negative']
+  },
+  comparePrice: {
+    type: Number,
+    min: [0, 'Compare price cannot be negative'],
+    default: null
+  },
+  currency: {
+    type: String,
+    enum: ['NGN', 'USD', 'GBP', 'EUR'],
+    default: 'NGN'
+  },
+  images: [{
+    url: {
+      type: String,
+      required: true
+    },
+    publicId: {
+      type: String,
+      required: true
+    },
+    isPrimary: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  category: {
+    type: String,
+    enum: ['fashion', 'electronics', 'food', 'beauty', 'home', 'services', 'other'],
+    default: 'other'
+  },
+  tags: [{
+    type: String,
+    trim: true,
+    lowercase: true
+  }],
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  inStock: {
+    type: Boolean,
+    default: true
+  },
+  stock: {
+    type: Number,
+    default: null, // null means unlimited/not tracked
+    min: [0, 'Stock cannot be negative']
+  },
+  lowStockThreshold: {
+    type: Number,
+    default: 5
+  },
+  sku: {
+    type: String,
+    trim: true,
+    sparse: true // Allows multiple null values
+  },
+  variants: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true // e.g., "Size", "Color"
+    },
+    options: [{
+      value: String, // e.g., "Small", "Red"
+      price: Number, // Additional price for this option
+      stock: Number, // Stock for this specific variant
+      sku: String
+    }]
+  }],
+  weight: {
+    value: Number,
+    unit: {
+      type: String,
+      enum: ['kg', 'g', 'lb'],
+      default: 'kg'
+    }
+  },
+  dimensions: {
+    length: Number,
+    width: Number,
+    height: Number,
+    unit: {
+      type: String,
+      enum: ['cm', 'in', 'm'],
+      default: 'cm'
+    }
+  },
+  clicks: {
+    type: Number,
+    default: 0
+  },
+  views: {
+    type: Number,
+    default: 0
+  },
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  numReviews: {
+    type: Number,
+    default: 0
+  },
+  position: {
+    type: Number,
+    default: 0
+  }
+}, {
+  timestamps: true
+});
+
+// Get primary image
+productSchema.virtual('primaryImage').get(function() {
+  if (!this.images || this.images.length === 0) return null;
+  const primary = this.images.find(img => img.isPrimary);
+  return primary || this.images[0];
+});
+
+// Generate WhatsApp link
+productSchema.methods.getWhatsAppLink = function(whatsappNumber) {
+  const message = encodeURIComponent(
+    `Hello! I'm interested in your product: ${this.name}\nPrice: ₦${this.price.toLocaleString()}`
+  );
+  return `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${message}`;
+};
+
+// Increment click count
+productSchema.methods.incrementClicks = async function() {
+  this.clicks += 1;
+  await this.save();
+};
+
+// Increment view count
+productSchema.methods.incrementViews = async function() {
+  this.views += 1;
+  await this.save();
+};
+
+// Indexes for better query performance
+productSchema.index({ shop: 1, isActive: 1 });
+productSchema.index({ shop: 1, position: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+
+module.exports = mongoose.model('Product', productSchema);

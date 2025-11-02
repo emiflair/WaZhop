@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Theme</title>
+</head>
+<body>
+    <h1>Clear Theme Storage</h1>
+    <button onclick="clearTheme()">Clear Theme & Reload</button>
+    <div id="status"></div>
+    <script>
+        function clearTheme() {
+            localStorage.removeItem('theme');
+            document.getElementById('status').innerHTML = 'Theme cleared! Current: ' + localStorage.getItem('theme');
+            setTimeout(() => window.location.reload(), 1000);
+        }
+        document.getElementById('status').innerHTML = 'Current theme: ' + (localStorage.getItem('theme') || 'not set');
+    </script>
+</body>
+</html>
