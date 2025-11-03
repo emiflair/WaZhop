@@ -211,7 +211,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {
         for (let i = 0; i < req.files.length; i++) {
-          const result = await uploadFromBuffer(req.files[i].buffer, 'washop/products');
+          const result = await uploadFromBuffer(req.files[i].buffer, 'wazhop/products');
           images.push({
             url: result.secure_url,
             publicId: result.public_id,
@@ -410,7 +410,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
   // Upload new images
   const newImages = [];
   for (const file of req.files) {
-    const result = await uploadFromBuffer(file.buffer, 'washop/products');
+    const result = await uploadFromBuffer(file.buffer, 'wazhop/products');
     newImages.push({
       url: result.secure_url,
       publicId: result.public_id,

@@ -42,6 +42,11 @@ const shopSchema = new mongoose.Schema({
       type: String,
       default: 'Clean White'
     },
+    mode: {
+      type: String,
+      enum: ['light', 'dark', 'auto'],
+      default: 'light'
+    },
     primaryColor: {
       type: String,
       default: '#FFFFFF',
@@ -179,6 +184,52 @@ const shopSchema = new mongoose.Schema({
     unique: true,
     sparse: true, // Allow null values
     match: [/^[a-z0-9-]+$/, 'Subdomain can only contain lowercase letters, numbers, and hyphens']
+  },
+  // Payment Integration (Premium plan only)
+  paymentSettings: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    provider: {
+      type: String,
+      enum: ['flutterwave', 'paystack', null],
+      default: null
+    },
+    // For Flutterwave
+    flutterwave: {
+      publicKey: {
+        type: String,
+        default: null
+      },
+      // Store encrypted secret key or use payment link
+      paymentLink: {
+        type: String,
+        default: null
+      }
+    },
+    // For Paystack
+    paystack: {
+      publicKey: {
+        type: String,
+        default: null
+      },
+      // Store encrypted secret key or use payment link
+      paymentLink: {
+        type: String,
+        default: null
+      }
+    },
+    // Payment options
+    allowWhatsAppNegotiation: {
+      type: Boolean,
+      default: true // Always allow WhatsApp as fallback
+    },
+    currency: {
+      type: String,
+      default: 'NGN',
+      enum: ['NGN', 'USD', 'GHS', 'KES', 'ZAR']
+    }
   }
 }, {
   timestamps: true,

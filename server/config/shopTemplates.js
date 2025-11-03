@@ -1,4 +1,4 @@
-// Shop Template Presets for WaShop
+// Shop Template Presets for WaZhop
 // These templates provide world-class UI/UX designs for seller shops
 
 const shopTemplates = {

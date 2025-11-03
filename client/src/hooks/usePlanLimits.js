@@ -117,7 +117,7 @@ export const usePlanLimits = () => {
       customCSS: 'Upgrade to Premium for custom CSS',
       customDomain: 'Upgrade to Premium for custom domain',
       premiumTemplates: 'Upgrade to Premium for exclusive templates',
-      removeBranding: 'Upgrade to Pro or Premium to remove WaShop branding'
+      removeBranding: 'Upgrade to Pro or Premium to remove WaZhop branding'
     };
 
     return messages[feature] || `Upgrade to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} to access this feature`;

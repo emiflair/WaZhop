@@ -10,11 +10,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-1 mb-4">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <span className="text-gray-900 font-bold text-lg">W</span>
               </div>
-              <span className="text-xl font-bold">WaShop</span>
+              <span className="text-xl font-bold">aZhop</span>
             </div>
             <p className="text-gray-400 text-sm">
               Create your WhatsApp shop in minutes. Customize, share, and sell smarter.
@@ -62,8 +62,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-400">
-          <p>&copy; {currentYear} WaShop. All rights reserved. Made with ❤️ in Nigeria.</p>
+                {/* Copyright */}
+        <div className="border-t border-gray-800 pt-8 text-center">
+          <p>&copy; {currentYear} WaZhop. All rights reserved. Made with ❤️ in Nigeria.</p>
         </div>
       </div>
     </footer>

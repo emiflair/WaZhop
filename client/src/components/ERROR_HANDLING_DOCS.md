@@ -1,6 +1,6 @@
 # Error Handling Documentation
 
-Complete guide to error handling components and utilities in WaShop.
+Complete guide to error handling components and utilities in WaZhop.
 
 ## 📦 Components
 

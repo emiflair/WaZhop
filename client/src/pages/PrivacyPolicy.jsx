@@ -6,8 +6,8 @@ const PrivacyPolicy = () => {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy - WaShop</title>
-        <meta name="description" content="WaShop's Privacy Policy - Learn how we collect, use, and protect your personal information." />
+        <title>Privacy Policy - WaZhop</title>
+        <meta name="description" content="WaZhop's Privacy Policy - Learn how we collect, use, and protect your personal information." />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -33,7 +33,7 @@ const PrivacyPolicy = () => {
                   Introduction
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  Welcome to WaShop. We respect your privacy and are committed to protecting your personal data. 
+                  Welcome to WaZhop. We respect your privacy and are committed to protecting your personal data. 
                   This privacy policy will inform you about how we look after your personal data when you visit 
                   our platform and tell you about your privacy rights and how the law protects you.
                 </p>
@@ -107,7 +107,7 @@ const PrivacyPolicy = () => {
                   <li><strong>With shop owners:</strong> When you interact with a shop (view products, click WhatsApp), basic analytics are shared with the shop owner</li>
                   <li><strong>With service providers:</strong> We share information with third-party vendors who help us operate our platform (hosting, analytics, payment processing)</li>
                   <li><strong>For legal reasons:</strong> We may disclose information if required by law or to protect our rights</li>
-                  <li><strong>Business transfers:</strong> If WaShop is involved in a merger or acquisition, your information may be transferred</li>
+                  <li><strong>Business transfers:</strong> If WaZhop is involved in a merger or acquisition, your information may be transferred</li>
                   <li><strong>With your consent:</strong> We may share information with third parties when you give us permission</li>
                 </ul>
               </section>
@@ -146,7 +146,7 @@ const PrivacyPolicy = () => {
                   <li><strong>Withdraw consent:</strong> Withdraw consent for data processing</li>
                 </ul>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  To exercise these rights, please contact us at privacy@washop.com or through your account settings.
+                  To exercise these rights, please contact us at privacy@wazhop.com or through your account settings.
                 </p>
               </section>
 
@@ -171,7 +171,7 @@ const PrivacyPolicy = () => {
                   7. Children&apos;s Privacy
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  WaShop is not intended for children under 18 years of age. We do not knowingly collect 
+                  WaZhop is not intended for children under 18 years of age. We do not knowingly collect 
                   personal information from children. If you believe we have collected information from a 
                   child, please contact us immediately.
                 </p>
@@ -211,10 +211,10 @@ const PrivacyPolicy = () => {
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 space-y-2 text-sm sm:text-base">
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> privacy@washop.com
+                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> privacy@wazhop.com
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaShop, Lagos, Nigeria
+                    <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaZhop, Lagos, Nigeria
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     <strong className="text-gray-900 dark:text-gray-100">Website:</strong>{' '}

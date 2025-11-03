@@ -86,7 +86,7 @@ const Dashboard = () => {
                   rel="noopener noreferrer"
                   className="text-primary-100 hover:text-white active:text-primary-200 flex items-center gap-2 text-sm sm:text-base break-all sm:break-normal touch-manipulation"
                 >
-                  <span className="truncate">washop.com/{shop.slug}</span>
+                  <span className="truncate">wazhop.com/{shop.slug}</span>
                   <FiExternalLink className="flex-shrink-0" />
                 </a>
               </div>
@@ -143,7 +143,7 @@ const Dashboard = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 active:text-blue-800 dark:active:text-blue-200 flex items-center gap-1 truncate flex-1 min-w-0 touch-manipulation min-h-[44px]"
-                      title={`washop.com/${shopItem.slug}`}
+                      title={`wazhop.com/${shopItem.slug}`}
                     >
                       <FiExternalLink size={12} className="flex-shrink-0" />
                       <span className="truncate">{shopItem.slug}</span>

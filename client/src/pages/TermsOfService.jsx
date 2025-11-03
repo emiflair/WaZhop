@@ -6,8 +6,8 @@ const TermsOfService = () => {
   return (
     <>
       <Helmet>
-        <title>Terms of Service - WaShop</title>
-        <meta name="description" content="WaShop's Terms of Service - Learn about the rules and regulations for using our platform." />
+        <title>Terms of Service - WaZhop</title>
+        <meta name="description" content="WaZhop's Terms of Service - Learn about the rules and regulations for using our platform." />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -33,8 +33,8 @@ const TermsOfService = () => {
                   Introduction
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  Welcome to WaShop! These Terms of Service (&quot;Terms&quot;) govern your access to and use of WaShop&apos;s 
-                  platform, services, and applications. By accessing or using WaShop, you agree to be bound by 
+                  Welcome to WaZhop! These Terms of Service (&quot;Terms&quot;) govern your access to and use of WaZhop&apos;s 
+                  platform, services, and applications. By accessing or using WaZhop, you agree to be bound by 
                   these Terms. If you don&apos;t agree to these Terms, do not use our services.
                 </p>
               </section>
@@ -45,7 +45,7 @@ const TermsOfService = () => {
                   1. Account Registration
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  To use WaShop&apos;s services, you must:
+                  To use WaZhop&apos;s services, you must:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
                   <li>Be at least 18 years old</li>
@@ -70,7 +70,7 @@ const TermsOfService = () => {
                   Plan Types
                 </h3>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  WaShop offers three subscription plans:
+                  WaZhop offers three subscription plans:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
                   <li><strong>Free Plan:</strong> Limited features (up to 5 products, 1 shop, basic themes)</li>
@@ -105,7 +105,7 @@ const TermsOfService = () => {
                   3. Acceptable Use Policy
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  You agree NOT to use WaShop to:
+                  You agree NOT to use WaZhop to:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300">
                   <li>Sell illegal, counterfeit, or prohibited items</li>
@@ -132,7 +132,7 @@ const TermsOfService = () => {
                 </h3>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   You retain ownership of all content you upload (products, images, descriptions). By using 
-                  WaShop, you grant us a license to display, store, and process your content to provide our services.
+                  WaZhop, you grant us a license to display, store, and process your content to provide our services.
                 </p>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                   You represent and warrant that:
@@ -144,12 +144,12 @@ const TermsOfService = () => {
                 </ul>
 
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">
-                  WaShop&apos;s Content
+                  WaZhop&apos;s Content
                 </h3>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  All WaShop branding, logos, designs, and platform features are owned by WaShop and protected 
+                  All WaZhop branding, logos, designs, and platform features are owned by WaZhop and protected 
                   by copyright, trademark, and other intellectual property laws. You may not copy, modify, or 
-                  distribute WaShop&apos;s content without permission.
+                  distribute WaZhop&apos;s content without permission.
                 </p>
               </section>
 
@@ -171,7 +171,7 @@ const TermsOfService = () => {
                   <li>Paying applicable taxes on your sales</li>
                 </ul>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  WaShop provides the platform but is not responsible for transactions between you and your 
+                  WaZhop provides the platform but is not responsible for transactions between you and your 
                   customers. All sales and customer relationships are between you and your customers.
                 </p>
               </section>
@@ -182,13 +182,13 @@ const TermsOfService = () => {
                   6. WhatsApp Integration
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  WaShop integrates with WhatsApp for customer communication. You acknowledge that:
+                  WaZhop integrates with WhatsApp for customer communication. You acknowledge that:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300">
                   <li>You must comply with WhatsApp&apos;s terms of service</li>
                   <li>You&apos;re responsible for all WhatsApp communications with customers</li>
-                  <li>WaShop is not affiliated with or endorsed by WhatsApp</li>
-                  <li>WaShop is not responsible for WhatsApp service interruptions</li>
+                  <li>WaZhop is not affiliated with or endorsed by WhatsApp</li>
+                  <li>WaZhop is not responsible for WhatsApp service interruptions</li>
                   <li>You must maintain a valid WhatsApp Business account</li>
                 </ul>
               </section>
@@ -239,7 +239,7 @@ const TermsOfService = () => {
                   9. Disclaimer of Warranties
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  WaShop is provided &quot;as is&quot; without warranties of any kind. We do not guarantee that:
+                  WaZhop is provided &quot;as is&quot; without warranties of any kind. We do not guarantee that:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300">
                   <li>The service will be uninterrupted or error-free</li>
@@ -256,7 +256,7 @@ const TermsOfService = () => {
                   10. Limitation of Liability
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
-                  To the maximum extent permitted by law, WaShop shall not be liable for:
+                  To the maximum extent permitted by law, WaZhop shall not be liable for:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
                   <li>Indirect, incidental, or consequential damages</li>
@@ -276,7 +276,7 @@ const TermsOfService = () => {
                   11. Indemnification
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  You agree to indemnify and hold WaShop harmless from any claims, damages, losses, or expenses 
+                  You agree to indemnify and hold WaZhop harmless from any claims, damages, losses, or expenses 
                   arising from: (a) your violation of these Terms, (b) your violation of any rights of another, 
                   (c) your content, or (d) your use of the service.
                 </p>
@@ -331,13 +331,13 @@ const TermsOfService = () => {
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 space-y-2 text-sm sm:text-base">
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> legal@washop.com
+                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> legal@wazhop.com
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Support:</strong> support@washop.com
+                    <strong className="text-gray-900 dark:text-gray-100">Support:</strong> support@wazhop.com
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaShop, Lagos, Nigeria
+                    <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaZhop, Lagos, Nigeria
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     <strong className="text-gray-900 dark:text-gray-100">Website:</strong>{' '}
@@ -352,7 +352,7 @@ const TermsOfService = () => {
               <section className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   <strong className="text-gray-900 dark:text-gray-100">
-                    By using WaShop, you acknowledge that you have read, understood, and agree to be bound by 
+                    By using WaZhop, you acknowledge that you have read, understood, and agree to be bound by 
                     these Terms of Service.
                   </strong>
                 </p>

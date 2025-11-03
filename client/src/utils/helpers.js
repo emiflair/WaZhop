@@ -1,4 +1,4 @@
-// Client-side helper utilities for WaShop
+// Client-side helper utilities for WaZhop
 
 /**
  * Format phone number for WhatsApp

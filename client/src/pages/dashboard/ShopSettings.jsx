@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import PaymentSettings from '../../components/PaymentSettings';
 import { shopAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { usePlanLimits } from '../../hooks/usePlanLimits';
@@ -28,7 +29,10 @@ const ShopSettings = () => {
     description: '',
     slug: '',
     category: '',
-    location: ''
+    location: '',
+    theme: {
+      mode: 'light'
+    }
   });
 
   // Theme state
@@ -100,7 +104,10 @@ const ShopSettings = () => {
         description: data.description || '',
         slug: data.slug || '',
         category: data.category || '',
-        location: data.location || ''
+        location: data.location || '',
+        theme: {
+          mode: data.theme?.mode || 'light'
+        }
       });
 
       // Populate theme
@@ -402,6 +409,23 @@ const ShopSettings = () => {
     }
   };
 
+  const handleUpdate = async (updates) => {
+    console.log('🔄 ShopSettings.handleUpdate called with:', updates);
+    try {
+      setSaving(true);
+      const result = await shopAPI.updateShop(updates, shopId);
+      console.log('✅ ShopSettings.handleUpdate result:', result);
+      // Refresh shop data
+      await fetchShop();
+      return Promise.resolve();
+    } catch (error) {
+      console.error('❌ ShopSettings.handleUpdate error:', error);
+      return Promise.reject(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -420,7 +444,10 @@ const ShopSettings = () => {
         slug: formData.slug,
         category: formData.category,
         location: formData.location,
-        socialLinks
+        socialLinks,
+        theme: {
+          mode: formData.theme.mode
+        }
       };
       await shopAPI.updateShop(shopData, shopId);
 
@@ -527,7 +554,7 @@ const ShopSettings = () => {
                   Shop URL/Slug *
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">washop.com/</span>
+                  <span className="text-gray-500">wazhop.com/</span>
                   <input
                     type="text"
                     name="slug"
@@ -720,6 +747,141 @@ const ShopSettings = () => {
                 </button>
               )}
             </div>
+
+            {/* Theme Mode Selector - Premium Only */}
+            {user?.plan === 'premium' ? (
+              <div className="mb-6 p-6 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-indigo-200 dark:border-gray-600">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="text-2xl">🎨</div>
+                  <label className="block text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    Customer View Mode
+                  </label>
+                  <span className="ml-auto px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs font-bold rounded-full">
+                    PREMIUM
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Control how your shop appears to customers. This is separate from your dashboard theme preference.
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, theme: { ...formData.theme, mode: 'light' } })}
+                    className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                      formData.theme.mode === 'light'
+                        ? 'border-yellow-500 bg-white shadow-lg ring-2 ring-yellow-300'
+                        : 'border-gray-300 bg-white hover:border-yellow-400 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">☀️</div>
+                      <div className="text-sm font-bold text-gray-800">Light Mode</div>
+                      {formData.theme.mode === 'light' && (
+                        <div className="text-xs text-yellow-600 font-semibold mt-2 flex items-center justify-center gap-1">
+                          <span>✓</span> Active
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-1">Bright & Clean</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, theme: { ...formData.theme, mode: 'dark' } })}
+                    className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                      formData.theme.mode === 'dark'
+                        ? 'border-indigo-500 bg-gray-900 text-white shadow-lg ring-2 ring-indigo-400'
+                        : 'border-gray-600 bg-gray-900 text-white hover:border-indigo-400 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🌙</div>
+                      <div className="text-sm font-bold">Dark Mode</div>
+                      {formData.theme.mode === 'dark' && (
+                        <div className="text-xs text-indigo-400 font-semibold mt-2 flex items-center justify-center gap-1">
+                          <span>✓</span> Active
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-400 mt-1">Sleek & Modern</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, theme: { ...formData.theme, mode: 'auto' } })}
+                    className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                      formData.theme.mode === 'auto'
+                        ? 'border-purple-500 bg-gradient-to-br from-white via-gray-200 to-gray-900 shadow-lg ring-2 ring-purple-400'
+                        : 'border-gray-400 bg-gradient-to-br from-white via-gray-200 to-gray-900 hover:border-purple-400 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🌗</div>
+                      <div className="text-sm font-bold text-gray-800">Auto Mode</div>
+                      {formData.theme.mode === 'auto' && (
+                        <div className="text-xs text-purple-600 font-semibold mt-2 flex items-center justify-center gap-1">
+                          <span>✓</span> Active
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-600 mt-1">Smart Adapt</div>
+                    </div>
+                  </button>
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+                  <p className="text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                    <span className="text-base">💡</span>
+                    <span>
+                      <strong>Tip:</strong> Auto mode automatically matches your customers&apos; device preferences (light during day, dark at night).
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-purple-300 dark:border-gray-600 relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="text-center">
+                    <FaLock className="w-12 h-12 text-purple-500 mx-auto mb-3" />
+                    <p className="text-lg font-bold text-purple-700 dark:text-purple-400 mb-2">Premium Feature</p>
+                    <button
+                      onClick={() => navigate('/dashboard/subscription')}
+                      className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all"
+                    >
+                      Upgrade to Premium
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-3 opacity-30">
+                  <div className="text-2xl">🎨</div>
+                  <label className="block text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    Customer View Mode
+                  </label>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 opacity-30">
+                  Control how your shop appears to customers. This is separate from your dashboard theme preference.
+                </p>
+                <div className="grid grid-cols-3 gap-4 opacity-30">
+                  <div className="p-4 rounded-xl border-2 border-gray-300 bg-white">
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">☀️</div>
+                      <div className="text-sm font-bold text-gray-800">Light Mode</div>
+                      <div className="text-xs text-gray-500 mt-1">Bright & Clean</div>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl border-2 border-gray-600 bg-gray-900">
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🌙</div>
+                      <div className="text-sm font-bold text-white">Dark Mode</div>
+                      <div className="text-xs text-gray-400 mt-1">Sleek & Modern</div>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl border-2 border-gray-400 bg-gradient-to-br from-white via-gray-200 to-gray-900">
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🌗</div>
+                      <div className="text-sm font-bold text-gray-800">Auto Mode</div>
+                      <div className="text-xs text-gray-600 mt-1">Smart Adapt</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Free Plan - Locked */}
             {user?.plan === 'free' && (
@@ -1067,7 +1229,7 @@ const ShopSettings = () => {
                       className="input flex-1 min-w-[200px]"
                       placeholder="myshop"
                     />
-                    <span className="text-gray-500 whitespace-nowrap">.washop.com</span>
+                    <span className="text-gray-500 whitespace-nowrap">.wazhop.com</span>
                     <TouchButton
                       type="button"
                       onClick={handleSetSubdomain}
@@ -1083,12 +1245,12 @@ const ShopSettings = () => {
                     <p className="text-sm text-green-600 mt-2">
                       ✓ Your shop is accessible at:{' '}
                       <a 
-                        href={`https://${shop.subdomain}.washop.com`}
+                        href={`https://${shop.subdomain}.wazhop.com`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium underline"
                       >
-                        {shop.subdomain}.washop.com
+                        {shop.subdomain}.wazhop.com
                       </a>
                     </p>
                   )}
@@ -1295,6 +1457,13 @@ const ShopSettings = () => {
               </div>
             </div>
           </div>
+
+          {/* Payment Integration (Premium only) */}
+          <PaymentSettings 
+            shop={shop} 
+            onUpdate={handleUpdate}
+            isPremium={user?.plan === 'premium'}
+          />
 
           {/* Submit Button */}
           <div className="flex justify-end gap-3">

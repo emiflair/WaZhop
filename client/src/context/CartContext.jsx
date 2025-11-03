@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { CartContext } from './CartContextDefinition';
+
+export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('washop_cart');
+    const savedCart = localStorage.getItem('wazhop_cart');
     if (savedCart) {
       try {
         setCartItems(JSON.parse(savedCart));
@@ -19,7 +20,7 @@ export const CartProvider = ({ children }) => {
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('washop_cart', JSON.stringify(cartItems));
+    localStorage.setItem('wazhop_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (product, shop, quantity = 1, variant = null) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart, FiCreditCard } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { FaThumbsUp } from 'react-icons/fa';
 import StarRating from './StarRating';
@@ -270,14 +270,40 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                 Add to Cart
               </button>
               
-              <button
-                onClick={() => onWhatsAppClick(product)}
-                disabled={isOutOfStock}
-                className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
-              >
-                <IoLogoWhatsapp size={24} />
-                {isOutOfStock ? 'Out of Stock' : 'Order on WhatsApp'}
-              </button>
+              {/* Payment Button - Show if payment provider is configured */}
+              {shop?.paymentSettings?.provider && shop?.paymentSettings[shop.paymentSettings.provider]?.paymentLink && (
+                <button
+                  onClick={() => {
+                    const paymentLink = shop.paymentSettings[shop.paymentSettings.provider]?.paymentLink;
+                    if (paymentLink) {
+                      // Append product details to payment link
+                      const urlWithParams = new URL(paymentLink);
+                      urlWithParams.searchParams.append('product', product.name);
+                      urlWithParams.searchParams.append('amount', product.price);
+                      window.open(urlWithParams.toString(), '_blank');
+                    } else {
+                      toast.error('Payment link not configured');
+                    }
+                  }}
+                  disabled={isOutOfStock}
+                  className="btn btn-primary w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiCreditCard size={22} />
+                  {isOutOfStock ? 'Out of Stock' : 'Pay Now'}
+                </button>
+              )}
+              
+              {/* WhatsApp Button - Show if payment not configured or if negotiation is allowed */}
+              {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
+                <button
+                  onClick={() => onWhatsAppClick(product)}
+                  disabled={isOutOfStock}
+                  className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
+                >
+                  <IoLogoWhatsapp size={24} />
+                  {isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}
+                </button>
+              )}
             </div>
           </div>
         </div>

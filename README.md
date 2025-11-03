@@ -1,4 +1,4 @@
-# 🛍️ WhatsApp Shop Builder (WaShop)
+# 🛍️ WhatsApp Shop Builder (WaZhop)
 
 > Create your store. Customize it. Share your WhatsApp link. Sell smarter.
 
@@ -18,7 +18,7 @@ WhatsApp Shop Builder is a web platform that empowers small businesses and indiv
 ## Project Structure
 
 ```
-washop/
+wazhop/
 ├── client/          # React frontend
 │   ├── src/
 │   │   ├── components/
@@ -69,14 +69,18 @@ npm run dev
 - ✅ Seller dashboard
 - ✅ Store customization (colors, logo, banner)
 - ✅ Product management (CRUD)
-- ✅ Public storefront (washop.com/:username)
+- ✅ Public storefront (wazhop.com/:username)
 - ✅ WhatsApp integration for product negotiation
+- ✅ Payment integration (Flutterwave & Paystack) - Premium only
+- ✅ Shopping cart and checkout
+- ✅ Product reviews and ratings
+- ✅ Mobile-responsive design
 
 ### Subscription Tiers
 
-- **Free:** Up to 10 products, 1 theme, Washop branding
-- **Pro (₦2,000/month):** Up to 100 products, custom colors, no branding
-- **Premium (₦5,000/month):** Unlimited products, advanced themes, analytics
+- **Free:** Up to 10 products, 1 shop, basic themes, WaZhop branding, WhatsApp checkout only
+- **Pro (₦2,000/month):** Up to 100 products, 2 shops, custom colors, no branding, custom subdomain
+- **Premium (₦5,000/month):** Unlimited products, 3 shops, payment integration (Flutterwave/Paystack), custom domain, advanced analytics
 
 ## License
 
@@ -84,4 +88,4 @@ MIT
 
 ## Contact
 
-For support or inquiries, visit [washop.com/contact](https://washop.com/contact)
+For support or inquiries, visit [wazhop.com/contact](https://wazhop.com/contact)

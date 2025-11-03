@@ -7,6 +7,7 @@ import StarRating from '../components/StarRating';
 import ProductDetailModal from '../components/ProductDetailModal';
 import CartSidebar from '../components/CartSidebar';
 import { useCart } from '../hooks/useCart';
+import toast from 'react-hot-toast';
 
 const Storefront = () => {
   const { slug } = useParams();
@@ -32,6 +33,54 @@ const Storefront = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
+  useEffect(() => {
+    const html = document.documentElement;
+    let media;
+    let apply;
+
+    // Apply theme mode when shop data loads
+    if (shop?.theme?.mode) {
+      media = window.matchMedia('(prefers-color-scheme: dark)');
+
+      apply = () => {
+        if (shop.theme.mode === 'dark') {
+          html.classList.add('dark');
+        } else if (shop.theme.mode === 'light') {
+          html.classList.remove('dark');
+        } else if (shop.theme.mode === 'auto') {
+          html.classList.toggle('dark', media.matches);
+        }
+      };
+
+      // Initial apply
+      apply();
+
+      // Listen for system theme changes in auto mode
+      if (shop.theme.mode === 'auto') {
+        try {
+          media.addEventListener('change', apply);
+        } catch {
+          // Safari fallback
+          media.addListener(apply);
+        }
+      }
+    }
+    
+    // Cleanup: restore original theme when leaving storefront
+    return () => {
+      if (media && apply && shop?.theme?.mode === 'auto') {
+        try {
+          media.removeEventListener('change', apply);
+        } catch {
+          media.removeListener(apply);
+        }
+      }
+      // Revert to user's system preference
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      html.classList.toggle('dark', systemDark);
+    };
+  }, [shop]);
+
   const fetchShop = async () => {
     try {
       const shopData = await shopAPI.getShopBySlug(slug);
@@ -46,16 +95,32 @@ const Storefront = () => {
 
   const handleWhatsAppClick = async (product) => {
     try {
+      // Check if WhatsApp number is available
+      if (!shop?.owner?.whatsapp) {
+        console.error('WhatsApp number not available:', shop);
+        toast.error('WhatsApp contact not available for this shop');
+        return;
+      }
+
       await productAPI.trackClick(product._id);
       const message = encodeURIComponent(
         `Hello! I'm interested in your product: ${product.name}\nPrice: ₦${product.price.toLocaleString()}`
       );
+      const whatsappNumber = shop.owner.whatsapp.replace(/\D/g, '');
+      
+      if (!whatsappNumber) {
+        console.error('Invalid WhatsApp number:', shop.owner.whatsapp);
+        toast.error('Invalid WhatsApp contact for this shop');
+        return;
+      }
+
       window.open(
-        `https://wa.me/${shop.owner.whatsapp.replace(/\D/g, '')}?text=${message}`,
+        `https://wa.me/${whatsappNumber}?text=${message}`,
         '_blank'
       );
     } catch (err) {
-      console.error('Error tracking click:', err);
+      console.error('Error with WhatsApp click:', err);
+      toast.error('Failed to open WhatsApp. Please try again.');
     }
   };
 
@@ -124,7 +189,7 @@ const Storefront = () => {
   const accentColor = shop.theme?.accentColor || '#FFD700';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-safe-bottom">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-safe-bottom">
       {/* Header/Banner - Mobile Optimized */}
       <div
         className="relative h-40 sm:h-48 md:h-64"
@@ -135,18 +200,18 @@ const Storefront = () => {
         }}
       >
         {shop.showWatermark && (
-          <div className="absolute top-4 right-4 bg-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
-            Powered by <span className="font-semibold">WaShop</span>
+          <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200">
+            Powered by <span className="font-semibold">WaZhop</span>
           </div>
         )}
         
         {/* Floating Cart Button - Mobile Optimized with Touch Target */}
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed top-16 sm:top-20 right-3 sm:right-4 z-30 bg-white shadow-lg rounded-full touch-target hover:bg-gray-50 active:bg-gray-100 transition-all"
+          className="fixed top-16 sm:top-20 right-3 sm:right-4 z-30 bg-white dark:bg-gray-800 shadow-lg rounded-full touch-target hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-all"
           aria-label="View cart"
         >
-          <FiShoppingCart size={22} className="sm:w-6 sm:h-6" />
+          <FiShoppingCart size={22} className="sm:w-6 sm:h-6 dark:text-gray-200" />
           {getCartCount() > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-1.5 shadow-md">
               {getCartCount()}
@@ -157,7 +222,7 @@ const Storefront = () => {
 
       {/* Shop Info - Mobile Optimized */}
       <div className="container-custom -mt-12 sm:-mt-16 relative z-10">
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {shop.logo?.url && (
               <img
@@ -168,7 +233,7 @@ const Storefront = () => {
             )}
             <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{shop.shopName}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{shop.shopName}</h1>
                 {(shop.owner?.plan === 'pro' || shop.owner?.plan === 'premium') && (
                   <div className="flex-shrink-0" title="Verified Shop">
                     <svg 
@@ -211,9 +276,9 @@ const Storefront = () => {
                 )}
               </div>
               {shop.description && (
-                <p className="text-gray-600 mb-3 text-sm sm:text-base">{shop.description}</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-3 text-sm sm:text-base">{shop.description}</p>
               )}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {shop.location && (
                   <div className="flex items-center gap-1">
                     <FiMapPin size={16} className="flex-shrink-0" />
@@ -283,18 +348,18 @@ const Storefront = () => {
 
         {/* Search and Filter Bar - Mobile Optimized */}
         {products.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {/* Search - Full width on mobile */}
               <div className="relative md:col-span-1">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
                 <input
                   type="search"
                   inputMode="search"
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input pl-10 text-base"
+                  className="input pl-10 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   aria-label="Search products"
                 />
               </div>
@@ -303,7 +368,7 @@ const Storefront = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="input text-base appearance-none cursor-pointer"
+                className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 aria-label="Filter by category"
               >
                 {categories.map(cat => (
@@ -317,7 +382,7 @@ const Storefront = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="input text-base appearance-none cursor-pointer"
+                className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 aria-label="Sort products"
               >
                 <option value="newest">Newest First</option>
@@ -355,9 +420,9 @@ const Storefront = () => {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-16">
-            <FiShoppingBag size={64} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products Yet</h3>
-            <p className="text-gray-600">Check back soon for new items!</p>
+            <FiShoppingBag size={64} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Products Yet</h3>
+            <p className="text-gray-600 dark:text-gray-400">Check back soon for new items!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-12">
@@ -372,7 +437,7 @@ const Storefront = () => {
               const isLowStock = !isOutOfStock && product.stock !== null && product.stock <= (product.lowStockThreshold || 5);
 
               return (
-                <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">
+                <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">
                   {/* Product Image - Mobile Optimized */}
                   <div 
                     className="relative overflow-hidden cursor-pointer touch-manipulation active:opacity-90"
@@ -389,8 +454,8 @@ const Storefront = () => {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-48 sm:h-64 bg-gray-100 flex items-center justify-center">
-                        <FiPackage size={40} className="sm:w-12 sm:h-12 text-gray-300" />
+                      <div className="w-full h-48 sm:h-64 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <FiPackage size={40} className="sm:w-12 sm:h-12 text-gray-300 dark:text-gray-600" />
                       </div>
                     )}
                     
@@ -417,7 +482,7 @@ const Storefront = () => {
                   {/* Product Info - Mobile Optimized */}
                   <div className="p-3 sm:p-4">
                     <h3 
-                      className="font-semibold text-base sm:text-lg mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem] cursor-pointer hover:text-blue-600 active:text-blue-700 touch-manipulation"
+                      className="font-semibold text-base sm:text-lg mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem] cursor-pointer hover:text-blue-600 active:text-blue-700 dark:text-white dark:hover:text-blue-400 dark:active:text-blue-500 touch-manipulation"
                       onClick={() => setSelectedProduct(product)}
                       role="button"
                       tabIndex={0}
@@ -437,11 +502,11 @@ const Storefront = () => {
                       </div>
                     ) : (
                       <div className="mb-2 h-5">
-                        <span className="text-xs text-gray-400">No reviews yet</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">No reviews yet</span>
                       </div>
                     )}
 
-                    <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">{product.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">{product.description}</p>
                     
                     {/* Price - Mobile Optimized */}
                     <div className="mb-3 sm:mb-4">
@@ -458,7 +523,7 @@ const Storefront = () => {
                       
                       {/* Variants indicator */}
                       {product.variants && product.variants.length > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {product.variants.length} variant{product.variants.length > 1 ? 's' : ''} available
                         </p>
                       )}
@@ -510,7 +575,7 @@ const Storefront = () => {
       )}
 
       {/* Cart Sidebar */}
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} shop={shop} />
     </div>
   );
 };

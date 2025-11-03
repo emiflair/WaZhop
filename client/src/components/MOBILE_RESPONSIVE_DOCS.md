@@ -1,6 +1,6 @@
 # Mobile Responsiveness Documentation
 
-Complete guide to mobile-optimized components and best practices in WaShop.
+Complete guide to mobile-optimized components and best practices in WaZhop.
 
 ## 📱 Overview
 

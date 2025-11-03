@@ -47,11 +47,11 @@ const DashboardLayout = ({ children }) => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
             <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
           </div>
-          <span className="text-xl font-bold dark:text-gray-100">WaShop</span>
+          <span className="text-xl font-bold dark:text-gray-100">aZhop</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -82,11 +82,11 @@ const DashboardLayout = ({ children }) => {
         <div className="h-full flex flex-col">
           {/* Logo - Desktop Only */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b dark:border-gray-700">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-1">
               <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
                 <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
               </div>
-              <span className="text-xl font-bold dark:text-gray-100">WaShop</span>
+              <span className="text-xl font-bold dark:text-gray-100">aZhop</span>
             </Link>
             <ThemeToggle />
           </div>

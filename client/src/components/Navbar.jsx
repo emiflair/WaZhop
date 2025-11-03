@@ -41,11 +41,11 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+          <Link to="/" className="flex items-center space-x-1" onClick={() => setIsOpen(false)}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
               <span className="text-white dark:text-gray-900 font-bold text-lg md:text-xl">W</span>
             </div>
-            <span className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">WaShop</span>
+            <span className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -112,11 +112,11 @@ const Navbar = () => {
           <div className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-800 z-50 shadow-2xl md:hidden overflow-y-auto">
             {/* Header with Logo */}
             <div className="h-16 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-6">
-              <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+              <Link to="/" className="flex items-center space-x-1" onClick={() => setIsOpen(false)}>
                 <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
                   <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">WaShop</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
               </Link>
               <button
                 onClick={() => setIsOpen(false)}

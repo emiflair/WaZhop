@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# WaShop Docker Quick Start Script
+# WaZhop Docker Quick Start Script
 
-echo "🐳 Starting WaShop with Docker..."
+echo "🐳 Starting WaZhop with Docker..."
 echo ""
 
 # Get local IP address
@@ -12,7 +12,7 @@ LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $
 docker-compose up -d
 
 echo ""
-echo "✅ WaShop is starting..."
+echo "✅ WaZhop is starting..."
 echo ""
 echo "🌐 Access URLs:"
 echo "   Local:    http://localhost:3000"

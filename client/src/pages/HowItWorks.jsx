@@ -29,7 +29,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <SEO
-        title="How It Works - Simple Steps to Start Selling | WaShop"
+        title="How It Works - Simple Steps to Start Selling | WaZhop"
         description="Learn how to create your digital shop in 4 easy steps. Sign up, customize, share, and start selling on WhatsApp in minutes."
       />
       <Navbar />

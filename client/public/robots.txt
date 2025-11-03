@@ -1,4 +1,4 @@
-# robots.txt for WaShop
+# robots.txt for WaZhop
 User-agent: *
 Allow: /
 Disallow: /dashboard/
@@ -6,4 +6,4 @@ Disallow: /demo/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://washop.com/sitemap.xml
+Sitemap: https://wazhop.com/sitemap.xml

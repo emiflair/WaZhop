@@ -1,6 +1,6 @@
 # Loading States Documentation
 
-Complete guide to skeleton loaders, loading indicators, and optimistic UI updates in WaShop.
+Complete guide to skeleton loaders, loading indicators, and optimistic UI updates in WaZhop.
 
 ## 📦 Components
 

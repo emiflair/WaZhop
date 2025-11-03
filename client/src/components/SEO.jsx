@@ -8,10 +8,10 @@ const SEO = ({
   image, 
   url, 
   type = 'website',
-  author = 'WaShop',
-  siteName = 'WaShop'
+  author = 'WaZhop',
+  siteName = 'WaZhop'
 }) => {
-  const siteUrl = 'https://washop.com'; // Update with actual domain
+  const siteUrl = 'https://wazhop.com'; // Update with actual domain
   const fullUrl = url || window.location.href;
   const defaultImage = `${siteUrl}/og-image.png`; // Add default OG image
   const ogImage = image || defaultImage;

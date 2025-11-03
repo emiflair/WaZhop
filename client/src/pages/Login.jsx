@@ -42,7 +42,7 @@ const Login = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 sm:p-8">
             <div className="text-center mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h2>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">Login to your WaShop account</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">Login to your WaZhop account</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">

@@ -15,8 +15,8 @@ const Home = () => {
     },
     {
       name: 'Pro',
-      priceMonthly: '₦5,000',
-      priceYearly: '₦42,000',
+      priceMonthly: '₦6,000',
+      priceYearly: '₦50,400',
       period: 'month',
       popular: true,
       savings: '30%',
@@ -24,19 +24,19 @@ const Home = () => {
     },
     {
       name: 'Premium',
-      priceMonthly: '₦15,000',
-      priceYearly: '₦126,000',
+      priceMonthly: '₦18,000',
+      priceYearly: '₦151,200',
       period: 'month',
       savings: '30%',
-      features: ['Up to 3 shops', 'Unlimited products', 'Custom domain', 'Remove Washop branding', '24/7 support']
+      features: ['Up to 3 shops', 'Unlimited products', 'Payment integration', 'Custom domain', 'Remove Wazhop branding', '24/7 support']
     }
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <SEO
-        title="Your Own Digital Shop in Minutes. Sell Anywhere, Anytime | Washop"
-        description="Washop gives you a fully customizable digital shop with your own brand, logo, and style. Reach customers instantly on WhatsApp and grow your business from home."
+        title="Your Own Digital Shop in Minutes. Sell Anywhere, Anytime | Wazhop"
+        description="Wazhop gives you a fully customizable digital shop with your own brand, logo, and style. Reach customers instantly on WhatsApp and grow your business from home."
         keywords="WhatsApp shop, online store, e-commerce, sell online, WhatsApp business, digital shop, custom storefront"
         type="website"
       />
@@ -50,7 +50,7 @@ const Home = () => {
               Your Own Digital Shop in Minutes. <span className="text-primary-600 dark:text-primary-400">Sell Anywhere, Anytime</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Washop gives you a fully customizable digital shop with your own brand, logo, and style so you can reach customers instantly and professionally, all from the comfort of your home.
+              Wazhop gives you a fully customizable digital shop with your own brand, logo, and style so you can reach customers instantly and professionally, all from the comfort of your home.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link to="/register" className="btn btn-primary text-lg px-10 py-4 shadow-lg hover:shadow-xl transition-all">
@@ -160,12 +160,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Why Washop */}
+      {/* Why Wazhop */}
       <section className="py-16 sm:py-20 bg-white dark:bg-gray-900 px-4">
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Why Washop?
+              Why Wazhop?
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Built for real sellers who want control, flexibility, and growth
@@ -210,7 +210,7 @@ const Home = () => {
               <div>
                 <h3 className="text-xl font-bold mb-2 dark:text-gray-100">Designed for Real Sellers</h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  From fashion to electronics, skincare to cakes. Washop works for any product.
+                  From fashion to electronics, skincare to cakes. Wazhop works for any product.
                 </p>
               </div>
             </div>
@@ -241,7 +241,7 @@ const Home = () => {
                 <FaUsers size={40} />
                 <span className="text-5xl font-bold">50,000+</span>
               </div>
-              <p className="text-xl">Sellers currently using Washop to grow their business</p>
+              <p className="text-xl">Sellers currently using Wazhop to grow their business</p>
             </div>
           </div>
         </div>
@@ -344,7 +344,7 @@ const Home = () => {
             Create My Shop Now
           </Link>
           <p className="text-sm mt-4 opacity-75">
-            Join 50,000+ sellers already growing with Washop
+            Join 50,000+ sellers already growing with Wazhop
           </p>
         </div>
       </section>

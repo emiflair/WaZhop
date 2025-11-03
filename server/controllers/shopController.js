@@ -118,8 +118,10 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
 // @route   PUT /api/shops/my/shop?shopId=xxx
 // @access  Private
 exports.updateShop = asyncHandler(async (req, res) => {
-  const { shopName, description, category, location, slug, socialLinks } = req.body;
+  console.log('🔍 UPDATE SHOP - Full request body:', JSON.stringify(req.body, null, 2));
+  const { shopName, description, category, location, slug, socialLinks, theme, paymentSettings } = req.body;
   const { shopId } = req.query;
+  console.log('🔍 Extracted paymentSettings:', paymentSettings);
 
   // Find shop - use shopId if provided, otherwise get first active shop
   let shop;
@@ -162,6 +164,54 @@ exports.updateShop = asyncHandler(async (req, res) => {
   if (category) shop.category = category;
   if (location !== undefined) shop.location = location;
   if (socialLinks) shop.socialLinks = { ...shop.socialLinks, ...socialLinks };
+  
+  // Update payment settings (Premium only)
+  if (paymentSettings) {
+    console.log('📥 Received paymentSettings:', JSON.stringify(paymentSettings, null, 2));
+    
+    // Get user plan from request
+    const user = await User.findById(req.user.id);
+    
+    if (paymentSettings.enabled && user.plan !== 'premium') {
+      return res.status(403).json({
+        success: false,
+        message: 'Payment integration is only available for Premium plan users. Upgrade to Premium to accept direct payments.'
+      });
+    }
+    
+    // Update payment settings - use explicit boolean check
+    shop.paymentSettings = {
+      enabled: paymentSettings.enabled === true,
+      provider: paymentSettings.provider || null,
+      flutterwave: {
+        publicKey: paymentSettings.flutterwave?.publicKey || null,
+        paymentLink: paymentSettings.flutterwave?.paymentLink || null
+      },
+      paystack: {
+        publicKey: paymentSettings.paystack?.publicKey || null,
+        paymentLink: paymentSettings.paystack?.paymentLink || null
+      },
+      allowWhatsAppNegotiation: paymentSettings.allowWhatsAppNegotiation ?? true,
+      currency: paymentSettings.currency || 'NGN'
+    };
+    
+    console.log('💾 Saving shop.paymentSettings:', JSON.stringify(shop.paymentSettings, null, 2));
+  }
+  
+  // Update theme mode if provided (Premium only)
+  if (theme?.mode) {
+    // Get user plan from request
+    const user = await User.findById(req.user.id);
+    
+    if (user.plan !== 'premium') {
+      return res.status(403).json({
+        success: false,
+        message: 'Theme mode customization is only available for Premium plan users. Upgrade to Premium to control your shop\'s display mode.'
+      });
+    }
+    
+    shop.theme.mode = theme.mode;
+  }
 
   await shop.save();
 
@@ -353,7 +403,7 @@ exports.uploadLogo = asyncHandler(async (req, res) => {
   }
 
   // Upload new logo
-  const result = await uploadFromBuffer(req.file.buffer, 'washop/logos');
+  const result = await uploadFromBuffer(req.file.buffer, 'wazhop/logos');
 
   // Add new image size to storage
   await updateStorageUsage(req.user.id, req.file.size);
@@ -421,7 +471,7 @@ exports.uploadBanner = asyncHandler(async (req, res) => {
   }
 
   // Upload new banner
-  const result = await uploadFromBuffer(req.file.buffer, 'washop/banners');
+  const result = await uploadFromBuffer(req.file.buffer, 'wazhop/banners');
 
   // Add new image size to storage
   await updateStorageUsage(req.user.id, req.file.size);
@@ -900,7 +950,7 @@ exports.setSubdomain = asyncHandler(async (req, res) => {
     message: 'Subdomain set successfully',
     data: {
       subdomain,
-      url: `https://${subdomain}.washop.com`
+      url: `https://${subdomain}.wazhop.com`
     }
   });
 });

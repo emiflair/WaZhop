@@ -153,7 +153,7 @@ userSchema.methods.getPlanLimits = function() {
         'Custom gradient builder',
         'Custom CSS & styling',
         'Custom domain (yourshop.com)',
-        'Remove WaShop branding',
+        'Remove WaZhop branding',
         'Video backgrounds',
         'Advanced animations',
         'SEO optimization tools',

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# WaShop Development Startup Script
+# WaZhop Development Startup Script
 
-echo "🚀 Starting WaShop Development Servers..."
+echo "🚀 Starting WaZhop Development Servers..."
 echo ""
 
 # Start backend
