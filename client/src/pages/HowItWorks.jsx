@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 const HowItWorks = () => {
   const steps = [
@@ -26,22 +27,29 @@ const HowItWorks = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+      <SEO
+        title="How It Works - Simple Steps to Start Selling | WaShop"
+        description="Learn how to create your digital shop in 4 easy steps. Sign up, customize, share, and start selling on WhatsApp in minutes."
+      />
       <Navbar />
       <div className="flex-grow py-16">
         <div className="container-custom">
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 dark:text-gray-100">
             How It Works
           </h1>
+          <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
+            Get your digital shop up and running in four simple steps
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((step) => (
               <div key={step.number} className="text-center">
-                <div className="w-16 h-16 bg-accent-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary-600 dark:bg-primary-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-lg">
                   {step.number}
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <h3 className="text-xl font-semibold mb-2 dark:text-gray-100">{step.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
               </div>
             ))}
           </div>

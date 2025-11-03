@@ -273,7 +273,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               <button
                 onClick={() => onWhatsAppClick(product)}
                 disabled={isOutOfStock}
-                className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400"
+                className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
               >
                 <IoLogoWhatsapp size={24} />
                 {isOutOfStock ? 'Out of Stock' : 'Order on WhatsApp'}

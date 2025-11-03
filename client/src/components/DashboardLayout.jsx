@@ -116,7 +116,7 @@ const DashboardLayout = ({ children }) => {
                   to={item.href}
                   className={`flex items-center space-x-3 px-4 py-3 min-h-[52px] rounded-lg transition-all active:scale-95 ${
                     isActive
-                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-lg'
+                      ? 'bg-primary-600 dark:bg-primary-700 text-white shadow-lg'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600'
                   }`}
                 >

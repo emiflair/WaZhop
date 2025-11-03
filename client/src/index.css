@@ -7,50 +7,127 @@
     @apply border-gray-200 dark:border-gray-700;
   }
   
+  html {
+    /* Improve text rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent text size adjustment after orientation change in mobile */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
   body {
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased;
+    /* Better scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: contain;
+  }
+
+  /* Better touch targets on mobile */
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
+  /* Mobile-first button styles */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
+    @apply px-4 py-2.5 min-h-[44px] rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 active:scale-95 touch-manipulation;
+  }
+
+  /* Larger touch targets on mobile */
+  @media (min-width: 768px) {
+    .btn {
+      @apply py-2;
+    }
   }
 
   .btn-primary {
-    @apply bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 focus:ring-gray-900 dark:focus:ring-gray-100;
+    @apply bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 focus:ring-primary-600 dark:focus:ring-primary-500 active:bg-primary-800 dark:active:bg-primary-700;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500;
+    @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500 active:bg-gray-400 dark:active:bg-gray-500;
   }
 
   .btn-outline {
-    @apply border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 focus:ring-gray-900 dark:focus:ring-gray-100;
+    @apply border-2 border-primary-600 dark:border-primary-500 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 focus:ring-primary-600 dark:focus:ring-primary-500 active:bg-primary-800 dark:active:bg-primary-700 active:border-primary-800 dark:active:border-primary-700;
   }
 
   .btn-accent {
-    @apply bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-500;
+    @apply bg-accent-700 dark:bg-accent-600 text-white hover:bg-accent-800 dark:hover:bg-accent-700 focus:ring-accent-700 dark:focus:ring-accent-600 active:bg-accent-900 dark:active:bg-accent-800;
   }
 
   .btn-whatsapp {
-    @apply bg-green-500 text-white hover:bg-green-600 focus:ring-green-500;
+    @apply bg-primary-500 dark:bg-primary-500 text-white hover:bg-primary-600 dark:hover:bg-primary-600 focus:ring-primary-500 dark:focus:ring-primary-400 active:bg-primary-700 dark:active:bg-primary-700;
   }
 
+  /* Mobile-optimized inputs */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all;
+    @apply w-full px-4 py-3 min-h-[44px] text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent transition-all touch-manipulation;
+  }
+
+  @media (min-width: 768px) {
+    .input {
+      @apply py-2 text-sm;
+    }
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
   }
 
+  /* Mobile-optimized cards */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 border border-gray-100 dark:border-gray-700;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-4 sm:p-6 border border-gray-100 dark:border-gray-700;
   }
 
+  /* Responsive container with proper mobile padding */
   .container-custom {
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Mobile-first modal/sheet */
+  .mobile-sheet {
+    @apply fixed inset-x-0 bottom-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl max-h-[90vh] overflow-y-auto;
+  }
+
+  /* Smooth scroll for mobile */
+  .scroll-smooth-mobile {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Touch-friendly spacing */
+  .touch-spacing {
+    @apply space-y-3 sm:space-y-4;
+  }
+
+  /* Mobile-optimized text sizes */
+  .text-mobile-sm {
+    @apply text-sm sm:text-xs;
+  }
+
+  .text-mobile-base {
+    @apply text-base sm:text-sm;
+  }
+
+  .text-mobile-lg {
+    @apply text-lg sm:text-base;
+  }
+
+  .text-mobile-xl {
+    @apply text-xl sm:text-lg;
+  }
+
+  .text-mobile-2xl {
+    @apply text-2xl sm:text-xl;
+  }
+
+  .text-mobile-3xl {
+    @apply text-3xl sm:text-2xl;
   }
 }
 
@@ -61,5 +138,42 @@
     @supports not (text-wrap: balance) {
       text-align: left;
     }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area insets for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Minimum touch target size */
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px] flex items-center justify-center;
+  }
+
+  /* Better focus visible for keyboard users */
+  .focus-visible-ring {
+    @apply focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 dark:focus-visible:ring-gray-100 focus-visible:outline-none;
   }
 }

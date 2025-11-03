@@ -14,7 +14,7 @@ const Pricing = () => {
       yearlyPrice: '₦0',
       period: 'forever',
       features: [
-        'Up to 10 products',
+        'Up to 5 products',
         '1 shop',
         '1 default theme',
         'WhatsApp integration',

@@ -107,6 +107,39 @@ const shopSchema = new mongoose.Schema({
     url: String,
     publicId: String
   },
+  profileImage: {
+    url: String,
+    publicId: String
+  },
+  verifiedBadge: {
+    type: Boolean,
+    default: false // Premium plans only
+  },
+  // Template System
+  template: {
+    id: {
+      type: String,
+      default: 'classic-gradient',
+      enum: ['classic-gradient', 'minimal-white', 'modern-dark', 'lifestyle-banner', 'luxury-motion']
+    },
+    customSettings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    }
+  },
+  // Enhanced Social Links
+  socialLinks: {
+    instagram: String,
+    facebook: String,
+    twitter: String,
+    tiktok: String,
+    whatsapp: String,
+    telegram: String,
+    enabled: {
+      type: [String],
+      default: ['whatsapp']
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -122,12 +155,6 @@ const shopSchema = new mongoose.Schema({
   views: {
     type: Number,
     default: 0
-  },
-  socialLinks: {
-    instagram: String,
-    facebook: String,
-    twitter: String,
-    tiktok: String
   },
   // Custom domain for Premium plan
   customDomain: {

@@ -179,7 +179,7 @@ const Navbar = () => {
                     <Link
                       to="/register"
                       onClick={() => setIsOpen(false)}
-                      className="block min-h-[52px] px-4 py-3 text-center bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-900 dark:active:bg-gray-100 rounded-lg font-medium transition mt-2"
+                      className="block min-h-[52px] px-4 py-3 text-center bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 active:bg-primary-800 dark:active:bg-primary-700 rounded-lg font-medium transition mt-2"
                     >
                       Get Started
                     </Link>

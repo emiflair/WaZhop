@@ -86,7 +86,7 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
   const shop = await Shop.findOne({ slug, isActive: true })
     .populate({
       path: 'owner',
-      select: 'name whatsapp'
+      select: 'name whatsapp plan'
     });
 
   if (!shop) {

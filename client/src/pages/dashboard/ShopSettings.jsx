@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { shopAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
+import { usePlanLimits } from '../../hooks/usePlanLimits';
 import toast from 'react-hot-toast';
 import { HexColorPicker } from 'react-colorful';
 import { FaUpload, FaTimes, FaInstagram, FaFacebook, FaTwitter, FaMapMarkerAlt, FaStore, FaGlobe, FaCrown, FaLock } from 'react-icons/fa';
@@ -11,6 +12,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ShopSettings = () => {
   const { user } = useAuth();
+  const { hasFeature, getUpgradeMessage } = usePlanLimits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const shopId = searchParams.get('shopId');
@@ -262,6 +264,13 @@ const ShopSettings = () => {
   const handleLogoSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check storage access for free plan
+      if (!hasFeature('hasStorage')) {
+        toast.error(getUpgradeMessage('storage'));
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       // Validate file
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
@@ -284,6 +293,13 @@ const ShopSettings = () => {
   const handleBannerSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check storage access for free plan
+      if (!hasFeature('hasStorage')) {
+        toast.error(getUpgradeMessage('storage'));
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       // Validate file
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
@@ -306,6 +322,13 @@ const ShopSettings = () => {
   const uploadLogo = async () => {
     if (!logoFile) return;
 
+    // Check storage access
+    if (!hasFeature('hasStorage')) {
+      toast.error(getUpgradeMessage('storage'));
+      navigate('/dashboard/subscription');
+      return;
+    }
+
     try {
       setUploadingLogo(true);
       const formData = new FormData();
@@ -317,7 +340,7 @@ const ShopSettings = () => {
       toast.success('Logo uploaded successfully');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo');
+      toast.error(error.response?.data?.message || 'Failed to upload logo');
     } finally {
       setUploadingLogo(false);
     }
@@ -325,6 +348,13 @@ const ShopSettings = () => {
 
   const uploadBanner = async () => {
     if (!bannerFile) return;
+
+    // Check storage access
+    if (!hasFeature('hasStorage')) {
+      toast.error(getUpgradeMessage('storage'));
+      navigate('/dashboard/subscription');
+      return;
+    }
 
     try {
       setUploadingBanner(true);
@@ -337,7 +367,7 @@ const ShopSettings = () => {
       toast.success('Banner uploaded successfully');
     } catch (error) {
       console.error('Error uploading banner:', error);
-      toast.error('Failed to upload banner');
+      toast.error(error.response?.data?.message || 'Failed to upload banner');
     } finally {
       setUploadingBanner(false);
     }

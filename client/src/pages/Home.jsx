@@ -11,7 +11,7 @@ const Home = () => {
       name: 'Free',
       price: '₦0',
       period: 'forever',
-      features: ['1 shop', '10 products', 'WhatsApp integration', 'Basic customization']
+      features: ['1 shop', '5 products', 'WhatsApp integration', 'Basic customization']
     },
     {
       name: 'Pro',
@@ -43,11 +43,11 @@ const Home = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="flex-grow bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:to-gray-900 py-16 sm:py-20 md:py-24 px-4">
+      <section className="flex-grow bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:to-gray-900 py-16 sm:py-20 md:py-24 px-4">
         <div className="container-custom">
           <div className="text-center max-w-5xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">
-              Your Own Digital Shop in Minutes. <span className="text-blue-600 dark:text-blue-400">Sell Anywhere, Anytime</span>
+              Your Own Digital Shop in Minutes. <span className="text-primary-600 dark:text-primary-400">Sell Anywhere, Anytime</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               Washop gives you a fully customizable digital shop with your own brand, logo, and style so you can reach customers instantly and professionally, all from the comfort of your home.
@@ -72,7 +72,7 @@ const Home = () => {
         <div className="container-custom">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <FaPalette className="text-white" size={36} />
               </div>
               <h3 className="text-2xl font-bold mb-3 dark:text-gray-100">Customizable Storefronts</h3>
@@ -82,7 +82,7 @@ const Home = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <FaWhatsapp className="text-white" size={36} />
               </div>
               <h3 className="text-2xl font-bold mb-3 dark:text-gray-100">Direct Customer Connection</h3>
@@ -92,7 +92,7 @@ const Home = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-accent-700 to-accent-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <FaDollarSign className="text-white" size={36} />
               </div>
               <h3 className="text-2xl font-bold mb-3 dark:text-gray-100">Simple & Affordable</h3>
@@ -118,7 +118,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+              <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
                 1
               </div>
               <h3 className="text-xl font-bold mb-3 dark:text-gray-100">Sign Up & Set Up Your Shop</h3>
@@ -128,7 +128,7 @@ const Home = () => {
             </div>
 
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+              <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
                 2
               </div>
               <h3 className="text-xl font-bold mb-3 dark:text-gray-100">Add Your Products</h3>
@@ -138,7 +138,7 @@ const Home = () => {
             </div>
 
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+              <div className="w-12 h-12 bg-accent-600 dark:bg-accent-700/30 text-white dark:text-accent-300 rounded-full flex items-center justify-center font-bold text-xl mb-4">
                 3
               </div>
               <h3 className="text-xl font-bold mb-3 dark:text-gray-100">Share Your Shop Link</h3>
@@ -148,7 +148,7 @@ const Home = () => {
             </div>
 
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+              <div className="w-12 h-12 bg-accent-700 dark:bg-accent-800/30 text-white dark:text-accent-300 rounded-full flex items-center justify-center font-bold text-xl mb-4">
                 4
               </div>
               <h3 className="text-xl font-bold mb-3 dark:text-gray-100">Sell & Grow Your Brand</h3>
@@ -175,8 +175,8 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                  <FiStar className="text-blue-600 dark:text-blue-400" size={24} />
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                  <FiStar className="text-primary-600 dark:text-primary-400" size={24} />
                 </div>
               </div>
               <div>
@@ -189,8 +189,8 @@ const Home = () => {
 
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                  <FiZap className="text-green-600 dark:text-green-400" size={24} />
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                  <FiZap className="text-primary-600 dark:text-primary-400" size={24} />
                 </div>
               </div>
               <div>
@@ -203,8 +203,8 @@ const Home = () => {
 
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                  <FiShoppingBag className="text-purple-600 dark:text-purple-400" size={24} />
+                <div className="w-12 h-12 bg-accent-600 dark:bg-accent-700/30 rounded-lg flex items-center justify-center">
+                  <FiShoppingBag className="text-white dark:text-accent-300" size={24} />
                 </div>
               </div>
               <div>
@@ -217,8 +217,8 @@ const Home = () => {
 
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                  <FiTrendingUp className="text-orange-600 dark:text-orange-400" size={24} />
+                <div className="w-12 h-12 bg-accent-700 dark:bg-accent-800/30 rounded-lg flex items-center justify-center">
+                  <FiTrendingUp className="text-white dark:text-accent-300" size={24} />
                 </div>
               </div>
               <div>
@@ -233,7 +233,7 @@ const Home = () => {
       </section>
 
       {/* Social Proof */}
-      <section className="py-12 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 px-4">
+      <section className="py-12 bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-800 dark:to-primary-900 px-4">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 text-white">
             <div className="text-center md:text-left">
@@ -257,7 +257,7 @@ const Home = () => {
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-2">
               Choose the plan that works for you
             </p>
-            <p className="text-xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
               💰 Save 30% when you pay yearly!
             </p>
           </div>
@@ -267,12 +267,12 @@ const Home = () => {
               <div
                 key={index}
                 className={`bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 ${
-                  plan.popular ? 'border-4 border-blue-500 relative' : ''
+                  plan.popular ? 'border-4 border-primary-500 relative' : ''
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                    <span className="bg-primary-500 text-white px-4 py-1 rounded-full text-sm font-bold">
                       MOST POPULAR
                     </span>
                   </div>
@@ -300,7 +300,7 @@ const Home = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <FiCheck className="text-green-500 mt-1 flex-shrink-0" size={20} />
+                      <FiCheck className="text-primary-500 mt-1 flex-shrink-0" size={20} />
                       <span className="text-gray-600 dark:text-gray-300">{feature}</span>
                     </li>
                   ))}
@@ -310,7 +310,7 @@ const Home = () => {
                   to="/register"
                   className={`block w-full py-3 px-6 rounded-lg text-center font-semibold transition-colors ${
                     plan.popular
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? 'bg-primary-600 text-white hover:bg-primary-700'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
@@ -321,7 +321,7 @@ const Home = () => {
           </div>
 
           <div className="text-center mt-8">
-            <Link to="/pricing" className="text-blue-600 dark:text-blue-400 hover:underline text-lg font-medium">
+            <Link to="/pricing" className="text-primary-600 dark:text-primary-400 hover:underline text-lg font-medium">
               View detailed pricing →
             </Link>
           </div>
@@ -329,7 +329,7 @@ const Home = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white px-4">
+      <section className="py-20 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white px-4">
         <div className="container-custom text-center">
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
             Your Shop. Your Brand. Your Way.
@@ -339,7 +339,7 @@ const Home = () => {
           </p>
           <Link 
             to="/register" 
-            className="inline-block bg-white text-blue-600 hover:bg-gray-100 text-xl px-12 py-5 rounded-lg font-bold shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
+            className="inline-block bg-white text-primary-600 hover:bg-gray-100 text-xl px-12 py-5 rounded-lg font-bold shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
           >
             Create My Shop Now
           </Link>

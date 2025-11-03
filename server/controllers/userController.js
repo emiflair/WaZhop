@@ -128,7 +128,7 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
 
   // Get new plan limits
   const newLimits = {
-    free: { products: 10, maxShops: 1, storage: 0 },
+    free: { products: 5, maxShops: 1, storage: 0 },
     pro: { products: 100, maxShops: 2, storage: 69793218560 },
     premium: { products: Infinity, maxShops: 3, storage: 1099511627776 }
   };

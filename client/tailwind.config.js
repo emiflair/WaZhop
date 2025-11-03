@@ -8,29 +8,30 @@ export default {
   theme: {
     extend: {
       colors: {
+        // WhatsApp-inspired green color palette
         primary: {
-          50: '#f5f5f5',
-          100: '#e5e5e5',
-          200: '#d4d4d4',
-          300: '#a3a3a3',
-          400: '#737373',
-          500: '#525252',
-          600: '#404040',
-          700: '#262626',
-          800: '#171717',
-          900: '#0a0a0a',
+          50: '#e8f9f0',   // Very light green
+          100: '#d1f4e0',  // Light green background
+          200: '#a3e9c1',  // Soft green
+          300: '#75dea2',  // Light WhatsApp green
+          400: '#47d383',  // Medium green
+          500: '#25D366',  // WhatsApp primary green
+          600: '#1ead52',  // Darker green
+          700: '#128C7E',  // WhatsApp teal
+          800: '#0d6b5f',  // Deep teal
+          900: '#075E54',  // WhatsApp dark teal
         },
         accent: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
+          50: '#fffef5',   // Very light lime
+          100: '#fffceb',  // Light lime
+          200: '#fef9c7',  // Soft yellow-green
+          300: '#fdf5a3',  // Lime highlight
+          400: '#dcf8c6',  // WhatsApp chat bubble green
+          500: '#c8e6c9',  // Light accent green
+          600: '#a5d6a7',  // Medium accent
+          700: '#81c784',  // Vibrant accent
+          800: '#66bb6a',  // Deep accent
+          900: '#4caf50',  // Rich green accent
         },
       },
       fontFamily: {
