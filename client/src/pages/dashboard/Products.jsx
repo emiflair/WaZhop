@@ -17,6 +17,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { TouchButton } from '../../components/mobile';
 import { useNavigate } from 'react-router-dom';
 import ProductPreviewModal from '../../components/ProductPreviewModal';
+import { CATEGORY_SUGGESTIONS, toLabel } from '../../utils/categories';
 
 const Products = () => {
   const { user } = useAuth();
@@ -47,15 +48,7 @@ const Products = () => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  const categories = [
-    { value: 'fashion', label: 'Fashion' },
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'food', label: 'Food & Beverages' },
-    { value: 'beauty', label: 'Beauty & Health' },
-    { value: 'home', label: 'Home & Living' },
-    { value: 'services', label: 'Services' },
-    { value: 'other', label: 'Other' },
-  ];
+  // Categories are free-form; suggestions come from CATEGORY_SUGGESTIONS
 
   useEffect(() => {
     fetchProducts();
@@ -151,6 +144,13 @@ const Products = () => {
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
       };
+
+      // Normalize category: lowercase slug and fallback to 'other'
+      productData.category = (productData.category || 'other')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-') || 'other';
 
       if (editingProduct) {
         // Update existing product
@@ -493,8 +493,8 @@ const Products = () => {
                             ₦{product.comparePrice.toLocaleString()}
                           </span>
                         )}
-                        <span className="text-xs text-gray-600 capitalize bg-gray-100 px-2 py-0.5 rounded">
-                          {product.category}
+                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                          {toLabel(product.category || 'other')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
@@ -625,8 +625,8 @@ const Products = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-700 capitalize">
-                          {product.category}
+                        <span className="text-sm text-gray-700">
+                          {toLabel(product.category || 'other')}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -764,17 +764,29 @@ const Products = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label text-sm sm:text-base">Category</label>
-                    <select
+                    <input
+                      type="text"
+                      list="category-suggestions"
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          category: e.target.value
+                            .toString()
+                            .trim()
+                            .toLowerCase()
+                            .replace(/\s+/g, '-'),
+                        })
+                      }
                       className="input text-sm sm:text-base"
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </option>
+                      placeholder="e.g., fashion, electronics, home-appliances"
+                    />
+                    <datalist id="category-suggestions">
+                      {CATEGORY_SUGGESTIONS.map((c) => (
+                        <option key={c} value={c}>{toLabel(c)}</option>
                       ))}
-                    </select>
+                    </datalist>
+                    <p className="text-xs text-gray-500 mt-1">Type to search or pick a suggestion.</p>
                   </div>
                   <div>
                     <label className="label text-sm sm:text-base">SKU (Optional)</label>

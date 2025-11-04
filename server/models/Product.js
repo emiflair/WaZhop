@@ -49,7 +49,8 @@ const productSchema = new mongoose.Schema({
   }],
   category: {
     type: String,
-    enum: ['fashion', 'electronics', 'food', 'beauty', 'home', 'services', 'other'],
+    trim: true,
+    lowercase: true,
     default: 'other'
   },
   tags: [{
@@ -174,6 +175,7 @@ productSchema.methods.incrementViews = async function() {
 // Indexes for better query performance
 productSchema.index({ shop: 1, isActive: 1 });
 productSchema.index({ shop: 1, position: 1 });
+productSchema.index({ shop: 1, category: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

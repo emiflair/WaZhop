@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { shopAPI, productAPI } from '../utils/api';
-import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart, FiFilter, FiSliders } from 'react-icons/fi';
 import { IoLogoWhatsapp, IoLogoTiktok } from 'react-icons/io5';
 import StarRating from '../components/StarRating';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -9,6 +9,7 @@ import CartSidebar from '../components/CartSidebar';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
 import { convertProductPrice, formatPrice } from '../utils/currency';
+import { CATEGORY_SUGGESTIONS, toLabel } from '../utils/categories';
 
 const Storefront = () => {
   const { slug } = useParams();
@@ -21,6 +22,9 @@ const Storefront = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  // Mobile popovers for category/sort
+  const [showCatSheet, setShowCatSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
   
   // Product detail modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -134,8 +138,8 @@ const Storefront = () => {
     }
   };
 
-  // Get unique categories from products
-  const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+  // Provide comprehensive catalog of categories for user selection
+  const categoryOptions = ['all', ...CATEGORY_SUGGESTIONS];
 
   // Filter and sort products
   const filteredProducts = products
@@ -574,60 +578,147 @@ const Storefront = () => {
           </div>
         </div>
 
-        {/* Search and Filter Bar - Mobile Optimized */}
+        {/* Search and Filter Bar */}
         {products.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              {/* Search - Full width on mobile */}
-              <div className="relative md:col-span-1">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
-                <input
-                  type="search"
-                  inputMode="search"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input pl-10 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                  aria-label="Search products"
-                />
+          <>
+            {/* Mobile toolbar: icons + search */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 mb-4 md:hidden">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowCatSheet(true)}
+                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  aria-label="Filter by category"
+                >
+                  <FiFilter size={18} />
+                </button>
+                <button
+                  onClick={() => setShowSortSheet(true)}
+                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  aria-label="Sort products"
+                >
+                  <FiSliders size={18} />
+                </button>
+                <div className="relative flex-1">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
+                  <input
+                    type="search"
+                    inputMode="search"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="input pl-10 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                    aria-label="Search products"
+                  />
+                </div>
               </div>
-
-              {/* Category Filter - Mobile optimized */}
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                aria-label="Filter by category"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </option>
-                ))}
-              </select>
-
-              {/* Sort - Mobile optimized */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                aria-label="Sort products"
-              >
-                <option value="newest">Newest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-                <option value="popular">Most Popular</option>
-              </select>
+              {(searchQuery || selectedCategory !== 'all') && (
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-300">
+                  Showing {filteredProducts.length} of {products.length} products
+                </div>
+              )}
             </div>
 
-            {/* Results count */}
-            {(searchQuery || selectedCategory !== 'all') && (
-              <div className="mt-3 text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-                Showing {filteredProducts.length} of {products.length} products
+            {/* Desktop filters: three-column layout */}
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
+                  <input
+                    type="search"
+                    inputMode="search"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="input pl-10 text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                    aria-label="Search products"
+                  />
+                </div>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  aria-label="Filter by category"
+                >
+                  {categoryOptions.map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat === 'all' ? 'All Categories' : toLabel(cat)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  aria-label="Sort products"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="popular">Most Popular</option>
+                </select>
+              </div>
+              {(searchQuery || selectedCategory !== 'all') && (
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                  Showing {filteredProducts.length} of {products.length} products
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Category Sheet */}
+            {showCatSheet && (
+              <div className="fixed inset-0 z-50">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setShowCatSheet(false)} />
+                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">Categories</h4>
+                    <button className="text-sm text-blue-600" onClick={() => setShowCatSheet(false)}>Done</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                    {categoryOptions.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => { setSelectedCategory(cat); setShowCatSheet(false); }}
+                        className={`px-3 py-2 rounded-lg border text-sm ${selectedCategory === cat ? 'bg-blue-50 border-blue-400 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300' : 'border-gray-200 dark:border-gray-600 dark:text-gray-200'}`}
+                      >
+                        {cat === 'all' ? 'All Categories' : toLabel(cat)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-          </div>
+
+            {/* Mobile Sort Sheet */}
+            {showSortSheet && (
+              <div className="fixed inset-0 z-50">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setShowSortSheet(false)} />
+                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">Sort</h4>
+                    <button className="text-sm text-blue-600" onClick={() => setShowSortSheet(false)}>Done</button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { value: 'newest', label: 'Newest First' },
+                      { value: 'price-low', label: 'Price: Low to High' },
+                      { value: 'price-high', label: 'Price: High to Low' },
+                      { value: 'rating', label: 'Highest Rated' },
+                      { value: 'popular', label: 'Most Popular' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { setSortBy(opt.value); setShowSortSheet(false); }}
+                        className={`px-3 py-2 rounded-lg border text-sm text-left ${sortBy === opt.value ? 'bg-blue-50 border-blue-400 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300' : 'border-gray-200 dark:border-gray-600 dark:text-gray-200'}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Products Grid */}
