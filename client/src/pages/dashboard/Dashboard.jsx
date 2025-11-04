@@ -89,16 +89,7 @@ const Dashboard = () => {
 
         {/* PWA Install Prompt */}
         {showInstallPrompt && (
-          <div className="relative">
-            <InstallPWA />
-            <button
-              onClick={handleDismissInstallPrompt}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold leading-none"
-              aria-label="Dismiss install prompt"
-            >
-              ×
-            </button>
-          </div>
+          <InstallPWA onClose={handleDismissInstallPrompt} />
         )}
 
         {/* Shop Link - Mobile Optimized */}
