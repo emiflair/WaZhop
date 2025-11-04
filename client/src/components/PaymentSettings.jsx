@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FaCreditCard, FaLock, FaWhatsapp, FaExternalLinkAlt, FaCrown } from 'react-icons/fa';
 import { SiFlutter } from 'react-icons/si';
-import toast from 'react-hot-toast';
 
 const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
   const [paymentData, setPaymentData] = useState({
@@ -20,7 +19,6 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
   });
 
   const [activeTab, setActiveTab] = useState(paymentData.provider || 'flutterwave');
-  const [saving, setSaving] = useState(false);
 
   // Sync local state with shop prop changes
   useEffect(() => {
@@ -49,55 +47,30 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
 
   const handleProviderChange = (provider) => {
     setActiveTab(provider);
-    setPaymentData({ ...paymentData, provider });
+    const updatedData = { ...paymentData, provider };
+    setPaymentData(updatedData);
+    // Notify parent of changes
+    onUpdate({ paymentSettings: updatedData });
   };
 
   const handleInputChange = (provider, field, value) => {
-    setPaymentData({
+    const updatedData = {
       ...paymentData,
       [provider]: {
         ...paymentData[provider],
         [field]: value
       }
-    });
+    };
+    setPaymentData(updatedData);
+    // Notify parent of changes
+    onUpdate({ paymentSettings: updatedData });
   };
 
-  const handleSave = async (e) => {
-    e?.preventDefault();
-    
-    console.log('💾 Attempting to save payment settings:', paymentData);
-    console.log('💾 PaymentSettings.enabled =', paymentData.enabled);
-    console.log('💾 PaymentSettings.provider =', paymentData.provider);
-    
-    if (!isPremium) {
-      toast.error('Payment integration is only available on the Premium plan');
-      return;
-    }
-
-    if (!paymentData.provider) {
-      toast.error('Please select a payment provider');
-      return;
-    }
-
-    const selectedProvider = paymentData[paymentData.provider];
-    if (!selectedProvider.paymentLink && !selectedProvider.publicKey) {
-      toast.error('Please provide either a payment link or public key');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      console.log('📤 Sending payment settings to API...');
-      const result = await onUpdate({ paymentSettings: paymentData });
-      console.log('✅ Payment settings saved successfully:', result);
-      toast.success('Payment settings updated successfully');
-    } catch (error) {
-      console.error('❌ Payment settings update error:', error);
-      console.error('Error response:', error.response?.data);
-      toast.error(error.response?.data?.message || 'Failed to update payment settings');
-    } finally {
-      setSaving(false);
-    }
+  const handleToggleChange = (field, value) => {
+    const updatedData = { ...paymentData, [field]: value };
+    setPaymentData(updatedData);
+    // Notify parent of changes
+    onUpdate({ paymentSettings: updatedData });
   };
 
   return (
@@ -285,7 +258,7 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
               <label className="label">Currency</label>
               <select
                 value={paymentData.currency}
-                onChange={(e) => setPaymentData({ ...paymentData, currency: e.target.value })}
+                onChange={(e) => handleToggleChange('currency', e.target.value)}
                 className="input"
               >
                 <option value="NGN">🇳🇬 Nigerian Naira (NGN)</option>
@@ -307,10 +280,7 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
                 </div>
               </div>
               <button
-                onClick={() => setPaymentData({ 
-                  ...paymentData, 
-                  allowWhatsAppNegotiation: !paymentData.allowWhatsAppNegotiation 
-                })}
+                onClick={() => handleToggleChange('allowWhatsAppNegotiation', !paymentData.allowWhatsAppNegotiation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   paymentData.allowWhatsAppNegotiation ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
@@ -324,20 +294,6 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
             </div>
           </div>
         </>
-      )}
-
-      {/* Save Button */}
-      {isPremium && (
-        <div className="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Saving...' : 'Save Payment Settings'}
-          </button>
-        </div>
       )}
 
       {/* Info Section */}

@@ -2,6 +2,7 @@ import { FiX, FiShoppingCart, FiMinus, FiPlus, FiTrash2, FiCreditCard } from 're
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
+import { formatPrice } from '../utils/currency';
 
 const CartSidebar = ({ isOpen, onClose, shop }) => {
   const { cartItems, updateQuantity, removeFromCart, clearCart, getCartTotal, getItemsByShop } = useCart();
@@ -9,15 +10,17 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
   const handleWhatsAppCheckout = () => {
     const itemsByShop = getItemsByShop();
     
-    itemsByShop.forEach(({ shop, items }) => {
-      let message = `Hello! I'd like to order the following items from ${shop.shopName}:\n\n`;
+    itemsByShop.forEach(({ shop: itemShop, items }) => {
+      const currency = itemShop.paymentSettings?.currency || 'NGN';
+      let message = `Hello! I'd like to order the following items from ${itemShop.shopName}:\n\n`;
       
       items.forEach((item, idx) => {
+        const price = item.variant?.price || item.product.price;
         message += `${idx + 1}. ${item.product.name}`;
         if (item.variant) {
           message += ` (${Object.values(item.variant).join(', ')})`;
         }
-        message += ` - Qty: ${item.quantity} - ₦${(item.variant?.price || item.product.price).toLocaleString()} each\n`;
+        message += ` - Qty: ${item.quantity} - ${formatPrice(price, currency)} each\n`;
       });
 
       const shopTotal = items.reduce((sum, item) => {
@@ -25,9 +28,9 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
         return sum + (price * item.quantity);
       }, 0);
 
-      message += `\nTotal: ₦${shopTotal.toLocaleString()}`;
+      message += `\nTotal: ${formatPrice(shopTotal, currency)}`;
 
-      const whatsappNumber = shop.owner.whatsapp.replace(/\D/g, '');
+      const whatsappNumber = itemShop.owner.whatsapp.replace(/\D/g, '');
       window.open(
         `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
         '_blank'
@@ -134,7 +137,9 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                             ).filter(Boolean).join(', ')}
                           </p>
                         )}
-                        <p className="font-bold text-lg text-gray-900 dark:text-gray-100">₦{price.toLocaleString()}</p>
+                        <p className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                          {formatPrice(price, shop?.paymentSettings?.currency || 'NGN')}
+                        </p>
 
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-2 mt-2">
@@ -172,7 +177,9 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
             <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3 text-gray-900 dark:text-gray-100">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-lg font-semibold">Total:</span>
-                <span className="text-2xl font-bold">₦{getCartTotal().toLocaleString()}</span>
+                <span className="text-2xl font-bold">
+                  {formatPrice(getCartTotal(), shop?.paymentSettings?.currency || 'NGN')}
+                </span>
               </div>
 
               {/* Payment Button - Show if payment provider is configured */}

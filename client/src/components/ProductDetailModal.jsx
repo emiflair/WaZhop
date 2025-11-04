@@ -6,6 +6,7 @@ import StarRating from './StarRating';
 import { reviewAPI } from '../utils/api';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
+import { formatPrice } from '../utils/currency';
 
 const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -182,12 +183,12 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
             <div className="mb-6">
               <div className="flex items-baseline gap-3 mb-2">
                 <p className="text-4xl font-bold" style={{ color: primaryColor }}>
-                  ₦{product.price.toLocaleString()}
+                  {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
                 </p>
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
                     <p className="text-xl text-gray-400 line-through">
-                      ₦{product.comparePrice.toLocaleString()}
+                      {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
                     </p>
                     <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
                       -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
@@ -230,7 +231,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                         <div key={optIdx} className="border border-gray-300 rounded px-3 py-2 text-sm">
                           <span className="font-medium">{option.value}</span>
                           {option.price && option.price !== product.price && (
-                            <span className="ml-2 text-gray-600">₦{option.price.toLocaleString()}</span>
+                            <span className="ml-2 text-gray-600">{formatPrice(option.price, shop.paymentSettings?.currency || 'NGN')}</span>
                           )}
                           {option.stock !== undefined && option.stock === 0 && (
                             <span className="ml-2 text-red-500 text-xs">(Out of stock)</span>

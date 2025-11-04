@@ -8,6 +8,7 @@ import ProductDetailModal from '../components/ProductDetailModal';
 import CartSidebar from '../components/CartSidebar';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
+import { convertProductPrice, formatPrice } from '../utils/currency';
 
 const Storefront = () => {
   const { slug } = useParams();
@@ -85,7 +86,14 @@ const Storefront = () => {
     try {
       const shopData = await shopAPI.getShopBySlug(slug);
       setShop(shopData.shop);
-      setProducts(shopData.products);
+      
+      // Convert product prices to shop's currency
+      const shopCurrency = shopData.shop.paymentSettings?.currency || 'NGN';
+      const convertedProducts = shopData.products.map(product => 
+        convertProductPrice(product, shopCurrency)
+      );
+      
+      setProducts(convertedProducts);
     } catch (err) {
       setError(err.response?.data?.message || 'Shop not found');
     } finally {
@@ -103,8 +111,13 @@ const Storefront = () => {
       }
 
       await productAPI.trackClick(product._id);
+      
+      // Get currency and format price
+      const currency = shop.paymentSettings?.currency || 'NGN';
+      const formattedPrice = formatPrice(product.price, currency);
+      
       const message = encodeURIComponent(
-        `Hello! I'm interested in your product: ${product.name}\nPrice: ₦${product.price.toLocaleString()}`
+        `Hello! I'm interested in your product: ${product.name}\nPrice: ${formattedPrice}`
       );
       const whatsappNumber = shop.owner.whatsapp.replace(/\D/g, '');
       
@@ -512,11 +525,11 @@ const Storefront = () => {
                     <div className="mb-3 sm:mb-4">
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <p className="text-xl sm:text-2xl font-bold" style={{ color: primaryColor }}>
-                          ₦{product.price.toLocaleString()}
+                          {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
                         </p>
                         {product.comparePrice && product.comparePrice > product.price && (
                           <p className="text-xs sm:text-sm text-gray-400 line-through">
-                            ₦{product.comparePrice.toLocaleString()}
+                            {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
                           </p>
                         )}
                       </div>
