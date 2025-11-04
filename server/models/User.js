@@ -50,6 +50,42 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  referralStats: {
+    totalReferrals: {
+      type: Number,
+      default: 0
+    },
+    freeReferred: {
+      type: Number,
+      default: 0
+    },
+    proReferred: {
+      type: Number,
+      default: 0
+    },
+    premiumReferred: {
+      type: Number,
+      default: 0
+    },
+    rewardsEarned: {
+      type: Number,
+      default: 0 // In days of free premium
+    },
+    rewardsUsed: {
+      type: Number,
+      default: 0
+    }
+  },
   shop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shop'
@@ -73,6 +109,40 @@ userSchema.pre('save', async function(next) {
   }
 });
 
+// Generate referral code on first save
+userSchema.pre('save', async function(next) {
+  if (!this.referralCode && !this.isNew) {
+    return next();
+  }
+  
+  if (this.isNew && !this.referralCode) {
+    // Generate unique 8-character code
+    const generateCode = () => {
+      return Math.random().toString(36).substring(2, 10).toUpperCase();
+    };
+    
+    let code = generateCode();
+    let attempts = 0;
+    
+    // Ensure uniqueness
+    while (attempts < 5) {
+      const existing = await mongoose.model('User').findOne({ referralCode: code });
+      if (!existing) {
+        this.referralCode = code;
+        break;
+      }
+      code = generateCode();
+      attempts++;
+    }
+    
+    if (!this.referralCode) {
+      this.referralCode = `${generateCode()}${Date.now().toString(36).slice(-4)}`;
+    }
+  }
+  
+  next();
+});
+
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
@@ -82,7 +152,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.getPlanLimits = function() {
   const limits = {
     free: { 
-      products: 5,
+      products: 4,
       themes: 1,
       maxShops: 1,
       storage: 0, // No storage - images only
@@ -93,10 +163,11 @@ userSchema.methods.getPlanLimits = function() {
       customCSS: false,
       advancedFeatures: false,
       prioritySupport: false,
+      inventoryManagement: false,
       features: [
         'Basic shop setup',
         '1 shop',
-        'Up to 5 products',
+        'Up to 4 products',
         '1 default theme (white)',
         'Basic product management',
         'Standard support'
@@ -114,6 +185,7 @@ userSchema.methods.getPlanLimits = function() {
       customCSS: false,
       advancedFeatures: true,
       prioritySupport: false,
+      inventoryManagement: true,
       features: [
         'Everything in Free',
         '2 shops',
@@ -122,6 +194,9 @@ userSchema.methods.getPlanLimits = function() {
         '10 professional preset themes',
         'Beautiful gradient themes',
         'Smooth animations',
+        'Inventory management system',
+        'Low stock alerts',
+        'Automated stock tracking',
         'Advanced analytics dashboard',
         'Sales reports & insights',
         'Customer behavior tracking',
@@ -143,6 +218,7 @@ userSchema.methods.getPlanLimits = function() {
       customCSS: true,
       advancedFeatures: true,
       prioritySupport: true,
+      inventoryManagement: true,
       features: [
         'Everything in Pro',
         '3 shops',
@@ -154,12 +230,14 @@ userSchema.methods.getPlanLimits = function() {
         'Custom CSS & styling',
         'Custom domain (yourshop.com)',
         'Remove WaZhop branding',
+        'Advanced inventory management',
+        'Supplier management',
+        'Batch inventory updates',
         'Video backgrounds',
         'Advanced animations',
         'SEO optimization tools',
         'Email marketing integration',
         'Multi-currency support',
-        'Inventory management',
         'Automated backups',
         'Priority 24/7 support',
         'Dedicated account manager',

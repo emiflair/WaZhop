@@ -32,6 +32,9 @@ const Products = lazy(() => import('./pages/dashboard/Products'))
 const Subscription = lazy(() => import('./pages/dashboard/Subscription'))
 const Analytics = lazy(() => import('./pages/dashboard/Analytics'))
 const ManageShops = lazy(() => import('./pages/dashboard/ManageShops'))
+const ReferralProgram = lazy(() => import('./pages/dashboard/ReferralProgram'))
+const InventoryManagement = lazy(() => import('./pages/dashboard/InventoryManagement'))
+const Reviews = lazy(() => import('./pages/dashboard/Reviews'))
 
 // Lazy load demo pages
 const ErrorHandlingExamples = lazy(() => import('./pages/ErrorHandlingExamples'))
@@ -71,8 +74,11 @@ function App() {
                 <Route path="/dashboard/shops" element={<ProtectedRoute><ManageShops /></ProtectedRoute>} />
                 <Route path="/dashboard/shop" element={<ProtectedRoute><ShopSettings /></ProtectedRoute>} />
                 <Route path="/dashboard/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+                <Route path="/dashboard/inventory" element={<ProtectedRoute><InventoryManagement /></ProtectedRoute>} />
                 <Route path="/dashboard/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
                 <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/dashboard/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
+                <Route path="/dashboard/referrals" element={<ProtectedRoute><ReferralProgram /></ProtectedRoute>} />
                 
                 {/* Demo Pages (Development) */}
                 <Route path="/demo/error-handling" element={<ProtectedRoute><ErrorHandlingExamples /></ProtectedRoute>} />

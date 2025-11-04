@@ -31,10 +31,26 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
+    // Don't process 304 responses - they have no data
+    if (response.status === 304) {
+      console.warn('⚠️ Received 304 response, no data:', response.config.url);
+      return response;
+    }
+    
+    // Check if response.data exists
+    if (!response.data) {
+      console.warn('⚠️ No response.data:', response.config.url);
+      return response;
+    }
+    
     // Handle standard API response format { success: true, data: {...} }
-    if (response.data && response.data.success) {
+    if (response.data.success === true) {
       // Auth endpoints return { success, token, user } - return full response.data
       if (response.data.token && response.data.user) {
+        return response.data;
+      }
+      // Upgrade/downgrade endpoints return { success, user, data } - return full response.data
+      if (response.data.user && response.data.data) {
         return response.data;
       }
       // Other endpoints return { success, data } - extract just the data
@@ -42,8 +58,9 @@ api.interceptors.response.use(
         return response.data.data;
       }
     }
-    // Fallback for non-standard responses
-    return response.data || response;
+    
+    // For non-standard responses (direct data objects), return as-is
+    return response.data;
   },
   (error) => {
     // Log all API errors

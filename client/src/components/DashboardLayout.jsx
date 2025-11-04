@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiHome, FiShoppingBag, FiSettings, FiUser, FiCreditCard, FiLogOut, FiMenu, FiX, FiBarChart2 } from 'react-icons/fi';
+import { FiHome, FiShoppingBag, FiSettings, FiUser, FiCreditCard, FiLogOut, FiMenu, FiX, FiBarChart2, FiGift, FiPackage, FiStar } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -15,9 +15,12 @@ const DashboardLayout = ({ children }) => {
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
     { name: 'My Shops', href: '/dashboard/shops', icon: FaStore },
     { name: 'Products', href: '/dashboard/products', icon: FiShoppingBag },
+    { name: 'Inventory', href: '/dashboard/inventory', icon: FiPackage },
+    { name: 'Reviews', href: '/dashboard/reviews', icon: FiStar },
     { name: 'Shop Settings', href: '/dashboard/shop', icon: FiSettings },
     { name: 'Analytics', href: '/dashboard/analytics', icon: FiBarChart2 },
     { name: 'Profile', href: '/dashboard/profile', icon: FiUser },
+    { name: 'Referrals', href: '/dashboard/referrals', icon: FiGift },
     { name: 'Subscription', href: '/dashboard/subscription', icon: FiCreditCard },
   ];
 

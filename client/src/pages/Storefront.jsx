@@ -104,33 +104,30 @@ const Storefront = () => {
   const handleWhatsAppClick = async (product) => {
     try {
       // Check if WhatsApp number is available
-      if (!shop?.owner?.whatsapp) {
-        console.error('WhatsApp number not available:', shop);
+      const rawNumber = shop?.owner?.whatsapp || '';
+      const whatsappNumber = String(rawNumber).replace(/\D/g, '');
+      if (!whatsappNumber) {
+        console.error('Invalid or missing WhatsApp number:', rawNumber);
         toast.error('WhatsApp contact not available for this shop');
         return;
       }
 
-      await productAPI.trackClick(product._id);
-      
-      // Get currency and format price
+      // Prepare message first (match cart-style formatting)
       const currency = shop.paymentSettings?.currency || 'NGN';
       const formattedPrice = formatPrice(product.price, currency);
-      
-      const message = encodeURIComponent(
-        `Hello! I'm interested in your product: ${product.name}\nPrice: ${formattedPrice}`
-      );
-      const whatsappNumber = shop.owner.whatsapp.replace(/\D/g, '');
-      
-      if (!whatsappNumber) {
-        console.error('Invalid WhatsApp number:', shop.owner.whatsapp);
-        toast.error('Invalid WhatsApp contact for this shop');
-        return;
-      }
+      const message = `Hello! I'd like to order the following item from ${shop.shopName}:\n\n1. ${product.name} - Qty: 1 - ${formattedPrice}\n\nTotal: ${formattedPrice}`;
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-      window.open(
-        `https://wa.me/${whatsappNumber}?text=${message}`,
-        '_blank'
-      );
+      // IMPORTANT: Open WhatsApp immediately on user gesture to avoid popup blockers
+      window.open(url, '_blank');
+
+      // Fire-and-forget click tracking (do not await to keep popup allowed)
+      try {
+        productAPI.trackClick(product._id);
+      } catch (e) {
+        // Non-blocking
+        console.warn('trackClick failed (non-blocking):', e);
+      }
     } catch (err) {
       console.error('Error with WhatsApp click:', err);
       toast.error('Failed to open WhatsApp. Please try again.');
@@ -200,9 +197,227 @@ const Storefront = () => {
 
   const primaryColor = shop.theme?.primaryColor || '#000000';
   const accentColor = shop.theme?.accentColor || '#FFD700';
+  const layout = shop.theme?.layout || 'grid';
+  // Enforce font selection from theme
+  const fontStacks = {
+    inter: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    roboto: "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
+    poppins: "'Poppins', 'Inter', system-ui, sans-serif",
+    montserrat: "'Montserrat', 'Inter', system-ui, sans-serif",
+  };
+  const fontFamily = shop.theme?.font ? fontStacks[shop.theme.font] : undefined;
+
+  const renderGridCard = (product) => {
+    const discountPercent = product.comparePrice && product.comparePrice > product.price
+      ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+      : 0;
+    const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
+    const isLowStock = !isOutOfStock && product.stock !== null && product.stock <= (product.lowStockThreshold || 5);
+
+    return (
+      <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">
+        <div 
+          className="relative overflow-hidden cursor-pointer touch-manipulation active:opacity-90"
+          onClick={() => setSelectedProduct(product)}
+          role="button"
+          tabIndex={0}
+          aria-label={`View details for ${product.name}`}
+        >
+          {product.images && product.images.length > 0 ? (
+            <img
+              src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
+              alt={product.name}
+              className="w-full h-36 sm:h-48 md:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-36 sm:h-48 md:h-56 lg:h-64 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <FiPackage size={32} className="sm:w-10 sm:h-10 md:w-12 md:h-12 text-gray-300 dark:text-gray-600" />
+            </div>
+          )}
+          <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1">
+            {discountPercent > 0 && (
+              <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md">
+                -{discountPercent}%
+              </span>
+            )}
+            {isOutOfStock && (
+              <span className="bg-gray-800 text-white text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md">
+                Out of Stock
+              </span>
+            )}
+            {isLowStock && (
+              <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md">
+                Only {product.stock} left
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="p-2 sm:p-3 md:p-4">
+          <h3 
+            className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg mb-1 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] cursor-pointer hover:text-blue-600 active:text-blue-700 dark:text-white dark:hover:text-blue-400 dark:active:text-blue-500 touch-manipulation"
+            onClick={() => setSelectedProduct(product)}
+            role="button"
+            tabIndex={0}
+          >
+            {product.name}
+          </h3>
+
+          {product.numReviews > 0 ? (
+            <div className="mb-1.5 sm:mb-2">
+              <StarRating 
+                rating={product.averageRating || 0} 
+                count={product.numReviews} 
+                size={12}
+                showCount={true}
+              />
+            </div>
+          ) : (
+            <div className="mb-1.5 sm:mb-2 h-4 sm:h-5">
+              <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">No reviews yet</span>
+            </div>
+          )}
+
+          <p className="text-gray-600 dark:text-gray-300 text-[10px] sm:text-xs md:text-sm mb-2 sm:mb-3 line-clamp-2 min-h-[1.5rem] sm:min-h-[2rem] md:min-h-[2.5rem] hidden sm:block">{product.description}</p>
+
+          <div className="mb-2 sm:mb-3 md:mb-4">
+            <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+              <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold" style={{ color: primaryColor }}>
+                {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
+              </p>
+              {product.comparePrice && product.comparePrice > product.price && (
+                <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 line-through">
+                  {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
+                </p>
+              )}
+            </div>
+            {product.variants && product.variants.length > 0 && (
+              <p className="text-[9px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+                {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5 sm:space-y-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addToCart(product, shop, 1);
+              }}
+              disabled={isOutOfStock}
+              className="btn btn-secondary w-full flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] sm:text-sm md:text-base py-1.5 sm:py-2 touch-manipulation"
+              aria-label={`Add ${product.name} to cart`}
+            >
+              <FiShoppingCart size={14} className="sm:w-4 sm:h-4" />
+              <span className="truncate hidden sm:inline">Add to Cart</span>
+              <span className="truncate sm:hidden">Add</span>
+            </button>
+            {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWhatsAppClick(product);
+              }}
+              disabled={isOutOfStock}
+              className="btn btn-whatsapp w-full flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white text-[10px] sm:text-sm md:text-base py-1.5 sm:py-2 touch-manipulation"
+              aria-label={isOutOfStock ? 'Out of stock' : `Order ${product.name} on WhatsApp`}
+            >
+              <IoLogoWhatsapp size={14} className="sm:w-[18px] sm:h-[18px] md:w-5 md:h-5 flex-shrink-0" />
+              <span className="truncate hidden sm:inline">{isOutOfStock ? 'Out of Stock' : 'Order on WhatsApp'}</span>
+              <span className="truncate sm:hidden">{isOutOfStock ? 'Out' : 'WhatsApp'}</span>
+            </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderListItem = (product) => {
+    const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
+    return (
+      <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 flex gap-3 sm:gap-4">
+        <div
+          className="w-28 sm:w-36 h-24 sm:h-28 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+          onClick={() => setSelectedProduct(product)}
+        >
+          {product.images?.length ? (
+            <img
+              src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <FiPackage className="text-gray-300 dark:text-gray-600" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg dark:text-white truncate">{product.name}</h3>
+            <p className="text-sm sm:text-lg md:text-xl font-bold" style={{ color: primaryColor }}>
+              {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
+            </p>
+          </div>
+          {product.numReviews > 0 && (
+            <div className="mt-1">
+              <StarRating rating={product.averageRating || 0} count={product.numReviews} size={12} showCount />
+            </div>
+          )}
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{product.description}</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => addToCart(product, shop, 1)}
+              disabled={isOutOfStock}
+              className="btn btn-secondary text-xs sm:text-sm"
+            >
+              Add to Cart
+            </button>
+            {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
+            <button
+              onClick={() => handleWhatsAppClick(product)}
+              disabled={isOutOfStock}
+              className="btn btn-whatsapp text-xs sm:text-sm"
+            >
+              WhatsApp
+            </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMinimalCard = (product) => (
+    <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="cursor-pointer" onClick={() => setSelectedProduct(product)}>
+        {product.images?.length ? (
+          <img
+            src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
+            alt={product.name}
+            className="w-full h-40 sm:h-44 object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-40 sm:h-44 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <FiPackage className="text-gray-300 dark:text-gray-600" />
+          </div>
+        )}
+      </div>
+      <div className="p-2 sm:p-3">
+        <p className="font-medium text-xs sm:text-sm dark:text-white line-clamp-2">{product.name}</p>
+        <p className="text-sm sm:text-base font-semibold mt-1" style={{ color: primaryColor }}>
+          {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-safe-bottom">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-safe-bottom" style={fontFamily ? { fontFamily } : undefined}>
       {/* Header/Banner - Mobile Optimized */}
       <div
         className="relative h-40 sm:h-48 md:h-64"
@@ -438,142 +653,34 @@ const Storefront = () => {
             <p className="text-gray-600 dark:text-gray-400">Check back soon for new items!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-12">
-            {filteredProducts.map((product) => {
-              // Calculate discount percentage
-              const discountPercent = product.comparePrice && product.comparePrice > product.price
-                ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
-                : 0;
-
-              // Check stock status
-              const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
-              const isLowStock = !isOutOfStock && product.stock !== null && product.stock <= (product.lowStockThreshold || 5);
-
-              return (
-                <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">
-                  {/* Product Image - Mobile Optimized */}
-                  <div 
-                    className="relative overflow-hidden cursor-pointer touch-manipulation active:opacity-90"
-                    onClick={() => setSelectedProduct(product)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`View details for ${product.name}`}
-                  >
-                    {product.images && product.images.length > 0 ? (
-                      <img
-                        src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
-                        alt={product.name}
-                        className="w-full h-48 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-48 sm:h-64 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                        <FiPackage size={40} className="sm:w-12 sm:h-12 text-gray-300 dark:text-gray-600" />
-                      </div>
-                    )}
-                    
-                    {/* Badges - Mobile Optimized */}
-                    <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-                      {discountPercent > 0 && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
-                          -{discountPercent}%
-                        </span>
-                      )}
-                      {isOutOfStock && (
-                        <span className="bg-gray-800 text-white text-xs font-semibold px-2 py-1 rounded shadow-md">
-                          Out of Stock
-                        </span>
-                      )}
-                      {isLowStock && (
-                        <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded shadow-md">
-                          Only {product.stock} left
-                        </span>
-                      )}
+          <>
+            {layout === 'list' && (
+              <div className="space-y-3 sm:space-y-4 md:space-y-6 pb-6 sm:pb-12">
+                {filteredProducts.map(renderListItem)}
+              </div>
+            )}
+            {layout === 'minimal' && (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 pb-6 sm:pb-12">
+                {filteredProducts.map(renderMinimalCard)}
+              </div>
+            )}
+            {layout === 'masonry' && (
+              <div className="pb-6 sm:pb-12">
+                <div className="columns-2 md:columns-3 lg:columns-4 gap-3 sm:gap-4">
+                  {filteredProducts.map((p) => (
+                    <div key={p._id} style={{ breakInside: 'avoid' }} className="mb-3 sm:mb-4">
+                      {renderMinimalCard(p)}
                     </div>
-                  </div>
-
-                  {/* Product Info - Mobile Optimized */}
-                  <div className="p-3 sm:p-4">
-                    <h3 
-                      className="font-semibold text-base sm:text-lg mb-1 line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem] cursor-pointer hover:text-blue-600 active:text-blue-700 dark:text-white dark:hover:text-blue-400 dark:active:text-blue-500 touch-manipulation"
-                      onClick={() => setSelectedProduct(product)}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      {product.name}
-                    </h3>
-                    
-                    {/* Rating - Mobile Optimized */}
-                    {product.numReviews > 0 ? (
-                      <div className="mb-2">
-                        <StarRating 
-                          rating={product.averageRating || 0} 
-                          count={product.numReviews} 
-                          size={14}
-                          showCount={true}
-                        />
-                      </div>
-                    ) : (
-                      <div className="mb-2 h-5">
-                        <span className="text-xs text-gray-400 dark:text-gray-500">No reviews yet</span>
-                      </div>
-                    )}
-
-                    <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">{product.description}</p>
-                    
-                    {/* Price - Mobile Optimized */}
-                    <div className="mb-3 sm:mb-4">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <p className="text-xl sm:text-2xl font-bold" style={{ color: primaryColor }}>
-                          {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
-                        </p>
-                        {product.comparePrice && product.comparePrice > product.price && (
-                          <p className="text-xs sm:text-sm text-gray-400 line-through">
-                            {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Variants indicator */}
-                      {product.variants && product.variants.length > 0 && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {product.variants.length} variant{product.variants.length > 1 ? 's' : ''} available
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Action Buttons - Mobile Optimized */}
-                    <div className="space-y-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product, shop, 1);
-                        }}
-                        disabled={isOutOfStock}
-                        className="btn btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base touch-manipulation"
-                        aria-label={`Add ${product.name} to cart`}
-                      >
-                        <FiShoppingCart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                        <span className="truncate">Add to Cart</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleWhatsAppClick(product);
-                        }}
-                        disabled={isOutOfStock}
-                        className="btn btn-whatsapp w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white text-sm sm:text-base touch-manipulation"
-                        aria-label={isOutOfStock ? 'Out of stock' : `Order ${product.name} on WhatsApp`}
-                      >
-                        <IoLogoWhatsapp size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
-                        <span className="truncate">{isOutOfStock ? 'Out of Stock' : 'Order on WhatsApp'}</span>
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )}
+            {(layout === 'grid' || !['list','minimal','masonry'].includes(layout)) && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 pb-6 sm:pb-12">
+                {filteredProducts.map(renderGridCard)}
+              </div>
+            )}
+          </>
         )}
       </div>
 

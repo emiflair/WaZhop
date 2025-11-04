@@ -11,16 +11,16 @@ const Home = () => {
       name: 'Free',
       price: '₦0',
       period: 'forever',
-      features: ['1 shop', '5 products', 'WhatsApp integration', 'Basic customization']
+      features: ['1 shop', '4 products', 'WhatsApp integration', 'Basic customization']
     },
     {
       name: 'Pro',
-      priceMonthly: '₦6,000',
-      priceYearly: '₦50,400',
+      priceMonthly: '₦9,000',
+      priceYearly: '₦75,600',
       period: 'month',
       popular: true,
       savings: '30%',
-      features: ['Up to 2 shops', '100 products', 'Premium themes', 'Advanced analytics', 'Priority support']
+      features: ['Up to 2 shops', '100 products', 'Inventory management', 'Premium themes', 'Advanced analytics', 'Priority support']
     },
     {
       name: 'Premium',

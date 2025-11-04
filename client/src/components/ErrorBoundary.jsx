@@ -65,9 +65,9 @@ class ErrorBoundary extends Component {
               We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
             </p>
 
-            {import.meta.env.DEV && this.state.error && (
+            {this.state.error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-sm font-mono text-red-800 mb-2">
+                <p className="text-sm font-mono text-red-800 mb-2 break-words">
                   <strong>Error:</strong> {this.state.error.toString()}
                 </p>
                 {this.state.errorInfo && (
@@ -79,6 +79,11 @@ class ErrorBoundary extends Component {
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </details>
+                )}
+                {!import.meta.env.DEV && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    Tip: take a screenshot of the error section above and share it so we can fix it fast.
+                  </p>
                 )}
               </div>
             )}

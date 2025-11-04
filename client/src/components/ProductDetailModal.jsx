@@ -28,8 +28,13 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
     comment: ''
   });
 
-  const primaryColor = shop.theme?.primaryColor || '#000000';
-  const images = product.images || [];
+  const primaryColor = shop?.theme?.primaryColor || '#000000';
+  const images = Array.isArray(product?.images) ? product.images : [];
+
+  // Reset selected image whenever the product changes to avoid index issues
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [product?._id]);
   
   // Calculate stock status
   const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
@@ -38,14 +43,21 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
   useEffect(() => {
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reviewPage]);
+  }, [reviewPage, product?._id]);
 
   const fetchReviews = async () => {
     try {
       setLoadingReviews(true);
+      if (!product?._id) return;
       const data = await reviewAPI.getProductReviews(product._id, { page: reviewPage, limit: 5 });
-      setReviews(data.reviews);
-      setTotalReviews(data.totalReviews);
+      // API interceptor returns just the array (data) for reviews endpoint.
+      // Fallback if a future change returns an object.
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.reviews) ? data.reviews : []);
+      const total = Array.isArray(data)
+        ? (typeof data.total === 'number' ? data.total : list.length)
+        : (typeof data?.total === 'number' ? data.total : (typeof data?.totalReviews === 'number' ? data.totalReviews : list.length));
+      setReviews(list);
+      setTotalReviews(total);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
@@ -64,8 +76,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
     try {
       setSubmittingReview(true);
       await reviewAPI.createReview({
-        product: product._id,
-        shop: shop._id,
+        productId: product._id,
         ...reviewForm
       });
       
@@ -91,18 +102,19 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
   };
 
   const handleShareToWhatsApp = () => {
-    const currency = shop.paymentSettings?.currency || 'NGN';
-    const formattedPrice = formatPrice(product.price, currency);
+    const currency = shop?.paymentSettings?.currency || 'NGN';
+    const formattedPrice = formatPrice(product?.price, currency);
     const productUrl = window.location.href.split('?')[0]; // Get clean URL without query params
-    
+    const desc = typeof product?.description === 'string' ? product.description : '';
+
     const shareMessage = encodeURIComponent(
-      `Check out this product from ${shop.shopName}!\n\n` +
-      `${product.name}\n` +
+      `Check out this product from ${shop?.shopName || 'this shop'}!\n\n` +
+      `${product?.name || ''}\n` +
       `Price: ${formattedPrice}\n\n` +
-      `${product.description.substring(0, 150)}${product.description.length > 150 ? '...' : ''}\n\n` +
+      `${desc.substring(0, 150)}${desc.length > 150 ? '...' : ''}\n\n` +
       `View here: ${productUrl}`
     );
-    
+
     window.open(`https://wa.me/?text=${shareMessage}`, '_blank');
     toast.success('Opening WhatsApp to share product');
   };
@@ -116,8 +128,8 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-6xl w-full my-8 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-lg max-w-6xl w-full my-8 relative max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -134,7 +146,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               {images.length > 0 ? (
                 <>
                   <img
-                    src={images[selectedImage].url}
+                    src={(images[selectedImage] && (images[selectedImage].url || images[selectedImage].secure_url)) || ''}
                     alt={product.name}
                     className="w-full h-full object-contain"
                   />
@@ -173,7 +185,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                       selectedImage === idx ? 'border-blue-500' : 'border-gray-200'
                     }`}
                   >
-                    <img src={img.url} alt="" className="w-full h-20 object-cover" />
+                    <img src={(img && (img.url || img.secure_url)) || ''} alt="" className="w-full h-20 object-cover" />
                   </button>
                 ))}
               </div>
@@ -200,12 +212,12 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
             <div className="mb-6">
               <div className="flex items-baseline gap-3 mb-2">
                 <p className="text-4xl font-bold" style={{ color: primaryColor }}>
-                  {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
+                  {formatPrice(product.price, shop?.paymentSettings?.currency || 'NGN')}
                 </p>
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
                     <p className="text-xl text-gray-400 line-through">
-                      {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
+                      {formatPrice(product.comparePrice, shop?.paymentSettings?.currency || 'NGN')}
                     </p>
                     <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
                       -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
@@ -237,18 +249,18 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
             </div>
 
             {/* Variants */}
-            {product.variants && product.variants.length > 0 && (
+            {Array.isArray(product.variants) && product.variants.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-3">Available Options</h3>
                 {product.variants.map((variant, idx) => (
                   <div key={idx} className="mb-3">
                     <p className="font-medium text-sm text-gray-700 mb-2">{variant.name}:</p>
                     <div className="flex flex-wrap gap-2">
-                      {variant.options.map((option, optIdx) => (
+                      {Array.isArray(variant.options) && variant.options.map((option, optIdx) => (
                         <div key={optIdx} className="border border-gray-300 rounded px-3 py-2 text-sm">
                           <span className="font-medium">{option.value}</span>
                           {option.price && option.price !== product.price && (
-                            <span className="ml-2 text-gray-600">{formatPrice(option.price, shop.paymentSettings?.currency || 'NGN')}</span>
+                            <span className="ml-2 text-gray-600">{formatPrice(option.price, shop?.paymentSettings?.currency || 'NGN')}</span>
                           )}
                           {option.stock !== undefined && option.stock === 0 && (
                             <span className="ml-2 text-red-500 text-xs">(Out of stock)</span>
@@ -262,7 +274,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
             )}
 
             {/* Tags */}
-            {product.tags && product.tags.length > 0 && (
+            {Array.isArray(product.tags) && product.tags.length > 0 && (
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
                   {product.tags.map((tag, idx) => (
@@ -289,10 +301,10 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               </button>
               
               {/* Payment Button - Show if payment provider is configured */}
-              {shop?.paymentSettings?.provider && shop?.paymentSettings[shop.paymentSettings.provider]?.paymentLink && (
+              {shop?.paymentSettings?.provider && shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink && (
                 <button
                   onClick={() => {
-                    const paymentLink = shop.paymentSettings[shop.paymentSettings.provider]?.paymentLink;
+                    const paymentLink = shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink;
                     if (paymentLink) {
                       // Append product details to payment link
                       const urlWithParams = new URL(paymentLink);
@@ -349,12 +361,12 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
 
           {/* Review Form */}
           {showReviewForm && (
-            <form onSubmit={handleSubmitReview} className="bg-gray-50 rounded-lg p-6 mb-6">
+            <form onSubmit={handleSubmitReview} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
               <h4 className="text-lg font-semibold mb-4">Write Your Review</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     Your Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -362,26 +374,26 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                     required
                     value={reviewForm.customerName}
                     onChange={(e) => setReviewForm({ ...reviewForm, customerName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:border-gray-600"
                     placeholder="John Doe"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     Email (optional)
                   </label>
                   <input
                     type="email"
                     value={reviewForm.customerEmail}
                     onChange={(e) => setReviewForm({ ...reviewForm, customerEmail: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:border-gray-600"
                     placeholder="john@example.com"
                   />
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Rating <span className="text-red-500">*</span>
                 </label>
                 <StarRating
@@ -394,7 +406,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Review <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -403,11 +415,11 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                   maxLength={1000}
                   value={reviewForm.comment}
                   onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:border-gray-600"
                   rows="4"
                   placeholder="Share your experience with this product... (minimum 10 characters)"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {reviewForm.comment.length}/1000 characters
                 </p>
               </div>
@@ -427,13 +439,13 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
             </div>
-          ) : reviews.length === 0 ? (
+          ) : !Array.isArray(reviews) || reviews.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No reviews yet. Be the first to review this product!</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {reviews.map((review) => (
+              {Array.isArray(reviews) && reviews.map((review) => (
                 <div key={review._id} className="border-b border-gray-200 pb-6 last:border-b-0">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -462,7 +474,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
           )}
 
           {/* Pagination */}
-          {totalReviews > 5 && (
+          {typeof totalReviews === 'number' && totalReviews > 5 && (
             <div className="flex justify-center gap-2 mt-6">
               <button
                 onClick={() => setReviewPage(p => Math.max(1, p - 1))}
@@ -472,11 +484,11 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                 Previous
               </button>
               <span className="px-4 py-2">
-                Page {reviewPage} of {Math.ceil(totalReviews / 5)}
+                Page {reviewPage} of {Math.ceil((typeof totalReviews === 'number' ? totalReviews : 0) / 5)}
               </span>
               <button
                 onClick={() => setReviewPage(p => p + 1)}
-                disabled={reviewPage >= Math.ceil(totalReviews / 5)}
+                disabled={reviewPage >= Math.ceil((typeof totalReviews === 'number' ? totalReviews : 0) / 5)}
                 className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
               >
                 Next

@@ -251,3 +251,26 @@ exports.checkPremiumTemplateAccess = async (req, res, next) => {
     });
   }
 };
+
+// Middleware to check inventory management access
+exports.checkInventoryAccess = async (req, res, next) => {
+  try {
+    const planLimits = req.user.getPlanLimits();
+
+    if (!planLimits.inventoryManagement) {
+      return res.status(403).json({
+        success: false,
+        message: `Inventory Management is only available on Pro and Premium plans. Upgrade to track stock levels, get low stock alerts, and automate inventory.`,
+        upgrade: true,
+        requiredPlan: 'pro'
+      });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error checking inventory access'
+    });
+  }
+};

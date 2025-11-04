@@ -115,7 +115,7 @@ const ShopSettings = () => {
         primaryColor: data.theme?.primaryColor || '#10b981',
         accentColor: data.theme?.accentColor || '#3b82f6',
         layout: data.theme?.layout || 'grid',
-        fontFamily: data.theme?.fontFamily || 'inter'
+        fontFamily: data.theme?.font || 'inter'
       });
 
       // Populate social links
@@ -338,11 +338,8 @@ const ShopSettings = () => {
 
     try {
       setUploadingLogo(true);
-      const formData = new FormData();
-      formData.append('logo', logoFile);
-      
-      const data = await shopAPI.uploadLogo(formData);
-      setShop(prev => ({ ...prev, logo: data.logo }));
+      const data = await shopAPI.uploadLogo(logoFile);
+      setShop(prev => ({ ...prev, logo: data }));
       setLogoFile(null);
       toast.success('Logo uploaded successfully');
     } catch (error) {
@@ -365,11 +362,8 @@ const ShopSettings = () => {
 
     try {
       setUploadingBanner(true);
-      const formData = new FormData();
-      formData.append('banner', bannerFile);
-      
-      const data = await shopAPI.uploadBanner(formData);
-      setShop(prev => ({ ...prev, banner: data.banner }));
+      const data = await shopAPI.uploadBanner(bannerFile);
+      setShop(prev => ({ ...prev, banner: data }));
       setBannerFile(null);
       toast.success('Banner uploaded successfully');
     } catch (error) {
@@ -404,6 +398,24 @@ const ShopSettings = () => {
     } catch (error) {
       console.error('Error applying theme:', error);
       toast.error(error.response?.data?.message || 'Failed to apply theme');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Persist layout immediately for Premium users when a layout is selected
+  const handleLayoutSelect = async (layoutValue) => {
+    setTheme(prev => ({ ...prev, layout: layoutValue }));
+    if (user?.plan !== 'premium') return; // Pro users change layout via preset themes
+
+    try {
+      setSaving(true);
+      await shopAPI.updateTheme({ layout: layoutValue }, shopId);
+      toast.success('Layout updated');
+      await fetchShop();
+    } catch (error) {
+      console.error('Error updating layout:', error);
+      toast.error(error.response?.data?.message || 'Failed to update layout');
     } finally {
       setSaving(false);
     }
@@ -451,6 +463,21 @@ const ShopSettings = () => {
       };
       await shopAPI.updateShop(shopData, shopId);
 
+      // Persist theme (Premium customization)
+      if (user?.plan === 'premium') {
+        try {
+          await shopAPI.updateTheme({
+            primaryColor: theme.primaryColor,
+            accentColor: theme.accentColor,
+            layout: theme.layout,
+            font: theme.fontFamily
+          }, shopId);
+        } catch (err) {
+          console.error('Error updating theme:', err);
+          toast.error(err.response?.data?.message || 'Failed to update theme');
+        }
+      }
+
       // Upload images if changed
       if (logoFile) {
         await uploadLogo();
@@ -490,7 +517,6 @@ const ShopSettings = () => {
     { value: 'inter', label: 'Inter', class: 'font-sans' },
     { value: 'roboto', label: 'Roboto', class: 'font-sans' },
     { value: 'poppins', label: 'Poppins', class: 'font-sans' },
-    { value: 'playfair', label: 'Playfair Display', class: 'font-serif' },
     { value: 'montserrat', label: 'Montserrat', class: 'font-sans' }
   ];
 
@@ -1127,8 +1153,8 @@ const ShopSettings = () => {
               </div>
             )}
 
-            {/* Layout, Font, Preview - Available for Pro and Premium */}
-            {(user?.plan === 'pro' || user?.plan === 'premium') && (
+            {/* Layout, Font, Preview - Premium Only (Pro uses preset themes) */}
+            {user?.plan === 'premium' && (
               <div className="space-y-6 mt-6">
               {/* Layout */}
               <div>
@@ -1140,7 +1166,7 @@ const ShopSettings = () => {
                     <button
                       key={layout.value}
                       type="button"
-                      onClick={() => handleThemeChange('layout', layout.value)}
+                      onClick={() => handleLayoutSelect(layout.value)}
                       className={`p-4 border-2 rounded-lg text-left transition-all ${
                         theme.layout === layout.value
                           ? 'border-green-500 bg-green-50'

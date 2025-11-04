@@ -74,6 +74,14 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 5
   },
+  trackInventory: {
+    type: Boolean,
+    default: false // Only enabled for Pro/Premium users
+  },
+  lastRestockDate: {
+    type: Date,
+    default: null
+  },
   sku: {
     type: String,
     trim: true,

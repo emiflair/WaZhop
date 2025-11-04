@@ -13,6 +13,8 @@ exports.getProductReviews = asyncHandler(async (req, res) => {
     product: productId,
     isApproved: true 
   })
+    // Do not expose customerEmail publicly
+    .select('-customerEmail -__v')
     .sort(sort)
     .limit(limit * 1)
     .skip((page - 1) * limit)

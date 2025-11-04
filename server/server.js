@@ -12,6 +12,7 @@ const shopRoutes = require('./routes/shop');
 const productRoutes = require('./routes/product');
 const userRoutes = require('./routes/user');
 const reviewRoutes = require('./routes/review');
+const referralRoutes = require('./routes/referral');
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use('/api/shops', shopRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/referrals', referralRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

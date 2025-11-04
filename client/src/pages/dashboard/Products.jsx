@@ -16,6 +16,7 @@ import { FaCrown } from 'react-icons/fa';
 import DashboardLayout from '../../components/DashboardLayout';
 import { TouchButton } from '../../components/mobile';
 import { useNavigate } from 'react-router-dom';
+import ProductPreviewModal from '../../components/ProductPreviewModal';
 
 const Products = () => {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ const Products = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [previewProduct, setPreviewProduct] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -112,8 +114,8 @@ const Products = () => {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + images.length > 5) {
-      toast.error('Maximum 5 images allowed per product');
+    if (files.length + images.length > 10) {
+      toast.error('Maximum 10 images allowed per product');
       return;
     }
 
@@ -132,6 +134,10 @@ const Products = () => {
   const removeImage = (index) => {
     setImages(images.filter((_, i) => i !== index));
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
+
+  const openPreview = (product) => {
+    setPreviewProduct(product);
   };
 
   const handleSubmit = async (e) => {
@@ -157,6 +163,11 @@ const Products = () => {
         
         toast.success('Product updated successfully!');
       } else {
+        // Require at least 1 image for new products
+        if (images.length === 0) {
+          toast.error('Please add at least 1 product image');
+          return;
+        }
         // Create new product
         await productAPI.createProduct(productData, images);
         toast.success('Product created successfully!');
@@ -224,6 +235,17 @@ const Products = () => {
       fetchProducts();
     } catch (error) {
       toast.error('Failed to update status');
+      console.error(error);
+    }
+  };
+
+  const toggleInStock = async (productId, currentInStock) => {
+    try {
+      await productAPI.updateProduct(productId, { inStock: !currentInStock });
+      toast.success('Stock status updated');
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to update stock');
       console.error(error);
     }
   };
@@ -435,11 +457,12 @@ const Products = () => {
             <div className="block lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
               {filteredProducts.map((product) => (
                 <div key={product._id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="flex items-start gap-3 mb-3" onClick={() => openPreview(product)}>
                     <input
                       type="checkbox"
                       checked={selectedProducts.includes(product._id)}
                       onChange={() => toggleSelectProduct(product._id)}
+                      onClick={(e) => e.stopPropagation()}
                       className="rounded mt-1"
                     />
                     {product.images && product.images.length > 0 ? (
@@ -476,7 +499,7 @@ const Products = () => {
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <button
-                          onClick={() => toggleProductStatus(product._id, product.isActive)}
+                          onClick={(e) => { e.stopPropagation(); toggleInStock(product._id, product.inStock); }}
                           className={`text-xs px-2 py-1 rounded-full ${
                             product.inStock
                               ? 'bg-green-100 text-green-700'
@@ -486,7 +509,7 @@ const Products = () => {
                           {product.inStock ? 'In Stock' : 'Out of Stock'}
                         </button>
                         <button
-                          onClick={() => toggleProductStatus(product._id, product.isActive)}
+                          onClick={(e) => { e.stopPropagation(); toggleProductStatus(product._id, product.isActive); }}
                           className={`text-xs px-2 py-1 rounded-full ${
                             product.isActive
                               ? 'bg-blue-100 text-blue-700'
@@ -568,7 +591,7 @@ const Products = () => {
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => openPreview(product)}>
                           {product.images && product.images.length > 0 ? (
                             <img
                               src={
@@ -608,7 +631,7 @@ const Products = () => {
                       </td>
                       <td className="px-4 py-3">
                         <button
-                          onClick={() => toggleProductStatus(product._id, product.isActive)}
+                          onClick={() => toggleInStock(product._id, product.inStock)}
                           className={`text-sm px-3 py-1 rounded-full ${
                             product.inStock
                               ? 'bg-green-100 text-green-700'
@@ -793,7 +816,7 @@ const Products = () => {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="label text-sm sm:text-base">Product Images (Max 5)</label>
+                  <label className="label text-sm sm:text-base">Product Images (Max 10)</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center">
                     <input
                       type="file"
@@ -802,11 +825,11 @@ const Products = () => {
                       accept="image/*"
                       onChange={handleImageSelect}
                       className="hidden"
-                      disabled={images.length >= 5}
+                      disabled={images.length >= 10}
                     />
                     <label
                       htmlFor="images"
-                      className={`cursor-pointer ${images.length >= 5 ? 'opacity-50' : ''}`}
+                      className={`cursor-pointer ${images.length >= 10 ? 'opacity-50' : ''}`}
                     >
                       <FiUpload className="mx-auto text-gray-400 mb-2" size={28} />
                       <p className="text-xs sm:text-sm text-gray-600">
@@ -909,6 +932,13 @@ const Products = () => {
           </div>
         )}
       </div>
+      {/* Preview Modal */}
+      {previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+        />
+      )}
     </DashboardLayout>
   );
 };

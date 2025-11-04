@@ -75,12 +75,15 @@ npm run dev
 - ✅ Shopping cart and checkout
 - ✅ Product reviews and ratings
 - ✅ Mobile-responsive design
+- ✅ PWA support (Add to Home Screen)
+- ✅ Referral program
+- ✅ IP-based currency detection
 
 ### Subscription Tiers
 
-- **Free:** Up to 10 products, 1 shop, basic themes, WaZhop branding, WhatsApp checkout only
-- **Pro (₦2,000/month):** Up to 100 products, 2 shops, custom colors, no branding, custom subdomain
-- **Premium (₦5,000/month):** Unlimited products, 3 shops, payment integration (Flutterwave/Paystack), custom domain, advanced analytics
+- **Free:** Up to 4 products, 1 shop, basic themes, WaZhop branding, WhatsApp checkout only
+- **Pro (₦9,000/month):** Up to 100 products, 2 shops, inventory management, custom colors, no branding, custom subdomain, advanced analytics
+- **Premium (₦18,000/month):** Unlimited products, 3 shops, payment integration (Flutterwave/Paystack), custom domain, advanced analytics, priority support
 
 ## License
 

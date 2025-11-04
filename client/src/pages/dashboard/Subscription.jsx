@@ -58,7 +58,7 @@ const Subscription = () => {
       color: 'gray',
       features: [
         { text: '1 shop', included: true },
-        { text: 'Up to 5 products', included: true },
+        { text: 'Up to 4 products', included: true },
         { text: '1 default theme', included: true },
         { text: 'Basic product management', included: true },
         { text: 'Standard support', included: true },
@@ -66,24 +66,26 @@ const Subscription = () => {
         { text: 'Multiple shops', included: false },
         { text: 'Premium themes', included: false },
         { text: 'Analytics dashboard', included: false },
+        { text: 'Inventory management', included: false },
         { text: 'Custom domain', included: false },
         { text: 'Priority support', included: false }
       ],
       limits: {
-        products: 5,
+        products: 4,
         themes: 1,
         analytics: false,
         customDomain: false,
         maxShops: 1,
-        storage: 0
+        storage: 0,
+        inventoryManagement: false
       }
     },
     {
       id: 'pro',
       name: 'Pro',
-      price: 6000,
-      yearlyPrice: 50400,
-      monthlyEquivalent: 4200,
+      price: 9000,
+      yearlyPrice: 75600,
+      monthlyEquivalent: 6300,
       period: 'month',
       description: 'For growing businesses',
       icon: FaRocket,
@@ -96,6 +98,9 @@ const Subscription = () => {
         { text: '10 professional preset themes', included: true },
         { text: 'Beautiful gradient themes', included: true },
         { text: 'Smooth animations', included: true },
+        { text: 'Inventory management system', included: true },
+        { text: 'Low stock alerts', included: true },
+        { text: 'Automated stock tracking', included: true },
         { text: 'Advanced analytics dashboard', included: true },
         { text: 'Sales reports & insights', included: true },
         { text: 'Customer behavior tracking', included: true },
@@ -112,7 +117,8 @@ const Subscription = () => {
         analytics: true,
         customDomain: false,
         maxShops: 2,
-        storage: 65 * 1024 * 1024 * 1024 // 65GB in bytes
+        storage: 65 * 1024 * 1024 * 1024, // 65GB in bytes
+        inventoryManagement: true
       }
     },
     {
@@ -171,6 +177,35 @@ const Subscription = () => {
     const diffTime = expiry - now;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  };
+
+  const getBillingInfo = () => {
+    if (user?.plan === 'free' || !user?.planExpiry) {
+      return { period: 'forever', price: 0, isYearly: false };
+    }
+    
+    const daysUntilExpiry = getDaysUntilExpiry();
+    if (daysUntilExpiry === null) {
+      return { period: currentPlan.period, price: currentPlan.price, isYearly: false };
+    }
+    
+    // If days until expiry is >= 300 (approximately 10 months), assume yearly billing
+    const isYearly = daysUntilExpiry >= 300;
+    
+    if (isYearly && currentPlan.yearlyPrice) {
+      return { 
+        period: 'year', 
+        price: currentPlan.yearlyPrice,
+        monthlyEquivalent: currentPlan.monthlyEquivalent,
+        isYearly: true 
+      };
+    }
+    
+    return { 
+      period: currentPlan.period, 
+      price: currentPlan.price, 
+      isYearly: false 
+    };
   };
 
   const handleUpgradeClick = (plan) => {
@@ -256,6 +291,7 @@ const Subscription = () => {
 
   const daysUntilExpiry = getDaysUntilExpiry();
   const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 7;
+  const billingInfo = getBillingInfo();
 
   return (
     <DashboardLayout>
@@ -286,9 +322,14 @@ const Subscription = () => {
             </div>
             <div className="text-left md:text-right flex-shrink-0">
               <div className="text-3xl font-bold">
-                ₦{currentPlan.price.toLocaleString()}
+                ₦{billingInfo.price.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500">per {currentPlan.period}</div>
+              <div className="text-sm text-gray-500">per {billingInfo.period}</div>
+              {billingInfo.isYearly && billingInfo.monthlyEquivalent && (
+                <div className="text-xs text-green-600 font-medium mt-1">
+                  (₦{billingInfo.monthlyEquivalent.toLocaleString()}/month)
+                </div>
+              )}
             </div>
           </div>
 
@@ -565,49 +606,69 @@ const Subscription = () => {
 
         {/* Upgrade Confirmation Modal */}
         {showUpgradeModal && selectedPlan && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 rounded-full ${getColorClasses(selectedPlan.color).bg} flex items-center justify-center`}>
                   <selectedPlan.icon className={`text-2xl ${getColorClasses(selectedPlan.color).text}`} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     {getPlanLevel(selectedPlan.id) > getPlanLevel(user?.plan) ? 'Upgrade' : 'Change'} to {selectedPlan.name}
                   </h3>
-                  <p className="text-sm text-gray-500">Confirm your plan change</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Confirm your plan change</p>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Plan</span>
-                  <span className="font-semibold">{selectedPlan.name}</span>
+                  <span className="text-gray-600 dark:text-gray-300">Plan</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{selectedPlan.name}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Price</span>
-                  <span className="font-semibold">₦{selectedPlan.price.toLocaleString()}/{selectedPlan.period}</span>
+                  <span className="text-gray-600 dark:text-gray-300">Billing Period</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {billingPeriod === 'yearly' ? 'Yearly' : 'Monthly'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Shops</span>
-                  <span className="font-semibold">{selectedPlan.limits.maxShops} shop{selectedPlan.limits.maxShops > 1 ? 's' : ''}</span>
+                  <span className="text-gray-600 dark:text-gray-300">Price</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {billingPeriod === 'yearly' && selectedPlan.yearlyPrice ? (
+                      <>₦{selectedPlan.yearlyPrice.toLocaleString()}/year</>
+                    ) : (
+                      <>₦{selectedPlan.price.toLocaleString()}/{selectedPlan.period}</>
+                    )}
+                  </span>
+                </div>
+                {billingPeriod === 'yearly' && selectedPlan.monthlyEquivalent && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600 dark:text-gray-300">Monthly Equivalent</span>
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      ₦{selectedPlan.monthlyEquivalent.toLocaleString()}/month
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600 dark:text-gray-300">Shops</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{selectedPlan.limits.maxShops} shop{selectedPlan.limits.maxShops > 1 ? 's' : ''}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Storage</span>
-                  <span className="font-semibold">
+                  <span className="text-gray-600 dark:text-gray-300">Storage</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
                     {selectedPlan.limits.storage === 0 ? 'None' : `${(selectedPlan.limits.storage / (1024 * 1024 * 1024)).toFixed(0)} GB`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Products Limit</span>
-                  <span className="font-semibold">
+                  <span className="text-gray-600 dark:text-gray-300">Products Limit</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
                     {selectedPlan.limits.products === Infinity ? 'Unlimited' : selectedPlan.limits.products}
                   </span>
                 </div>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-yellow-800">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   <strong>Note:</strong> Payment integration is coming soon. 
                   This change is currently free for testing.
                 </p>
@@ -619,7 +680,7 @@ const Subscription = () => {
                     setShowUpgradeModal(false);
                     setSelectedPlan(null);
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-gray-700 dark:text-gray-200"
                   disabled={upgrading}
                 >
                   Cancel

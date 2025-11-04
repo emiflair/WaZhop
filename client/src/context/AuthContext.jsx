@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
 
       toast.success('Account created successfully! Welcome to WaZhop!');
-      return { success: true };
+      return { success: true, user: newUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);

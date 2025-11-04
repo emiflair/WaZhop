@@ -81,16 +81,39 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   user.planExpiry = expiryDate;
   await user.save();
 
+  console.log('✅ User plan upgraded:', { userId: user._id, email: user.email, plan, planExpiry: expiryDate });
+
   // Update all shops branding and watermark visibility
   if (plan === 'pro' || plan === 'premium') {
     await Shop.updateMany(
       { owner: user._id },
       { $set: { showBranding: false, showWatermark: false } }
     );
+    console.log('✅ Shop branding updated for paid plan');
+  }
+
+  // Notify referrer if user was referred
+  if (user.referredBy) {
+    console.log('🎯 User has referrer, calling notifyReferrerOfUpgrade:', { userId: user._id, referredBy: user.referredBy, plan });
+    const { notifyReferrerOfUpgrade } = require('./referralController');
+    await notifyReferrerOfUpgrade(user._id, plan);
+  } else {
+    console.log('ℹ️ User has no referrer (user.referredBy is null/undefined)');
   }
 
   res.status(200).json({
     success: true,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      plan: user.plan,
+      planExpiry: user.planExpiry,
+      storageUsed: user.storageUsed,
+      referralCode: user.referralCode,
+      referredBy: user.referredBy,
+      referralStats: user.referralStats
+    },
     data: {
       plan: user.plan,
       planExpiry: user.planExpiry,
@@ -229,6 +252,17 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      plan: user.plan,
+      planExpiry: user.planExpiry,
+      storageUsed: user.storageUsed,
+      referralCode: user.referralCode,
+      referredBy: user.referredBy,
+      referralStats: user.referralStats
+    },
     data: {
       plan: user.plan,
       planExpiry: user.planExpiry,
