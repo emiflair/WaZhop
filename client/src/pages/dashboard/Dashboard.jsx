@@ -67,17 +67,26 @@ const Dashboard = () => {
   // Open shop link in browser (not within PWA)
   const openShopInBrowser = (slug) => {
     const url = `${window.location.origin}/${slug}`;
+    
     // Check if running as PWA (standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                         window.navigator.standalone ||
                         document.referrer.includes('android-app://');
     
     if (isStandalone) {
-      // Open in external browser
-      window.open(url, '_blank', 'noopener,noreferrer');
+      // Create a temporary anchor element to force external browser opening
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      // Add this attribute to hint system to open in browser
+      a.setAttribute('data-external', 'true');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } else {
-      // Open in new tab
-      window.open(url, '_blank');
+      // Open in new tab for regular browser
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
