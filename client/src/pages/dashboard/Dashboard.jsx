@@ -5,11 +5,13 @@ import { shopAPI, productAPI } from '../../utils/api';
 import { FiShoppingBag, FiEye, FiMousePointer, FiExternalLink } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
 import DashboardLayout from '../../components/DashboardLayout';
+import InstallPWA from '../../components/InstallPWA';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [shop, setShop] = useState(null);
   const [shops, setShops] = useState([]);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(true);
   const [stats, setStats] = useState({
     totalProducts: 0,
     activeProducts: 0,
@@ -20,6 +22,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Check if user has dismissed the install prompt
+    const dismissed = localStorage.getItem('installPromptDismissed');
+    if (dismissed) {
+      setShowInstallPrompt(false);
+    }
   }, []);
 
   const fetchDashboardData = async () => {
@@ -51,6 +59,11 @@ const Dashboard = () => {
     }
   };
 
+  const handleDismissInstallPrompt = () => {
+    setShowInstallPrompt(false);
+    localStorage.setItem('installPromptDismissed', 'true');
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -73,6 +86,20 @@ const Dashboard = () => {
             Here&apos;s what&apos;s happening with your shop today.
           </p>
         </div>
+
+        {/* PWA Install Prompt */}
+        {showInstallPrompt && (
+          <div className="relative">
+            <InstallPWA />
+            <button
+              onClick={handleDismissInstallPrompt}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold leading-none"
+              aria-label="Dismiss install prompt"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Shop Link - Mobile Optimized */}
         {shop && (

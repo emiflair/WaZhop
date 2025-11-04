@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart, FiCreditCard } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart, FiCreditCard, FiShare2 } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { FaThumbsUp } from 'react-icons/fa';
 import StarRating from './StarRating';
@@ -88,6 +88,23 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
     } catch (error) {
       toast.error('Failed to mark review as helpful');
     }
+  };
+
+  const handleShareToWhatsApp = () => {
+    const currency = shop.paymentSettings?.currency || 'NGN';
+    const formattedPrice = formatPrice(product.price, currency);
+    const productUrl = window.location.href.split('?')[0]; // Get clean URL without query params
+    
+    const shareMessage = encodeURIComponent(
+      `Check out this product from ${shop.shopName}!\n\n` +
+      `${product.name}\n` +
+      `Price: ${formattedPrice}\n\n` +
+      `${product.description.substring(0, 150)}${product.description.length > 150 ? '...' : ''}\n\n` +
+      `View here: ${productUrl}`
+    );
+    
+    window.open(`https://wa.me/?text=${shareMessage}`, '_blank');
+    toast.success('Opening WhatsApp to share product');
   };
 
   const nextImage = () => {
@@ -305,6 +322,15 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                   {isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}
                 </button>
               )}
+              
+              {/* Share to WhatsApp Button */}
+              <button
+                onClick={handleShareToWhatsApp}
+                className="btn btn-outline w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+              >
+                <FiShare2 size={22} />
+                Share on WhatsApp
+              </button>
             </div>
           </div>
         </div>
