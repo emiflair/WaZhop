@@ -64,6 +64,23 @@ const Dashboard = () => {
     localStorage.setItem('installPromptDismissed', 'true');
   };
 
+  // Open shop link in browser (not within PWA)
+  const openShopInBrowser = (slug) => {
+    const url = `${window.location.origin}/${slug}`;
+    // Check if running as PWA (standalone mode)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone ||
+                        document.referrer.includes('android-app://');
+    
+    if (isStandalone) {
+      // Open in external browser
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      // Open in new tab
+      window.open(url, '_blank');
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -98,15 +115,13 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 w-full sm:w-auto">
                 <h3 className="text-base sm:text-lg font-semibold mb-2">Your Shop Link</h3>
-                <a
-                  href={`/${shop.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-100 hover:text-white active:text-primary-200 flex items-center gap-2 text-sm sm:text-base break-all sm:break-normal touch-manipulation"
+                <button
+                  onClick={() => openShopInBrowser(shop.slug)}
+                  className="text-primary-100 hover:text-white active:text-primary-200 flex items-center gap-2 text-sm sm:text-base break-all sm:break-normal touch-manipulation text-left"
                 >
                   <span className="truncate">wazhop.com/{shop.slug}</span>
                   <FiExternalLink className="flex-shrink-0" />
-                </a>
+                </button>
               </div>
               <button
                 onClick={() => {
@@ -156,16 +171,14 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <a
-                      href={`/${shopItem.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 active:text-blue-800 dark:active:text-blue-200 flex items-center gap-1 truncate flex-1 min-w-0 touch-manipulation min-h-[44px]"
+                    <button
+                      onClick={() => openShopInBrowser(shopItem.slug)}
+                      className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 active:text-blue-800 dark:active:text-blue-200 flex items-center gap-1 truncate flex-1 min-w-0 touch-manipulation min-h-[44px] text-left"
                       title={`wazhop.com/${shopItem.slug}`}
                     >
                       <FiExternalLink size={12} className="flex-shrink-0" />
                       <span className="truncate">{shopItem.slug}</span>
-                    </a>
+                    </button>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/${shopItem.slug}`);
@@ -246,9 +259,12 @@ const Dashboard = () => {
             <Link to="/dashboard/shop" className="btn btn-outline text-center text-sm sm:text-base touch-manipulation">
               Customize Shop
             </Link>
-            <Link to={`/${shop?.slug}`} target="_blank" className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation">
+            <button 
+              onClick={() => shop && openShopInBrowser(shop.slug)}
+              className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
+            >
               View Shop
-            </Link>
+            </button>
           </div>
         </div>
 
