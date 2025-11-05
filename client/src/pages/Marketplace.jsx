@@ -16,7 +16,8 @@ export default function Marketplace() {
   const [hasMore, setHasMore] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
-  const [sortBy, setSortBy] = useState('-createdAt')
+  // Empty sort means backend default (featured: boosted first)
+  const [sortBy, setSortBy] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -27,20 +28,22 @@ export default function Marketplace() {
       const params = {
         page: reset ? 1 : page,
         limit: 24,
-        sort: sortBy,
+        ...(sortBy ? { sort: sortBy } : {}),
         ...(category !== 'all' && { category }),
         ...(search && { search }),
         ...(priceRange.min && { minPrice: priceRange.min }),
         ...(priceRange.max && { maxPrice: priceRange.max })
       }
-      const res = await productAPI.getMarketplaceProducts(params)
+      const list = await productAPI.getMarketplaceProducts(params)
+      const items = Array.isArray(list) ? list : []
       if (reset) {
-        setProducts(res.data || [])
+        setProducts(items)
         setPage(1)
       } else {
-        setProducts(prev => [...prev, ...(res.data || [])])
+        setProducts(prev => [...prev, ...items])
       }
-      setHasMore(res.pagination?.hasNextPage || false)
+      // Infer hasMore from page size
+      setHasMore(items.length === (params.limit || 24))
     } catch (err) {
       toast.error(err.userMessage || 'Failed to load products')
     } finally {
@@ -53,6 +56,14 @@ export default function Marketplace() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, sortBy, search])
 
+  // When page changes (and not a reset), load more
+  useEffect(() => {
+    if (page > 1) {
+      fetchProducts(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
+
   const handleSearch = (e) => {
     e.preventDefault()
     fetchProducts(true)
@@ -60,15 +71,15 @@ export default function Marketplace() {
 
   const clearFilters = () => {
     setCategory('all')
-    setSortBy('-createdAt')
+    setSortBy('')
     setSearch('')
     setPriceRange({ min: '', max: '' })
+    setPage(1)
   }
 
   const loadMore = () => {
     if (!loading && hasMore) {
       setPage(p => p + 1)
-      fetchProducts(false)
     }
   }
 
@@ -155,6 +166,7 @@ export default function Marketplace() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="input py-2 text-sm w-auto"
               >
+                <option value="">Featured (Boosted first)</option>
                 <option value="-createdAt">Newest First</option>
                 <option value="price">Price: Low to High</option>
                 <option value="-price">Price: High to Low</option>
