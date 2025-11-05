@@ -50,6 +50,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  passwordResetToken: {
+    type: String,
+    default: null,
+    select: false
+  },
+  passwordResetExpires: {
+    type: Date,
+    default: null,
+    select: false
+  },
   referralCode: {
     type: String,
     unique: true,

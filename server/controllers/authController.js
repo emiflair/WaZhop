@@ -7,6 +7,7 @@ const {
   formatValidationErrors,
   generateSlug 
 } = require('../utils/helpers');
+const crypto = require('crypto');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -193,4 +194,71 @@ exports.changePassword = asyncHandler(async (req, res) => {
     success: true,
     message: 'Password changed successfully'
   });
+});
+
+// @desc    Request password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Email is required' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  // Always respond with success message to avoid user enumeration
+  if (!user) {
+    return res.status(200).json({ success: true, message: 'If an account exists, a reset link has been generated.' });
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const hashed = crypto.createHash('sha256').update(resetToken).digest('hex');
+  const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
+
+  user.passwordResetToken = hashed;
+  user.passwordResetExpires = expires;
+  await user.save({ validateBeforeSave: false });
+
+  const baseUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3000';
+  const resetLink = `${baseUrl}/reset-password/${resetToken}`;
+
+  // In production, you would send email via a provider. For development, return link.
+  const response = { success: true, message: 'If an account exists, a reset link has been generated.' };
+  if (process.env.NODE_ENV !== 'production') {
+    response.resetLink = resetLink;
+    response.expiresAt = expires;
+  }
+
+  res.status(200).json(response);
+});
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ success: false, message: 'Token and new password are required' });
+  }
+
+  const hashed = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({ 
+    passwordResetToken: hashed, 
+    passwordResetExpires: { $gt: new Date() }
+  }).select('+password');
+
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+  }
+
+  user.password = password;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+
+  res.status(200).json({ success: true, message: 'Password has been reset. You can now log in.' });
 });
