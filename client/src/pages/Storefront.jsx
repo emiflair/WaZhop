@@ -421,7 +421,7 @@ const Storefront = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-safe-bottom" style={fontFamily ? { fontFamily } : undefined}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-bottom" style={fontFamily ? { fontFamily } : undefined}>
       {/* Header/Banner - Mobile Optimized */}
       <div
         className="relative h-40 sm:h-48 md:h-64"
@@ -440,7 +440,8 @@ const Storefront = () => {
         {/* Floating Cart Button - Mobile Optimized with Touch Target */}
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed top-16 sm:top-20 right-3 sm:right-4 z-30 bg-white dark:bg-gray-800 shadow-lg rounded-full touch-target hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-all"
+          className="fixed right-3 sm:right-4 z-30 bg-white dark:bg-gray-800 shadow-lg rounded-full touch-target hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-all"
+          style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}
           aria-label="View cart"
         >
           <FiShoppingCart size={22} className="sm:w-6 sm:h-6 dark:text-gray-200" />
@@ -669,7 +670,7 @@ const Storefront = () => {
             {showCatSheet && (
               <div className="fixed inset-0 z-50">
                 <div className="absolute inset-0 bg-black/40" onClick={() => setShowCatSheet(false)} />
-                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl">
+                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl safe-bottom">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold">Categories</h4>
                     <button className="text-sm text-blue-600" onClick={() => setShowCatSheet(false)}>Done</button>
@@ -693,7 +694,7 @@ const Storefront = () => {
             {showSortSheet && (
               <div className="fixed inset-0 z-50">
                 <div className="absolute inset-0 bg-black/40" onClick={() => setShowSortSheet(false)} />
-                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl">
+                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 shadow-2xl safe-bottom">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold">Sort</h4>
                     <button className="text-sm text-blue-600" onClick={() => setShowSortSheet(false)}>Done</button>

@@ -3,6 +3,7 @@ import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import logo from '../assets/brand/wazhop-icon.svg';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,14 +38,18 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700">
+    <nav className="bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
       <div className="container-custom">
-        <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="flex justify-between items-center min-h-[56px] md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-1" onClick={() => setIsOpen(false)}>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
-              <span className="text-white dark:text-gray-900 font-bold text-lg md:text-xl">W</span>
-            </div>
+            <img
+              src={logo}
+              alt="WaZhop logo"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-lg shadow-sm"
+              decoding="async"
+              loading="eager"
+            />
             <span className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
           </Link>
 
@@ -113,9 +118,13 @@ const Navbar = () => {
             {/* Header with Logo */}
             <div className="h-16 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-6">
               <Link to="/" className="flex items-center space-x-1" onClick={() => setIsOpen(false)}>
-                <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
-                </div>
+                <img
+                  src={logo}
+                  alt="WaZhop logo"
+                  className="w-8 h-8 rounded-lg shadow-sm"
+                  decoding="async"
+                  loading="eager"
+                />
                 <span className="text-xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
               </Link>
               <button

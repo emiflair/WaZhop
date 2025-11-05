@@ -1,15 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiHome, FiShoppingBag, FiSettings, FiUser, FiCreditCard, FiLogOut, FiMenu, FiX, FiBarChart2, FiGift, FiPackage, FiStar } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import logo from '../assets/brand/wazhop-icon.svg';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
@@ -41,6 +44,25 @@ const DashboardLayout = ({ children }) => {
     };
   }, [sidebarOpen]);
 
+  // Measure mobile header height (including safe-area padding) to offset main content correctly
+  useEffect(() => {
+    const update = () => {
+      if (headerRef.current) {
+        const h = Math.ceil(headerRef.current.getBoundingClientRect().height);
+        setHeaderHeight(h || 64);
+      }
+    };
+    update();
+    const id = setInterval(update, 250); // handle iOS URL bar/safe-area transitions briefly
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -49,11 +71,9 @@ const DashboardLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 h-16 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700">
+  <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
         <div className="flex items-center space-x-1">
-          <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
-          </div>
+          <img src={logo} alt="WaZhop logo" className="w-8 h-8 rounded-lg shadow-sm" decoding="async" loading="eager" />
           <span className="text-xl font-bold dark:text-gray-100">aZhop</span>
         </div>
         <div className="flex items-center gap-2">
@@ -86,9 +106,7 @@ const DashboardLayout = ({ children }) => {
           {/* Logo - Desktop Only */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b dark:border-gray-700">
             <Link to="/" className="flex items-center space-x-1">
-              <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-white dark:text-gray-900 font-bold text-lg">W</span>
-              </div>
+              <img src={logo} alt="WaZhop logo" className="w-8 h-8 rounded-lg shadow-sm" decoding="async" loading="eager" />
               <span className="text-xl font-bold dark:text-gray-100">aZhop</span>
             </Link>
             <ThemeToggle />
@@ -167,11 +185,11 @@ const DashboardLayout = ({ children }) => {
 
       {/* Main content */}
       <main className="lg:ml-64 min-h-screen">
-        <div className="pt-16 lg:pt-0 p-4 md:p-6 lg:p-8">{children}</div>
+        <div className="lg:pt-0 p-4 md:p-6 lg:p-8 pb-20" style={{ paddingTop: location.pathname.startsWith('/dashboard') ? headerHeight : undefined }}>{children}</div>
       </main>
 
       {/* Bottom Navigation - Mobile Only */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-lg z-30">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-lg z-30 safe-bottom">
         <div className="flex items-center justify-around">
           {navigation.slice(0, 4).map((item) => {
             const isActive = location.pathname === item.href;

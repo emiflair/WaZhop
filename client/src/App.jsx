@@ -3,7 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CartProvider } from './context/CartContext'
 import { HelmetProvider } from 'react-helmet-async'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // Loading component
@@ -47,16 +48,42 @@ const Storefront = lazy(() => import('./pages/Storefront'))
 // Protected Route Component
 import ProtectedRoute from './components/ProtectedRoute'
 
-function App() {
+// Wrapper component that lives inside Router so we can use useLocation safely
+function AppRoutes() {
+  const location = useLocation()
+  // On route changes, fade out and remove splash screen inserted in index.html
+  useEffect(() => {
+    const el = document.getElementById('app-splash')
+    if (!el) return
+
+    // If we navigated to a marketing page, remove splash immediately
+    const path = location?.pathname || window.location.pathname
+  const isLogin = path === '/login' || path === '/register'
+    const isDashboard = path.startsWith('/dashboard')
+    // Only dashboard gets the long splash; login/register get a short one; all other pages (including storefront) remove immediately
+    const MIN_SPLASH_MS = isDashboard ? 1600 : (isLogin ? 900 : 0)
+
+    const FADE_MS = 350
+    const start = (window).__SPLASH_START || (performance.now ? performance.now() : Date.now())
+    const now = performance.now ? performance.now() : Date.now()
+    const elapsed = Math.max(0, now - start)
+    const wait = Math.max(0, MIN_SPLASH_MS - elapsed)
+
+    const timer = setTimeout(() => {
+      el.style.transition = `opacity ${FADE_MS}ms ease`
+      el.style.opacity = '0'
+      setTimeout(() => {
+        try { el.remove() } catch (e) { /* ignore */ }
+        try { document.body.classList.remove('splashing') } catch (e) { /* ignore */ }
+      }, FADE_MS + 40)
+    }, wait)
+
+    return () => clearTimeout(timer)
+  }, [location?.pathname])
+
   return (
-    <ErrorBoundary>
-      <HelmetProvider>
-        <ThemeProvider>
-          <Router>
-            <AuthProvider>
-              <CartProvider>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
@@ -87,14 +114,26 @@ function App() {
 
                 {/* Public Storefront */}
                 <Route path="/:slug" element={<Storefront />} />
-              </Routes>
-            </Suspense>
-          </CartProvider>
-        </AuthProvider>
-      </Router>
-      </ThemeProvider>
-    </HelmetProvider>
-  </ErrorBoundary>
+      </Routes>
+    </Suspense>
+  )
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <HelmetProvider>
+        <ThemeProvider>
+          <Router>
+            <AuthProvider>
+              <CartProvider>
+                <AppRoutes />
+              </CartProvider>
+            </AuthProvider>
+          </Router>
+        </ThemeProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   )
 }
 

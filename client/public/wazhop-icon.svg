@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WaZhop W lettermark">
+  <defs>
+    <linearGradient id="g" x1="128" y1="64" x2="896" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="60%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#0B3B2E" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="180" fill="url(#g)" filter="url(#softShadow)"/>
+  <path d="M220 360 L340 700 L512 360 L684 700 L804 360" stroke="#FFFFFF" stroke-width="120" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

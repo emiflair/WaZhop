@@ -86,22 +86,22 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
             <div className="flex items-center gap-2">
-              <FiShoppingCart size={24} />
-              <h2 className="text-xl font-bold">Shopping Cart</h2>
+              <FiShoppingCart size={20} className="sm:w-6 sm:h-6" />
+              <h2 className="text-lg sm:text-xl font-bold">Shopping Cart</h2>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
-              <FiX size={24} className="text-gray-700 dark:text-gray-200" />
+            <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+              <FiX size={22} className="text-gray-700 dark:text-gray-200" />
             </button>
           </div>
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-4">
             {cartItems.length === 0 ? (
-              <div className="text-center py-12">
-                <FiShoppingCart size={64} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                <p className="text-gray-600 dark:text-gray-300">Your cart is empty</p>
+              <div className="text-center py-10">
+                <FiShoppingCart size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <p className="text-gray-600 dark:text-gray-300 text-base">Your cart is empty</p>
               </div>
             ) : (
               <div className="space-y-4">
