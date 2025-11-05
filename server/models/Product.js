@@ -145,6 +145,20 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Boosting subdocument
+productSchema.add({
+  boost: {
+    active: { type: Boolean, default: false },
+    startAt: { type: Date, default: null },
+    endAt: { type: Date, default: null },
+    durationHours: { type: Number, default: 0 },
+    amount: { type: Number, default: 0 }, // Amount paid in NGN
+    state: { type: String, trim: true, default: null }, // e.g., 'Lagos'
+    area: { type: String, trim: true, default: null }, // e.g., 'Victoria Island'
+    country: { type: String, trim: true, default: 'NG' }
+  }
+});
+
 // Get primary image
 productSchema.virtual('primaryImage').get(function() {
   if (!this.images || this.images.length === 0) return null;
@@ -177,5 +191,6 @@ productSchema.index({ shop: 1, isActive: 1 });
 productSchema.index({ shop: 1, position: 1 });
 productSchema.index({ shop: 1, category: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+productSchema.index({ 'boost.endAt': -1 });
 
 module.exports = mongoose.model('Product', productSchema);

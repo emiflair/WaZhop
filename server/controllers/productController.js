@@ -1,7 +1,8 @@
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
-const { asyncHandler } = require('../utils/helpers');
+const Review = require('../models/Review');
+const { asyncHandler, paginate, paginationMeta } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
 const streamifier = require('streamifier');
 
@@ -552,5 +553,166 @@ exports.trackProductClick = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Click tracked'
+  });
+});
+
+// @desc    Get marketplace products (all public products across all active shops)
+// @route   GET /api/products/marketplace
+// @access  Public
+exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 24, category, search, minPrice, maxPrice, sort, state, area } = req.query;
+
+  // Build query for products from active shops only
+  const activeShops = await Shop.find({ isActive: true }).select('_id');
+  const activeShopIds = activeShops.map(s => s._id);
+
+  const query = { shop: { $in: activeShopIds } };
+
+  // Filter by category if provided
+  if (category && category !== 'all') {
+    query.category = category.toLowerCase();
+  }
+
+  // Search by product name or description
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  // Price range filter
+  if (minPrice || maxPrice) {
+    query.price = {};
+    if (minPrice) query.price.$gte = parseFloat(minPrice);
+    if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+  }
+
+  // Pagination
+  const { skip, limit: pLimit } = paginate(page, limit);
+
+  // Get total count for pagination
+  const total = await Product.countDocuments(query);
+
+  // Fetch products with shop and owner details
+  const sortString = sort ? `${sort}` : '-boost.endAt,-views,-createdAt';
+  const products = await Product.find(query)
+    .populate({
+      path: 'shop',
+      select: 'shopName slug logo banner owner',
+      populate: {
+        path: 'owner',
+        select: 'name whatsapp'
+      }
+    })
+    .sort(sortString)
+    .skip(skip)
+    .limit(pLimit)
+    .lean();
+
+  // Enrich each product with review stats
+  const enriched = await Promise.all(
+    products.map(async (product) => {
+      const reviewStats = await Review.aggregate([
+        { $match: { product: product._id, isApproved: true } },
+        {
+          $group: {
+            _id: null,
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      return {
+        ...product,
+        reviewStats: reviewStats[0] || { avgRating: 0, count: 0 }
+      };
+    })
+  );
+
+  res.status(200).json({
+    success: true,
+    data: enriched,
+    pagination: paginationMeta(total, page, pLimit)
+  });
+});
+
+// Pricing: simple flat rate per hour (NGN)
+const BOOST_RATE_PER_HOUR_NGN = 400; // e.g., ₦2000 for 5 hours
+
+// @desc    Start/extend a product boost
+// @route   PUT /api/products/:id/boost
+// @access  Private
+exports.boostProduct = asyncHandler(async (req, res) => {
+  const { hours, state, area, startAt } = req.body;
+
+  const durationHours = Math.max(1, parseInt(hours, 10) || 0);
+  if (!durationHours) {
+    return res.status(400).json({ success: false, message: 'Please provide boost hours' });
+  }
+
+  let product = await Product.findById(req.params.id).populate('shop');
+  if (!product) {
+    return res.status(404).json({ success: false, message: 'Product not found' });
+  }
+
+  // Ownership check
+  if (product.shop.owner.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized to boost this product' });
+  }
+
+  // Shop must be active
+  if (!product.shop.isActive) {
+    return res.status(403).json({ success: false, message: 'Cannot boost products in an inactive shop' });
+  }
+
+  const now = new Date();
+  const boostStart = startAt ? new Date(startAt) : now;
+  // If there is an existing active boost, extend from its end time
+  const existingEnd = product.boost?.endAt && new Date(product.boost.endAt) > now
+    ? new Date(product.boost.endAt)
+    : boostStart;
+  const boostEnd = new Date(existingEnd.getTime() + durationHours * 60 * 60 * 1000);
+
+  const amount = durationHours * BOOST_RATE_PER_HOUR_NGN;
+
+  // Update product boost fields
+  product.boost = {
+    active: true,
+    startAt: product.boost?.startAt && new Date(product.boost.startAt) > now ? product.boost.startAt : boostStart,
+    endAt: boostEnd,
+    durationHours: (product.boost?.durationHours || 0) + durationHours,
+    amount: (product.boost?.amount || 0) + amount,
+    state: state || product.boost?.state || null,
+    area: area || product.boost?.area || null,
+    country: 'NG'
+  };
+
+  await product.save();
+
+  res.status(200).json({
+    success: true,
+    data: product,
+    message: `Boost started. Your product will be highlighted until ${boostEnd.toLocaleString()}.`
+  });
+});
+
+// @desc    Get boost status for a product
+// @route   GET /api/products/:id/boost
+// @access  Private
+exports.getBoostStatus = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id).select('boost').lean();
+  if (!product) {
+    return res.status(404).json({ success: false, message: 'Product not found' });
+  }
+  const now = new Date();
+  const active = product.boost?.endAt && new Date(product.boost.endAt) > now;
+  res.status(200).json({
+    success: true,
+    data: {
+      ...product.boost,
+      active
+    }
   });
 });

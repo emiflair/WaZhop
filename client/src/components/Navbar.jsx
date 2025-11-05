@@ -31,6 +31,7 @@ const Navbar = () => {
   }, [isOpen]);
 
   const menuLinks = [
+    { to: '/marketplace', label: 'Marketplace' },
     { to: '/how-it-works', label: 'How It Works' },
     { to: '/pricing', label: 'Pricing' },
     { to: '/about', label: 'About' },

@@ -32,6 +32,8 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [previewProduct, setPreviewProduct] = useState(null);
+  const [boostModal, setBoostModal] = useState({ open: false, product: null });
+  const [boostForm, setBoostForm] = useState({ hours: 5, state: 'Lagos', area: '' });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -198,6 +200,49 @@ const Products = () => {
       sku: product.sku || '',
     });
     setShowModal(true);
+  };
+
+  // Nigeria states list for targeting
+  const NG_STATES = [
+    'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'
+  ];
+
+  const openBoost = async (product) => {
+    setBoostModal({ open: true, product });
+    setBoostForm((prev) => ({ ...prev, area: '', state: 'Lagos', hours: 5 }));
+    try {
+      const status = await productAPI.getBoostStatus(product._id);
+      if (status?.active) {
+        toast(`Active boost ends ${new Date(status.endAt).toLocaleString()}`);
+      }
+    } catch (err) {
+      // ignore
+    }
+  };
+
+  const submitBoost = async () => {
+    const { product } = boostModal;
+    if (!product) return;
+    try {
+      const payload = { hours: Number(boostForm.hours), state: boostForm.state, area: boostForm.area };
+      const updated = await productAPI.boostProduct(product._id, payload);
+      toast.success('Boost activated');
+      setProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
+      setFilteredProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
+      setBoostModal({ open: false, product: null });
+    } catch (e) {
+      toast.error(e.userMessage || 'Failed to start boost');
+    }
+  };
+
+  const getBoostBadge = (product) => {
+    const end = product?.boost?.endAt ? new Date(product.boost.endAt) : null;
+    if (end && end > new Date()) {
+      const ms = end - new Date();
+      const hoursLeft = Math.max(1, Math.floor(ms / 3600000));
+      return `Boosting • ${hoursLeft}h left`;
+    }
+    return null;
   };
 
   const handleDelete = async (productId) => {
@@ -498,6 +543,11 @@ const Products = () => {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
+                        {getBoostBadge(product) && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                            {getBoostBadge(product)}
+                          </span>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleInStock(product._id, product.inStock); }}
                           className={`text-xs px-2 py-1 rounded-full ${
@@ -522,6 +572,14 @@ const Products = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2 ml-20">
+                    <TouchButton
+                      onClick={() => openBoost(product)}
+                      variant="accent"
+                      size="sm"
+                      title="Boost"
+                    >
+                      Boost
+                    </TouchButton>
                     <TouchButton
                       onClick={() => handleEdit(product)}
                       variant="outline"
@@ -622,6 +680,11 @@ const Products = () => {
                               ₦{product.comparePrice.toLocaleString()}
                             </p>
                           )}
+                          {getBoostBadge(product) && (
+                            <p className="text-xs text-yellow-700 bg-yellow-50 inline-block mt-1 px-2 py-0.5 rounded-full">
+                              {getBoostBadge(product)}
+                            </p>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -655,6 +718,14 @@ const Products = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
+                          <TouchButton
+                            onClick={() => openBoost(product)}
+                            variant="accent"
+                            size="sm"
+                            title="Boost"
+                          >
+                            Boost
+                          </TouchButton>
                           <TouchButton
                             onClick={() => handleEdit(product)}
                             variant="outline"
@@ -742,6 +813,7 @@ const Products = () => {
                       className="input text-sm sm:text-base"
                       placeholder="10000"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Boosting starts at ₦400/hour. Use Boost to reach nearby customers.</p>
                   </div>
                   <div>
                     <label className="label text-sm sm:text-base">Compare at Price (₦)</label>
@@ -950,6 +1022,60 @@ const Products = () => {
           product={previewProduct}
           onClose={() => setPreviewProduct(null)}
         />
+      )}
+
+      {/* Boost Modal */}
+      {boostModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Boost Product</h3>
+              <TouchButton onClick={() => setBoostModal({ open: false, product: null })} variant="outline" size="sm">
+                <FiX />
+              </TouchButton>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">Reach more nearby customers. Pricing: ₦400/hour.</p>
+            <div className="space-y-3">
+              <div>
+                <label className="label">Hours</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={boostForm.hours}
+                  onChange={(e) => setBoostForm({ ...boostForm, hours: Number(e.target.value) })}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="label">State (Nigeria)</label>
+                <select
+                  className="input"
+                  value={boostForm.state}
+                  onChange={(e) => setBoostForm({ ...boostForm, state: e.target.value })}
+                >
+                  {NG_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Area (optional)</label>
+                <input
+                  type="text"
+                  value={boostForm.area}
+                  onChange={(e) => setBoostForm({ ...boostForm, area: e.target.value })}
+                  className="input"
+                  placeholder="e.g., Victoria Island"
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-sm text-gray-700">Total</span>
+                <span className="text-lg font-semibold">₦{(Number(boostForm.hours || 0) * 400).toLocaleString()}</span>
+              </div>
+              <TouchButton onClick={submitBoost} variant="primary" size="md" className="w-full">Start Boost</TouchButton>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
