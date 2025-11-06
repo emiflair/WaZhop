@@ -19,6 +19,7 @@ const Contact = () => {
               </div>
               <h3 className="font-semibold mb-2">Email</h3>
               <p className="text-gray-600">support@wazhop.com</p>
+              <p className="text-xs text-gray-500 mt-1">We typically reply within 24 hours (Mon–Fri)</p>
             </div>
 
             <div className="text-center">
@@ -27,6 +28,7 @@ const Contact = () => {
               </div>
               <h3 className="font-semibold mb-2">WhatsApp</h3>
               <p className="text-gray-600">+234 801 234 5678</p>
+              <p className="text-xs text-gray-500 mt-1">Support chats only—no voice calls</p>
             </div>
 
             <div className="text-center">
@@ -35,6 +37,16 @@ const Contact = () => {
               </div>
               <h3 className="font-semibold mb-2">Location</h3>
               <p className="text-gray-600">Lagos, Nigeria</p>
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto mt-12">
+            <div className="card bg-gray-50">
+              <p className="text-gray-600 text-sm">
+                For legal or privacy questions, see our{' '}
+                <a href="/terms-of-service" className="text-blue-600 hover:underline">Terms of Service</a>{' '}and{' '}
+                <a href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</a>.
+              </p>
             </div>
           </div>
         </div>

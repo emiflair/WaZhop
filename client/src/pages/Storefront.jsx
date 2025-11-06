@@ -38,53 +38,10 @@ const Storefront = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  useEffect(() => {
-    const html = document.documentElement;
-    let media;
-    let apply;
-
-    // Apply theme mode when shop data loads
-    if (shop?.theme?.mode) {
-      media = window.matchMedia('(prefers-color-scheme: dark)');
-
-      apply = () => {
-        if (shop.theme.mode === 'dark') {
-          html.classList.add('dark');
-        } else if (shop.theme.mode === 'light') {
-          html.classList.remove('dark');
-        } else if (shop.theme.mode === 'auto') {
-          html.classList.toggle('dark', media.matches);
-        }
-      };
-
-      // Initial apply
-      apply();
-
-      // Listen for system theme changes in auto mode
-      if (shop.theme.mode === 'auto') {
-        try {
-          media.addEventListener('change', apply);
-        } catch {
-          // Safari fallback
-          media.addListener(apply);
-        }
-      }
-    }
-    
-    // Cleanup: restore original theme when leaving storefront
-    return () => {
-      if (media && apply && shop?.theme?.mode === 'auto') {
-        try {
-          media.removeEventListener('change', apply);
-        } catch {
-          media.removeListener(apply);
-        }
-      }
-      // Revert to user's system preference
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      html.classList.toggle('dark', systemDark);
-    };
-  }, [shop]);
+  // IMPORTANT: Do not alter global theme here.
+  // We intentionally avoid toggling document.documentElement 'dark' class
+  // so the user's chosen theme remains sticky across all routes and browsers.
+  useEffect(() => {}, [shop]);
 
   const fetchShop = async () => {
     try {

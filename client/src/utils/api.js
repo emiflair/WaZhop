@@ -100,7 +100,11 @@ export const authAPI = {
   changePassword: (data) => api.put('/auth/change-password', data),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-  upgradeToSeller: (whatsapp) => api.put('/auth/upgrade-to-seller', { whatsapp })
+  upgradeToSeller: (payload) => {
+    // Backward compatible: allow passing a string (whatsapp) or an object { whatsapp, referralCode }
+    const body = typeof payload === 'string' ? { whatsapp: payload } : payload;
+    return api.put('/auth/upgrade-to-seller', body);
+  }
 };
 
 // Shop endpoints

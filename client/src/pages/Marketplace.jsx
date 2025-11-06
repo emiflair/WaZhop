@@ -21,6 +21,8 @@ export default function Marketplace() {
   const [sortBy, setSortBy] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [ngState, setNgState] = useState('')
+  const [area, setArea] = useState('')
   const navigate = useNavigate()
 
   const fetchProducts = useCallback(async (reset = false) => {
@@ -32,6 +34,8 @@ export default function Marketplace() {
         ...(sortBy ? { sort: sortBy } : {}),
         ...(category !== 'all' && { category }),
         ...(search && { search }),
+        ...(ngState && { state: ngState }),
+        ...(area && { area }),
         ...(priceRange.min && { minPrice: priceRange.min }),
         ...(priceRange.max && { maxPrice: priceRange.max })
       }
@@ -50,7 +54,7 @@ export default function Marketplace() {
     } finally {
       setLoading(false)
     }
-  }, [page, category, search, sortBy, priceRange])
+  }, [page, category, search, sortBy, priceRange, ngState, area])
 
   useEffect(() => {
     fetchProducts(true)
@@ -75,6 +79,8 @@ export default function Marketplace() {
     setSortBy('')
     setSearch('')
     setPriceRange({ min: '', max: '' })
+    setNgState('')
+    setArea('')
     setPage(1)
   }
 
@@ -109,7 +115,7 @@ export default function Marketplace() {
                 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
                 <input
                   type="text"
-                  placeholder="Search products, sellers, categories..."
+                  placeholder="Search products or categories..."
                   className="w-full pl-12 pr-4 py-3 sm:py-4 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-300 text-sm sm:text-base"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -119,6 +125,17 @@ export default function Marketplace() {
                 Search
               </button>
             </form>
+            {/* Location refinement */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto">
+              <select value={ngState} onChange={(e)=>setNgState(e.target.value)} className="input py-2 text-sm">
+                <option value="">All States</option>
+                {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <input className="input py-2 text-sm" type="text" value={area} placeholder="Area (e.g., Victoria Island)" onChange={(e)=>setArea(e.target.value)} />
+              <button onClick={()=>fetchProducts(true)} className="btn btn-outline text-sm">Apply</button>
+            </div>
           </div>
         </div>
 
@@ -176,7 +193,7 @@ export default function Marketplace() {
               </select>
 
               {/* Clear Filters */}
-              {(category !== 'all' || search || priceRange.min || priceRange.max) && (
+              {(category !== 'all' || search || priceRange.min || priceRange.max || ngState || area) && (
                 <button onClick={clearFilters} className="btn btn-outline text-sm flex items-center gap-2">
                   <FiX /> Clear
                 </button>
@@ -194,6 +211,21 @@ export default function Marketplace() {
                       <option key={cat.value} value={cat.value}>{cat.label}</option>
                     ))}
                   </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="label text-xs">State</label>
+                    <select value={ngState} onChange={(e)=>setNgState(e.target.value)} className="input text-sm">
+                      <option value="">All States</option>
+                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label text-xs">Area</label>
+                    <input className="input text-sm" type="text" value={area} placeholder="e.g., VI" onChange={(e)=>setArea(e.target.value)} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>

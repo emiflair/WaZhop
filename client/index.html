@@ -38,14 +38,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <script>
-      // Prevent flash of wrong theme
+      // Prevent flash of wrong theme and fix BFCache back/forward cases
       (function() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+        function applySavedTheme() {
+          try {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+          } catch (e) {
+            // Default to light if storage is blocked
+            document.documentElement.classList.remove('dark');
+          }
         }
+
+        // Initial apply on first paint
+        applySavedTheme();
+
+        // Re-apply when page is restored from BFCache (e.g., browser Back)
+        window.addEventListener('pageshow', function(ev) {
+          if (ev.persisted) {
+            applySavedTheme();
+          }
+        });
       })();
     </script>
   </head>

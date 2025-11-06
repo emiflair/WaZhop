@@ -45,6 +45,8 @@ const Products = () => {
     tags: '',
     inStock: true,
     sku: '',
+    locationState: 'Lagos',
+    locationArea: ''
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -201,6 +203,8 @@ const Products = () => {
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku || '',
+      locationState: product.locationState || 'Lagos',
+      locationArea: product.locationArea || ''
     });
     setShowModal(true);
   };
@@ -324,6 +328,8 @@ const Products = () => {
       tags: '',
       inStock: true,
       sku: '',
+      locationState: 'Lagos',
+      locationArea: ''
     });
     setImages([]);
     setImagePreviews([]);
@@ -872,6 +878,35 @@ const Products = () => {
                       className="input text-sm sm:text-base"
                       placeholder="PROD-001"
                     />
+                  </div>
+                </div>
+
+                {/* Location Targeting */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label text-sm sm:text-base">State (Nigeria) *</label>
+                    <select
+                      required
+                      className="input text-sm sm:text-base"
+                      value={formData.locationState}
+                      onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
+                    >
+                      {NG_STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Select the state buyers should see this product in search.</p>
+                  </div>
+                  <div>
+                    <label className="label text-sm sm:text-base">Area (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.locationArea}
+                      onChange={(e) => setFormData({ ...formData, locationArea: e.target.value })}
+                      className="input text-sm sm:text-base"
+                      placeholder="e.g., Victoria Island"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">More specific area or neighborhood.</p>
                   </div>
                 </div>
 

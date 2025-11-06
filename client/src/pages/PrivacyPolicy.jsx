@@ -21,7 +21,7 @@ const PrivacyPolicy = () => {
                 Privacy Policy
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Last updated: November 3, 2025
+                Last updated: November 6, 2025
               </p>
             </div>
 
@@ -53,8 +53,13 @@ const PrivacyPolicy = () => {
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
                   <li>Name and contact information (email, phone number)</li>
-                  <li>WhatsApp business number</li>
-                  <li>Shop information (name, description, category, location)</li>
+                  <li>WhatsApp Business number (required for sellers)</li>
+                  <li>Shop information (name, description, category)</li>
+                  <li>
+                    Location information you provide for targeting (State and Area for boosts or shop discovery). We do not collect
+                    precise GPS location.
+                  </li>
+                  <li>Referral code (if you choose to provide one during upgrade)</li>
                   <li>Product information and images</li>
                   <li>Payment and billing information</li>
                   <li>Account credentials</li>
@@ -70,7 +75,7 @@ const PrivacyPolicy = () => {
                   <li>Device information (IP address, browser type, operating system)</li>
                   <li>Usage data (pages visited, time spent, clicks)</li>
                   <li>Analytics data (product views, WhatsApp clicks)</li>
-                  <li>Cookies and similar tracking technologies</li>
+                  <li>Cookies, localStorage, and similar technologies (e.g., your theme preference: light or dark)</li>
                 </ul>
               </section>
 
@@ -92,7 +97,22 @@ const PrivacyPolicy = () => {
                   <li>Monitor and analyze trends, usage, and activities</li>
                   <li>Detect, prevent, and address technical issues and fraudulent activities</li>
                   <li>Provide analytics to shop owners about their store performance</li>
+                  <li>Use your State/Area to personalize discovery and apply your Boost targeting</li>
+                  <li>Attribute referrals when you enter a referral code during upgrade</li>
                 </ul>
+              </section>
+
+              {/* Legal Basis */}
+              <section className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
+                  2a. Legal Basis for Processing
+                </h2>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                  We process your personal information on the following legal bases: (i) to perform our contract with you
+                  (providing your shop and account), (ii) with your consent (e.g., marketing communications), and (iii)
+                  for our legitimate interests (platform security, fraud prevention, and service improvement) where those
+                  interests are not overridden by your rights.
+                </p>
               </section>
 
               {/* Information Sharing */}
@@ -160,8 +180,28 @@ const PrivacyPolicy = () => {
                   activities. You can control cookies through your browser settings, but disabling cookies may 
                   affect your ability to use certain features.
                 </p>
-                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  We use cookies for authentication, preferences, analytics, and security purposes.
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
+                  We use cookies for authentication, preferences, analytics, and security purposes. We also store your
+                  selected theme (light/dark) in <code>localStorage</code> so the app respects your choice across visits. You can
+                  clear this at any time via your browser settings.
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm sm:text-base">
+                  <p className="text-gray-700 dark:text-gray-300">
+                    We do not track precise geolocation. Any State/Area used for discovery or Boosts is provided by you or
+                    derived from your shop settings.
+                  </p>
+                </div>
+              </section>
+
+              {/* Media Uploads and Third Parties */}
+              <section className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
+                  7a. Media Uploads and Third‑Party Services
+                </h2>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
+                  Product images and other media you upload may be stored and delivered by third‑party providers such as
+                  Cloudinary. By uploading content, you confirm you have the necessary rights to use and share it. Third‑party
+                  providers process data in accordance with their own policies.
                 </p>
               </section>
 

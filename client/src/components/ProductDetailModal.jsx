@@ -389,7 +389,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
               {/* Share to WhatsApp Button */}
               <button
                 onClick={handleShareToWhatsApp}
-                className="btn btn-outline w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-primary-500 text-primary-600 hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-900/20"
+                className="btn w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20"
               >
                 <FiShare2 size={22} />
                 Share on WhatsApp

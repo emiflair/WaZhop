@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
+import { useTheme } from './context/ThemeContext'
 
 // Loading component
 const PageLoader = () => (
@@ -56,6 +57,17 @@ import HideForBuyers from './components/HideForBuyers'
 // Wrapper component that lives inside Router so we can use useLocation safely
 function AppRoutes() {
   const location = useLocation()
+  const { theme } = useTheme()
+
+  // Normalize DOM theme on every route change to match ThemeContext
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [location?.pathname, theme])
   // On route changes, fade out and remove splash screen inserted in index.html
   useEffect(() => {
     const el = document.getElementById('app-splash')

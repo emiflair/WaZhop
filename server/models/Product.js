@@ -58,6 +58,17 @@ const productSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   }],
+  // Product-level location (distinct from temporary boost targeting)
+  locationState: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  locationArea: {
+    type: String,
+    trim: true,
+    default: null
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -192,5 +203,6 @@ productSchema.index({ shop: 1, position: 1 });
 productSchema.index({ shop: 1, category: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ 'boost.endAt': -1 });
+productSchema.index({ locationState: 1, locationArea: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

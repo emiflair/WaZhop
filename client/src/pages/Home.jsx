@@ -1,11 +1,24 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
+  const isBuyer = isAuthenticated && user?.role === 'buyer';
+
+  const getStartedHref = () => {
+    if (!isAuthenticated) return '/register?role=seller';
+    if (isSeller) return '/dashboard';
+    if (isBuyer) return '/pricing?upgrade=seller';
+    return '/pricing';
+  };
+
   const plans = [
     {
       name: 'Free',
@@ -53,7 +66,7 @@ const Home = () => {
               Wazhop gives you a fully customizable digital shop with your own brand, logo, and style so you can reach customers instantly and professionally, all from the comfort of your home.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-              <Link to="/register" className="btn btn-primary text-lg px-10 py-4 shadow-lg hover:shadow-xl transition-all">
+              <Link to={getStartedHref()} className="btn btn-primary text-lg px-10 py-4 shadow-lg hover:shadow-xl transition-all">
                 Create Your Shop Now - Free Forever
               </Link>
               <Link to="/how-it-works" className="btn btn-outline text-lg px-10 py-4">
@@ -307,7 +320,7 @@ const Home = () => {
                 </ul>
 
                 <Link
-                  to="/register"
+                  to={getStartedHref()}
                   className={`block w-full py-3 px-6 rounded-lg text-center font-semibold transition-colors ${
                     plan.popular
                       ? 'bg-primary-600 text-white hover:bg-primary-700'
@@ -338,7 +351,7 @@ const Home = () => {
             Start Selling Today.
           </p>
           <Link 
-            to="/register" 
+            to={getStartedHref()} 
             className="inline-block bg-white text-primary-600 hover:bg-gray-100 text-xl px-12 py-5 rounded-lg font-bold shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
           >
             Create My Shop Now

@@ -178,7 +178,7 @@ exports.upgradeToSeller = asyncHandler(async (req, res) => {
     return res.status(200).json({ success: true, data: currentUser, message: 'Account already has seller access' });
   }
 
-  const { whatsapp } = req.body || {};
+  const { whatsapp, referralCode } = req.body || {};
   if (!whatsapp) {
     return res.status(400).json({ success: false, message: 'WhatsApp number is required to become a seller' });
   }
@@ -186,6 +186,37 @@ exports.upgradeToSeller = asyncHandler(async (req, res) => {
   currentUser.whatsapp = whatsapp;
   currentUser.role = 'seller';
   await currentUser.save();
+
+  // If a referral code is provided and user doesn't already have a referrer, link it
+  if (referralCode && !currentUser.referredBy) {
+    try {
+      const code = String(referralCode).toUpperCase();
+      const referrer = await User.findOne({ referralCode: code });
+      if (referrer && String(referrer._id) !== String(currentUser._id)) {
+        currentUser.referredBy = referrer._id;
+        await currentUser.save();
+
+        // Initialize stats if missing
+        if (!referrer.referralStats) {
+          referrer.referralStats = {
+            totalReferrals: 0,
+            freeReferred: 0,
+            proReferred: 0,
+            premiumReferred: 0,
+            rewardsEarned: 0,
+            rewardsUsed: 0
+          };
+        }
+        // Update referrer counters (user starts on free plan)
+        referrer.referralStats.totalReferrals += 1;
+        referrer.referralStats.freeReferred += 1;
+        await referrer.save();
+      }
+    } catch (e) {
+      // Non-blocking: ignore referral linking errors
+      console.error('Referral linking failed during upgrade-to-seller:', e?.message || e);
+    }
+  }
 
   // Create a default shop if none exists
   if (!currentUser.shop) {

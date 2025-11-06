@@ -167,7 +167,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private
 exports.createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, comparePrice, category, tags, inStock, sku, shopId } = req.body;
+  const { name, description, price, comparePrice, category, tags, inStock, sku, shopId, locationState, locationArea } = req.body;
 
   // Find the shop - use provided shopId or default to user's first active shop
   let shop;
@@ -235,6 +235,10 @@ exports.createProduct = asyncHandler(async (req, res) => {
   const lastProduct = await Product.findOne({ shop: shop._id }).sort({ position: -1 });
   const position = lastProduct ? lastProduct.position + 1 : 0;
 
+  // Normalize location (store consistent casing; allow null)
+  const normState = locationState ? locationState.toString().trim() : null;
+  const normArea = locationArea ? locationArea.toString().trim() : null;
+
   const product = await Product.create({
     shop: shop._id,
     name,
@@ -246,7 +250,9 @@ exports.createProduct = asyncHandler(async (req, res) => {
     inStock: inStock !== undefined ? inStock : true,
     sku,
     images,
-    position
+    position,
+    locationState: normState,
+    locationArea: normArea
   });
 
   res.status(201).json({
@@ -295,7 +301,16 @@ exports.updateProduct = asyncHandler(async (req, res) => {
 
   product = await Product.findByIdAndUpdate(
     req.params.id,
-    req.body,
+    (() => {
+      const update = { ...req.body };
+      if (update.locationState !== undefined) {
+        update.locationState = update.locationState ? update.locationState.toString().trim() : null;
+      }
+      if (update.locationArea !== undefined) {
+        update.locationArea = update.locationArea ? update.locationArea.toString().trim() : null;
+      }
+      return update;
+    })(),
     {
       new: true,
       runValidators: true
@@ -573,11 +588,12 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     query.category = category.toLowerCase();
   }
 
-  // Search by product name or description
+  // Search by product name, description, tags (not by sellers)
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { description: { $regex: search, $options: 'i' } },
+      { tags: { $elemMatch: { $regex: search, $options: 'i' } } }
     ];
   }
 
@@ -586,6 +602,36 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     query.price = {};
     if (minPrice) query.price.$gte = parseFloat(minPrice);
     if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+  }
+
+  // Optional location targeting: prioritize or filter by boost target or shop.location
+  if (state || area) {
+    const orConds = [];
+
+    // Match boost targeting
+    if (state) orConds.push({ 'boost.state': { $regex: new RegExp(`^${state}$`, 'i') } });
+    if (area) orConds.push({ 'boost.area': { $regex: new RegExp(area, 'i') } });
+
+    // Match persistent product-level location
+    if (state) orConds.push({ locationState: { $regex: new RegExp(`^${state}$`, 'i') } });
+    if (area) orConds.push({ locationArea: { $regex: new RegExp(area, 'i') } });
+
+    // Match shop.location field (broad string match)
+    const shopLocQuery = { isActive: true };
+    if (state && area) {
+      shopLocQuery.location = { $regex: new RegExp(`${state}.*${area}|${area}.*${state}`, 'i') };
+    } else if (state) {
+      shopLocQuery.location = { $regex: new RegExp(state, 'i') };
+    } else if (area) {
+      shopLocQuery.location = { $regex: new RegExp(area, 'i') };
+    }
+    const shopsByLoc = await Shop.find(shopLocQuery).select('_id');
+    const matchedShopIds = shopsByLoc.map(s => s._id);
+    if (matchedShopIds.length) orConds.push({ shop: { $in: matchedShopIds } });
+
+    if (orConds.length) {
+      query.$and = (query.$and || []).concat([{ $or: orConds }]);
+    }
   }
 
   // Pagination

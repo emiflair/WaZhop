@@ -34,6 +34,9 @@ const Subscription = () => {
   const [boostProductId, setBoostProductId] = useState('');
   const [boostLoading, setBoostLoading] = useState(false);
   const BOOST_RATE = 400;
+  // Location targeting for boost
+  const [boostState, setBoostState] = useState('Lagos');
+  const [boostArea, setBoostArea] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -652,6 +655,29 @@ const Subscription = () => {
                       onChange={(e) => setBoostHours(Number(e.target.value))}
                     />
                   </div>
+                  {/* Location targeting */}
+                  <div>
+                    <label className="label">State (Nigeria)</label>
+                    <select
+                      className="input"
+                      value={boostState}
+                      onChange={(e) => setBoostState(e.target.value)}
+                    >
+                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Area (optional)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={boostArea}
+                      onChange={(e) => setBoostArea(e.target.value)}
+                      placeholder="e.g., Victoria Island"
+                    />
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Total</span>
                     <span className="text-lg font-semibold">₦{(Number(boostHours || 0) * BOOST_RATE).toLocaleString()}</span>
@@ -662,7 +688,7 @@ const Subscription = () => {
                       if (!boostHours || boostHours < 1) { toast.error('Enter at least 1 hour'); return; }
                       try {
                         setBoostLoading(true);
-                        await productAPI.boostProduct(boostProductId, { hours: Number(boostHours) });
+                        await productAPI.boostProduct(boostProductId, { hours: Number(boostHours), state: boostState, area: boostArea });
                         toast.success('Boost activated');
                         setBoostOpen(false);
                       } catch (e) {

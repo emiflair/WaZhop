@@ -21,7 +21,7 @@ const TermsOfService = () => {
                 Terms of Service
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Last updated: November 3, 2025
+                Last updated: November 7, 2025
               </p>
             </div>
 
@@ -73,21 +73,21 @@ const TermsOfService = () => {
                   WaZhop offers three subscription plans:
                 </p>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
-                  <li><strong>Free Plan:</strong> Limited features (up to 5 products, 1 shop, basic themes)</li>
-                  <li><strong>Pro Plan:</strong> Enhanced features (₦4,999/month - up to 100 products, 3 shops, custom domain, analytics)</li>
-                  <li><strong>Premium Plan:</strong> All features (₦9,999/month - unlimited products, unlimited shops, priority support)</li>
+                  <li><strong>Free Plan:</strong> Limited features (for getting started)</li>
+                  <li><strong>Pro Plan:</strong> Enhanced features (more products, shops, and tools)</li>
+                  <li><strong>Premium Plan:</strong> All features (advanced limits and priority support)</li>
                 </ul>
 
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">
                   Billing
                 </h3>
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
-                  <li>Subscriptions are billed monthly in advance</li>
-                  <li>All fees are in Nigerian Naira (₦) unless otherwise stated</li>
-                  <li>Payment is due at the start of each billing cycle</li>
-                  <li>Subscriptions automatically renew unless cancelled</li>
-                  <li>No refunds for partial months or unused services</li>
-                  <li>We reserve the right to change pricing with 30 days notice</li>
+          <li>Subscriptions are billed in advance for the selected period</li>
+          <li>All fees are in Nigerian Naira (₦) unless otherwise stated</li>
+          <li>Payment is due at the start of each billing cycle</li>
+          <li>Subscriptions automatically renew unless cancelled</li>
+          <li>No refunds for partial periods or unused services</li>
+          <li>Current prices are shown on the <a href="/pricing" className="text-blue-600 dark:text-blue-400 hover:underline">Pricing</a> page at the time of purchase</li>
                 </ul>
 
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">
@@ -212,10 +212,55 @@ const TermsOfService = () => {
                 </p>
               </section>
 
+              {/* Boosted Listings & Location Targeting */}
+              <section className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
+                  8. Boosted Listings and Location Targeting
+                </h2>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
+                  Sellers may optionally purchase or activate a <strong>Boost</strong> to increase product visibility in the
+                  marketplace. When creating a Boost, you must provide a valid <strong>State</strong> and <strong>Area</strong> (locality) which
+                  we use to prioritize your boosted products to buyers filtering or browsing in those locations.
+                </p>
+                <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
+                  <li>Boosts improve placement but do not guarantee clicks, chats, or sales.</li>
+                  <li>You must not misrepresent your location. We may disable or adjust a Boost that appears misleading.</li>
+                  <li>Boost target locations are seller-provided; WaZhop does not track precise GPS location.</li>
+                  <li>Boosts run for the indicated duration and may be paused or removed for policy violations.</li>
+                  <li>Unless required by law, Boost fees are non-refundable once a Boost period has started.</li>
+                </ul>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Buyers can use marketplace filters (including State and Area) to discover relevant products. Our ranking systems
+                  consider multiple signals, including Boost status, product quality, engagement, and recency.
+                </p>
+              </section>
+
+              {/* Referral Program */}
+              <section className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
+                  9. Referral Program and Buyer Upgrade
+                </h2>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
+                  Buyers may upgrade to a seller account. During upgrade, we require your <strong>WhatsApp Business number</strong> and may
+                  offer an optional field to enter a <strong>referral code</strong>. When provided, we attribute the referral according to the
+                  rules published in your dashboard&apos;s Referral Program page.
+                </p>
+                <ul className="list-disc pl-5 sm:pl-6 space-y-1 sm:space-y-2 text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4">
+                  <li>Referral attribution is subject to verification and anti‑fraud checks.</li>
+                  <li>Referral rewards (if any) are not guaranteed and may be modified or discontinued at any time.</li>
+                  <li>Referral codes have no cash value, are non‑transferable, and may not be resold.</li>
+                  <li>Abuse (including self‑referrals or fake accounts) may result in forfeiture and account action.</li>
+                </ul>
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Your use of WhatsApp remains subject to WhatsApp&apos;s own terms. See our Privacy Policy for how we process
+                  WhatsApp numbers and referral information.
+                </p>
+              </section>
+
               {/* Termination */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  8. Termination
+                  10. Termination
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   We may suspend or terminate your account if you:
@@ -236,7 +281,7 @@ const TermsOfService = () => {
               {/* Disclaimer */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  9. Disclaimer of Warranties
+                  11. Disclaimer of Warranties
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   WaZhop is provided &quot;as is&quot; without warranties of any kind. We do not guarantee that:
@@ -253,7 +298,7 @@ const TermsOfService = () => {
               {/* Limitation of Liability */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  10. Limitation of Liability
+                  12. Limitation of Liability
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   To the maximum extent permitted by law, WaZhop shall not be liable for:
@@ -273,7 +318,7 @@ const TermsOfService = () => {
               {/* Indemnification */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  11. Indemnification
+                  13. Indemnification
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   You agree to indemnify and hold WaZhop harmless from any claims, damages, losses, or expenses 
@@ -285,7 +330,7 @@ const TermsOfService = () => {
               {/* Governing Law */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  12. Governing Law and Disputes
+                  14. Governing Law and Disputes
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   These Terms are governed by the laws of the Federal Republic of Nigeria. Any disputes shall 
@@ -301,7 +346,7 @@ const TermsOfService = () => {
               {/* Changes to Terms */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  13. Changes to Terms
+                  15. Changes to Terms
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   We may update these Terms from time to time. We&apos;ll notify you of significant changes via 
@@ -313,7 +358,7 @@ const TermsOfService = () => {
               {/* Severability */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  14. Severability and Waiver
+                  16. Severability and Waiver
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   If any provision of these Terms is found unenforceable, the remaining provisions will continue 
@@ -324,7 +369,7 @@ const TermsOfService = () => {
               {/* Contact */}
               <section className="mb-6 sm:mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
-                  15. Contact Information
+                  17. Contact Information
                 </h2>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-3 sm:mb-4">
                   If you have questions about these Terms, please contact us:

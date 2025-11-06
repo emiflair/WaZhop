@@ -8,8 +8,8 @@ echo ""
 # Get local IP address
 LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
 
-# Start Docker Compose
-docker-compose up -d
+# Start Docker Compose (Compose V2)
+docker compose up -d --build
 
 echo ""
 echo "✅ WaZhop is starting..."
@@ -23,8 +23,8 @@ echo "   1. Connect to the same WiFi network"
 echo "   2. Open browser and go to: http://$LOCAL_IP:3000"
 echo ""
 echo "🔍 View logs:"
-echo "   docker-compose logs -f"
+echo "   docker compose logs -f"
 echo ""
 echo "🛑 Stop services:"
-echo "   docker-compose down"
+echo "   docker compose down"
 echo ""

@@ -1,7 +1,7 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FiCheck } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { productAPI, authAPI } from '../utils/api';
@@ -12,17 +12,21 @@ const Pricing = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const isBuyer = isAuthenticated && user?.role === 'buyer';
   const navigate = useNavigate();
+  const location = useLocation();
   // Boost modal state
   const [boostOpen, setBoostOpen] = useState(false);
   const [myProducts, setMyProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [boostHours, setBoostHours] = useState(5);
   const [boostProductId, setBoostProductId] = useState('');
+  const [boostState, setBoostState] = useState('Lagos');
+  const [boostArea, setBoostArea] = useState('');
   const BOOST_RATE = 400;
 
   // Become Seller modal
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeWhatsapp, setUpgradeWhatsapp] = useState('');
+  const [upgradeReferral, setUpgradeReferral] = useState('');
   const [savingUpgrade, setSavingUpgrade] = useState(false);
 
   const plans = [
@@ -126,6 +130,16 @@ const Pricing = () => {
     load();
   }, [boostOpen]);
 
+  // Auto-open the upgrade modal when arriving with ?upgrade=seller and user is a buyer
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (isBuyer && (params.get('upgrade') === 'seller' || params.get('upgrade') === '1' || params.has('upgrade'))) {
+        setUpgradeOpen(true);
+      }
+    } catch {}
+  }, [location.search, isBuyer]);
+
   const openBoostFlow = () => {
     // If not authenticated, go to login
     if (!user) {
@@ -145,7 +159,7 @@ const Pricing = () => {
       return;
     }
     try {
-      await productAPI.boostProduct(boostProductId, { hours: Number(boostHours) });
+      await productAPI.boostProduct(boostProductId, { hours: Number(boostHours), state: boostState, area: boostArea });
       toast.success('Boost activated');
       setBoostOpen(false);
     } catch (e) {
@@ -311,6 +325,19 @@ const Pricing = () => {
                   <label className="label">Hours</label>
                   <input type="number" min={1} className="input" value={boostHours} onChange={(e) => setBoostHours(Number(e.target.value))} />
                 </div>
+                {/* Location targeting */}
+                <div>
+                  <label className="label">State (Nigeria)</label>
+                  <select className="input" value={boostState} onChange={(e) => setBoostState(e.target.value)}>
+                    {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Area (optional)</label>
+                  <input className="input" type="text" placeholder="e.g., Victoria Island" value={boostArea} onChange={(e) => setBoostArea(e.target.value)} />
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Total</span>
                   <span className="text-lg font-semibold">₦{(Number(boostHours || 0) * BOOST_RATE).toLocaleString()}</span>
@@ -344,6 +371,16 @@ const Pricing = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +234 for Nigeria)</p>
               </div>
+              <div>
+                <label className="label">Referral Code <span className="text-gray-400 text-xs">(optional)</span></label>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="Enter referral code (optional)"
+                  value={upgradeReferral}
+                  onChange={(e) => setUpgradeReferral(e.target.value.toUpperCase())}
+                />
+              </div>
 
               <div className="flex gap-3 pt-2">
                 <button
@@ -351,7 +388,11 @@ const Pricing = () => {
                     if (!upgradeWhatsapp) { toast.error('Enter your WhatsApp number'); return; }
                     try {
                       setSavingUpgrade(true);
-                      const res = await authAPI.upgradeToSeller(upgradeWhatsapp);
+                      const payload = { whatsapp: upgradeWhatsapp };
+                      if (upgradeReferral && upgradeReferral.trim()) {
+                        payload.referralCode = upgradeReferral.trim();
+                      }
+                      const res = await authAPI.upgradeToSeller(payload);
                       if (res?.token && res?.user) {
                         localStorage.setItem('token', res.token);
                         localStorage.setItem('user', JSON.stringify(res.user));
@@ -359,7 +400,8 @@ const Pricing = () => {
                       }
                       toast.success('Your account is now a seller!');
                       setUpgradeOpen(false);
-                      navigate('/dashboard');
+                      // Send new seller to shop settings to complete setup
+                      navigate('/dashboard/shop');
                     } catch (e) {
                       toast.error(e.userMessage || 'Failed to upgrade account');
                     } finally {
