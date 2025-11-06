@@ -424,7 +424,7 @@ const Storefront = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-bottom" style={fontFamily ? { fontFamily } : undefined}>
       {/* Header/Banner - Mobile Optimized */}
       <div
-        className="relative h-40 sm:h-48 md:h-64"
+        className="relative h-40 sm:h-48 md:h-64 pt-safe"
         style={{
           background: shop.banner?.url
             ? `url(${shop.banner.url}) center/cover`
@@ -433,7 +433,10 @@ const Storefront = () => {
       >
         {/* Top Right Watermark - Free Plan Only */}
         {shop.showWatermark && (
-          <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200 shadow-md">
+          <div 
+            className="absolute right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200 shadow-md"
+            style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+          >
             Powered by <span className="font-semibold text-primary-600 dark:text-primary-400">WaZhop</span>
           </div>
         )}
@@ -804,6 +807,7 @@ const Storefront = () => {
           shop={shop}
           onClose={() => setSelectedProduct(null)}
           onWhatsAppClick={handleWhatsAppClick}
+          onSelectProduct={setSelectedProduct}
         />
       )}
 

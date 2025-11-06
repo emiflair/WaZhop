@@ -85,11 +85,11 @@ const Navbar = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={
+                  className={`px-4 py-2 rounded-lg transition-all font-medium ${
                     active
-                      ? 'px-4 py-2 rounded-lg bg-primary-600 text-white shadow-sm hover:bg-primary-700 transition-all font-semibold'
-                      : 'px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all font-medium'
-                  }
+                      ? 'bg-primary-600 text-white shadow-sm hover:bg-primary-700 font-semibold'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
                 >
                   {link.label}
                 </Link>
