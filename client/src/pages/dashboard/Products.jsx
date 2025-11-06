@@ -332,7 +332,7 @@ const Products = () => {
 
   const getPlanLimits = () => {
     const limits = {
-      free: 5,
+      free: 10,
       pro: 100,
       premium: Infinity,
     };

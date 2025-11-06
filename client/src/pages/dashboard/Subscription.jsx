@@ -68,8 +68,8 @@ const Subscription = () => {
       color: 'gray',
       features: [
         { text: '1 shop', included: true },
-        { text: 'Up to 4 products', included: true },
-        { text: '1 default theme', included: true },
+        { text: 'Up to 10 products', included: true },
+        { text: '1 default theme (white)', included: true },
         { text: 'Basic product management', included: true },
         { text: 'Standard support', included: true },
         { text: 'Storage for images', included: false },
@@ -81,7 +81,7 @@ const Subscription = () => {
         { text: 'Priority support', included: false }
       ],
       limits: {
-        products: 4,
+        products: 10,
         themes: 1,
         analytics: false,
         customDomain: false,

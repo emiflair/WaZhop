@@ -431,9 +431,10 @@ const Storefront = () => {
             : `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
         }}
       >
+        {/* Top Right Watermark - Free Plan Only */}
         {shop.showWatermark && (
-          <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200">
-            Powered by <span className="font-semibold">WaZhop</span>
+          <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200 shadow-md">
+            Powered by <span className="font-semibold text-primary-600 dark:text-primary-400">WaZhop</span>
           </div>
         )}
         
@@ -775,6 +776,26 @@ const Storefront = () => {
           </>
         )}
       </div>
+
+      {/* Bottom Powered by WaZhop - Free Plan Only */}
+      {shop.showWatermark && (
+        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6 mt-8">
+          <div className="container-custom text-center">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Powered by{' '}
+              <a 
+                href="https://wazhop.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+              >
+                WaZhop
+              </a>
+              {' '}– Build your online shop in minutes
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Product Detail Modal */}
       {selectedProduct && (

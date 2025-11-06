@@ -32,12 +32,11 @@ const Pricing = () => {
       yearlyPrice: '₦0',
       period: 'forever',
       features: [
-        'Up to 4 products',
         '1 shop',
-        '1 default theme',
-        'WhatsApp integration',
-        'WaZhop branding',
-        'Basic analytics',
+        'Up to 10 products',
+        '1 default theme (white)',
+        'Basic product management',
+        'Standard support'
       ],
       cta: 'Get Started',
       popular: false,

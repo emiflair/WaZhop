@@ -11,7 +11,7 @@ const Home = () => {
       name: 'Free',
       price: '₦0',
       period: 'forever',
-      features: ['1 shop', '4 products', 'WhatsApp integration', 'Basic customization']
+      features: ['1 shop', '10 products', 'WhatsApp integration', 'Basic customization']
     },
     {
       name: 'Pro',
