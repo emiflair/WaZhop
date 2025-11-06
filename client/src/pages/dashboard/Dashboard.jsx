@@ -224,8 +224,8 @@ const Dashboard = () => {
                 <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Active Products</p>
                 <p className="text-2xl sm:text-3xl font-bold mt-1 dark:text-gray-100">{stats.activeProducts}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiShoppingBag className="text-green-600 dark:text-green-400" size={20} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiShoppingBag className="text-primary-600 dark:text-primary-400" size={20} />
               </div>
             </div>
           </div>

@@ -212,7 +212,7 @@ const ReferralProgram = () => {
         </div>
 
         <div className="card text-center">
-          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full flex items-center justify-center mx-auto mb-3">
             <FiTrendingUp size={24} />
           </div>
           <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">

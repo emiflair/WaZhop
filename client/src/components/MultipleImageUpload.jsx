@@ -131,7 +131,7 @@ const MultipleImageUpload = ({
           {previews.map((item, index) => (
             <div
               key={item.id || index}
-              className="relative group rounded-lg overflow-hidden border-2 border-gray-200 hover:border-green-500 transition-colors"
+              className="relative group rounded-lg overflow-hidden border-2 border-gray-200 hover:border-primary-500 transition-colors"
             >
               <img
                 src={item.preview || item}
@@ -164,7 +164,7 @@ const MultipleImageUpload = ({
           {...getRootProps()}
           className={`relative border-2 border-dashed rounded-lg transition-colors ${
             isDragActive
-              ? 'border-green-500 bg-green-50'
+              ? 'border-primary-500 bg-primary-50'
               : error
               ? 'border-red-500 bg-red-50'
               : 'border-gray-300 bg-gray-50 hover:border-gray-400'
@@ -174,10 +174,10 @@ const MultipleImageUpload = ({
 
           <div className="p-6 text-center">
             <FaImage className={`mx-auto text-3xl mb-2 ${
-              isDragActive ? 'text-green-500' : 'text-gray-400'
+              isDragActive ? 'text-primary-600' : 'text-gray-400'
             }`} />
             {isDragActive ? (
-              <p className="text-green-600 font-medium">Drop images here...</p>
+              <p className="text-primary-700 font-medium">Drop images here...</p>
             ) : (
               <>
                 <p className="text-gray-600 font-medium mb-1">
@@ -196,9 +196,9 @@ const MultipleImageUpload = ({
 
       {/* Max Reached Message */}
       {isMaxReached && (
-        <div className="border-2 border-green-500 bg-green-50 rounded-lg p-4 text-center">
-          <FaExclamationTriangle className="inline text-green-600 mr-2" />
-          <span className="text-green-700 font-medium">
+        <div className="border-2 border-primary-500 bg-primary-50 rounded-lg p-4 text-center">
+          <FaExclamationTriangle className="inline text-primary-700 mr-2" />
+          <span className="text-primary-700 font-medium">
             Maximum {maxFiles} images reached
           </span>
         </div>

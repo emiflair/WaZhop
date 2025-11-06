@@ -22,7 +22,7 @@ export const FormError = ({
 
   if (success && successMessage) {
     return (
-      <p className={`text-sm text-green-600 flex items-center gap-1 mt-1 ${className}`}>
+      <p className={`text-sm text-primary-600 flex items-center gap-1 mt-1 ${className}`}>
         <FaCheckCircle className="flex-shrink-0" />
         {successMessage}
       </p>

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext } from 'react';
 import { authAPI } from '../utils/api';
 import toast from 'react-hot-toast';
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
 
       toast.success('Welcome back!');
-      return { success: true };
+      return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);

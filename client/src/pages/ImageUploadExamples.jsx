@@ -347,39 +347,39 @@ const ImageUploadExamples = () => {
         </div>
 
         {/* Features Overview */}
-        <div className="card bg-green-50 border-2 border-green-200">
+        <div className="card bg-primary-50 border-2 border-primary-200">
           <h2 className="text-xl font-semibold mb-4">✨ Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Drag & drop support</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>File size validation</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>File type validation</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Image preview</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Image cropping</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Progress indicators</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Multiple file upload</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="text-green-500">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>Error handling</span>
             </div>
           </div>

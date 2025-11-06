@@ -7,7 +7,8 @@ import Footer from '../components/Footer'
 import SEO from '../components/SEO'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
-import ProductDetailModal from '../components/ProductDetailModal'
+// Product details now open on a dedicated page, not a modal
+import { useNavigate } from 'react-router-dom'
 
 export default function Marketplace() {
   const [products, setProducts] = useState([])
@@ -20,7 +21,7 @@ export default function Marketplace() {
   const [sortBy, setSortBy] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const navigate = useNavigate()
 
   const fetchProducts = useCallback(async (reset = false) => {
     try {
@@ -242,7 +243,11 @@ export default function Marketplace() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   {products.map(product => (
-                    <ProductCard key={product._id} product={product} onSelect={setSelectedProduct} />
+                    <ProductCard 
+                      key={product._id} 
+                      product={product} 
+                      onOpen={() => navigate(`/product/${product._id}`)}
+                    />
                   ))}
                 </div>
 
@@ -262,29 +267,25 @@ export default function Marketplace() {
         <Footer />
       </div>
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
+      {/* Product detail opens on a separate page now */}
     </>
   )
 }
 
-function ProductCard({ product, onSelect }) {
+function ProductCard({ product, onOpen }) {
   const image = product.images?.[0] || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
   const reviewCount = product.reviewStats?.count || 0
 
   return (
     <div
-      onClick={() => onSelect(product)}
-      className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 dark:border-gray-700"
+      onClick={() => onOpen()}
+      className="group bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-xl dark:hover:shadow-gray-900 transition-all duration-300 border border-gray-100 dark:border-gray-700"
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900">
+      <div 
+        className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900"
+      >
         <img
           src={image}
           alt={product.name}
@@ -332,6 +333,17 @@ function ProductCard({ product, onSelect }) {
             {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
           </div>
         )}
+
+        {/* Make Offer Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+          className="mt-3 w-full btn btn-primary text-sm py-2"
+        >
+          Make Offer
+        </button>
       </div>
     </div>
   )

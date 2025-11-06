@@ -22,7 +22,7 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  const { name, email, password, whatsapp } = req.body;
+  const { name, email, password, whatsapp, role = 'buyer' } = req.body;
 
   // Normalize email (trim and lowercase)
   const normalizedEmail = email.trim().toLowerCase();
@@ -41,30 +41,32 @@ exports.register = asyncHandler(async (req, res) => {
     name,
     email: normalizedEmail,
     password,
-    whatsapp,
-    plan: 'free'
+    whatsapp: role === 'seller' ? whatsapp : undefined,
+    plan: 'free',
+    role
   });
 
-  // Create default shop for user
-  const baseSlug = generateSlug(name);
-  const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+  // Create default shop only for sellers
+  if (role === 'seller') {
+    const baseSlug = generateSlug(name);
+    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
-  const shop = await Shop.create({
-    owner: user._id,
-    shopName: `${name}'s Shop`,
-    slug: uniqueSlug,
-    description: 'Welcome to my shop!',
-    theme: {
-      primaryColor: '#000000',
-      accentColor: '#FFD700',
-      layout: 'grid',
-      font: 'inter'
-    }
-  });
+    const shop = await Shop.create({
+      owner: user._id,
+      shopName: `${name}'s Shop`,
+      slug: uniqueSlug,
+      description: 'Welcome to my shop!',
+      theme: {
+        primaryColor: '#000000',
+        accentColor: '#FFD700',
+        layout: 'grid',
+        font: 'inter'
+      }
+    });
 
-  // Update user with shop reference
-  user.shop = shop._id;
-  await user.save();
+    user.shop = shop._id;
+    await user.save();
+  }
 
   // Send token response
   sendTokenResponse(user, 201, res);
@@ -159,6 +161,56 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     data: user,
     message: 'Profile updated successfully'
   });
+});
+
+// @desc    Upgrade a buyer account to seller and create default shop
+// @route   PUT /api/auth/upgrade-to-seller
+// @access  Private
+exports.upgradeToSeller = asyncHandler(async (req, res) => {
+  const currentUser = await User.findById(req.user.id);
+
+  if (!currentUser) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  // If already seller/admin, nothing to do
+  if (currentUser.role === 'seller' || currentUser.role === 'admin') {
+    return res.status(200).json({ success: true, data: currentUser, message: 'Account already has seller access' });
+  }
+
+  const { whatsapp } = req.body || {};
+  if (!whatsapp) {
+    return res.status(400).json({ success: false, message: 'WhatsApp number is required to become a seller' });
+  }
+
+  currentUser.whatsapp = whatsapp;
+  currentUser.role = 'seller';
+  await currentUser.save();
+
+  // Create a default shop if none exists
+  if (!currentUser.shop) {
+    const baseSlug = generateSlug(currentUser.name || 'my-shop');
+    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+    const shop = await Shop.create({
+      owner: currentUser._id,
+      shopName: `${currentUser.name || 'My'}'s Shop`,
+      slug: uniqueSlug,
+      description: 'Welcome to my shop!',
+      theme: {
+        primaryColor: '#000000',
+        accentColor: '#FFD700',
+        layout: 'grid',
+        font: 'inter'
+      }
+    });
+
+    currentUser.shop = shop._id;
+    await currentUser.save();
+  }
+
+  // Return fresh token containing updated role
+  return sendTokenResponse(currentUser, 200, res);
 });
 
 // @desc    Change password

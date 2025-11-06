@@ -17,6 +17,7 @@ import {
   FaStore,
   FaDatabase
 } from 'react-icons/fa';
+import { FiX } from 'react-icons/fi';
 
 const Subscription = () => {
   const { user, updateUser } = useAuth();
@@ -27,6 +28,12 @@ const Subscription = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
+  // Boost flow state
+  const [boostOpen, setBoostOpen] = useState(false);
+  const [boostHours, setBoostHours] = useState(5);
+  const [boostProductId, setBoostProductId] = useState('');
+  const [boostLoading, setBoostLoading] = useState(false);
+  const BOOST_RATE = 400;
 
   useEffect(() => {
     fetchData();
@@ -39,6 +46,9 @@ const Subscription = () => {
       const shopsData = await shopAPI.getMyShops();
       setProducts(productsData);
       setShops(shopsData.shops || []);
+      if (Array.isArray(productsData) && productsData.length > 0) {
+        setBoostProductId(productsData[0]._id);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load subscription data');
@@ -283,7 +293,7 @@ const Subscription = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         </div>
       </DashboardLayout>
     );
@@ -298,11 +308,11 @@ const Subscription = () => {
       <div className="max-w-6xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Subscription Management</h1>
-          <p className="text-gray-600 mt-2">Manage your plan and billing</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your plan and billing</p>
         </div>
 
         {/* Current Plan Overview */}
-        <div className="card mb-6 border-2 border-green-200 bg-gradient-to-r from-green-50 to-blue-50">
+        <div className="card mb-6 border-2 border-primary-200 dark:border-primary-700 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/30 dark:to-accent-900/30">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-full ${getColorClasses(currentPlan.color).bg} flex items-center justify-center`}>
@@ -310,23 +320,23 @@ const Subscription = () => {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-2xl font-bold">{currentPlan.name} Plan</h2>
+                  <h2 className="text-2xl font-bold dark:text-white">{currentPlan.name} Plan</h2>
                   {user?.plan !== 'free' && (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                    <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-200 text-xs font-semibold rounded-full">
                       ACTIVE
                     </span>
                   )}
                 </div>
-                <p className="text-gray-600 mt-1">{currentPlan.description}</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">{currentPlan.description}</p>
               </div>
             </div>
             <div className="text-left md:text-right flex-shrink-0">
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold dark:text-white">
                 ₦{billingInfo.price.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500">per {billingInfo.period}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">per {billingInfo.period}</div>
               {billingInfo.isYearly && billingInfo.monthlyEquivalent && (
-                <div className="text-xs text-green-600 font-medium mt-1">
+                <div className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-1">
                   (₦{billingInfo.monthlyEquivalent.toLocaleString()}/month)
                 </div>
               )}
@@ -335,11 +345,11 @@ const Subscription = () => {
 
           {/* Expiry Warning */}
           {isExpiringSoon && (
-            <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4 flex items-start gap-2">
-              <FaInfoCircle className="text-yellow-600 mt-1" />
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3 mb-4 flex items-start gap-2">
+              <FaInfoCircle className="text-yellow-600 dark:text-yellow-400 mt-1" />
               <div>
-                <p className="font-semibold text-yellow-800">Plan Expiring Soon</p>
-                <p className="text-sm text-yellow-700">
+                <p className="font-semibold text-yellow-800 dark:text-yellow-200">Plan Expiring Soon</p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
                   Your {currentPlan.name} plan will expire in {daysUntilExpiry} day{daysUntilExpiry !== 1 ? 's' : ''}. 
                   Renew now to continue enjoying premium features.
                 </p>
@@ -348,9 +358,9 @@ const Subscription = () => {
           )}
 
           {/* Usage Statistics */}
-          <div className="bg-white rounded-lg p-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <FaChartLine className="text-green-500" />
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+            <h3 className="font-semibold mb-3 flex items-center gap-2 dark:text-white">
+              <FaChartLine className="text-primary-500" />
               Usage Statistics
             </h3>
             <div className="space-y-4">
@@ -358,20 +368,20 @@ const Subscription = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <FaBox className="text-gray-400" />
-                    <span className="text-sm font-medium">Products</span>
+                    <FaBox className="text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm font-medium dark:text-gray-200">Products</span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     {productCount} / {productLimit === Infinity ? '∞' : productLimit}
                   </span>
                 </div>
                 {productLimit !== Infinity && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         usagePercentage >= 90 ? 'bg-red-500' :
                         usagePercentage >= 70 ? 'bg-yellow-500' :
-                        'bg-green-500'
+                        'bg-primary-500'
                       }`}
                       style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                     />
@@ -383,19 +393,19 @@ const Subscription = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <FaStore className="text-gray-400" />
-                    <span className="text-sm font-medium">Shops</span>
+                    <FaStore className="text-gray-400 dark:text-gray-500" />
+                    <span className="text-sm font-medium dark:text-gray-200">Shops</span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     {shops.length} / {currentPlan.limits.maxShops}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
                       (shops.length / currentPlan.limits.maxShops) * 100 >= 90 ? 'bg-red-500' :
                       (shops.length / currentPlan.limits.maxShops) * 100 >= 70 ? 'bg-yellow-500' :
-                      'bg-green-500'
+                      'bg-primary-500'
                     }`}
                     style={{ width: `${Math.min((shops.length / currentPlan.limits.maxShops) * 100, 100)}%` }}
                   />
@@ -407,19 +417,19 @@ const Subscription = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <FaDatabase className="text-gray-400" />
-                      <span className="text-sm font-medium">Storage</span>
+                      <FaDatabase className="text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm font-medium dark:text-gray-200">Storage</span>
                     </div>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       {((user?.storageUsed || 0) / (1024 * 1024 * 1024)).toFixed(2)} GB / {(currentPlan.limits.storage / (1024 * 1024 * 1024)).toFixed(0)} GB
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         ((user?.storageUsed || 0) / currentPlan.limits.storage) * 100 >= 90 ? 'bg-red-500' :
                         ((user?.storageUsed || 0) / currentPlan.limits.storage) * 100 >= 70 ? 'bg-yellow-500' :
-                        'bg-green-500'
+                        'bg-primary-500'
                       }`}
                       style={{ width: `${Math.min(((user?.storageUsed || 0) / currentPlan.limits.storage) * 100, 100)}%` }}
                     />
@@ -430,28 +440,28 @@ const Subscription = () => {
               {/* Other Features */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                 <div className="flex items-center gap-2">
-                  <FaPalette className={currentPlan.limits.themes > 1 ? 'text-green-500' : 'text-gray-300'} />
+                  <FaPalette className={currentPlan.limits.themes > 1 ? 'text-primary-500' : 'text-gray-300 dark:text-gray-600'} />
                   <div>
-                    <p className="text-xs text-gray-500">Themes</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Themes</p>
+                    <p className="text-sm font-medium dark:text-gray-200">
                       {currentPlan.limits.themes === Infinity ? 'Unlimited' : currentPlan.limits.themes}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaChartLine className={currentPlan.limits.analytics ? 'text-green-500' : 'text-gray-300'} />
+                  <FaChartLine className={currentPlan.limits.analytics ? 'text-primary-500' : 'text-gray-300 dark:text-gray-600'} />
                   <div>
-                    <p className="text-xs text-gray-500">Analytics</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Analytics</p>
+                    <p className="text-sm font-medium dark:text-gray-200">
                       {currentPlan.limits.analytics ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaGlobe className={currentPlan.limits.customDomain ? 'text-green-500' : 'text-gray-300'} />
+                  <FaGlobe className={currentPlan.limits.customDomain ? 'text-primary-500' : 'text-gray-300 dark:text-gray-600'} />
                   <div>
-                    <p className="text-xs text-gray-500">Custom Domain</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Custom Domain</p>
+                    <p className="text-sm font-medium dark:text-gray-200">
                       {currentPlan.limits.customDomain ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
@@ -464,16 +474,16 @@ const Subscription = () => {
         {/* Plan Comparison */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Choose Your Plan</h2>
+            <h2 className="text-2xl font-bold dark:text-white">Choose Your Plan</h2>
             
             {/* Billing Period Toggle */}
-            <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setBillingPeriod('monthly')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   billingPeriod === 'monthly' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-primary-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
                 }`}
               >
                 Monthly
@@ -482,12 +492,12 @@ const Subscription = () => {
                 onClick={() => setBillingPeriod('yearly')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors relative ${
                   billingPeriod === 'yearly' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-primary-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
                 }`}
               >
                 Yearly
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                <span className="absolute -top-2 -right-2 bg-primary-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                   -30%
                 </span>
               </button>
@@ -504,7 +514,7 @@ const Subscription = () => {
                 <div
                   key={plan.id}
                   className={`card relative ${
-                    isCurrent ? 'border-2 border-green-500 shadow-lg' : ''
+                    isCurrent ? 'border-2 border-primary-500 shadow-lg' : ''
                   } ${plan.popular ? 'border-2 border-blue-500' : ''}`}
                 >
                   {/* Popular Badge */}
@@ -519,7 +529,7 @@ const Subscription = () => {
                   {/* Current Plan Badge */}
                   {isCurrent && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                      <span className="px-3 py-1 bg-primary-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
                         <FaCheck /> CURRENT PLAN
                       </span>
                     </div>
@@ -529,28 +539,28 @@ const Subscription = () => {
                     <div className={`w-16 h-16 rounded-full ${colors.bg} flex items-center justify-center mx-auto mb-3`}>
                       <Icon className={`text-3xl ${colors.text}`} />
                     </div>
-                    <h3 className="text-2xl font-bold">{plan.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+                    <h3 className="text-2xl font-bold dark:text-white">{plan.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{plan.description}</p>
                   </div>
 
                   <div className="text-center mb-6">
-                    <div className="text-4xl font-bold">
+                    <div className="text-4xl font-bold dark:text-white">
                       {billingPeriod === 'yearly' && plan.yearlyPrice ? (
                         <>₦{plan.yearlyPrice.toLocaleString()}</>
                       ) : (
                         <>₦{plan.price.toLocaleString()}</>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       {billingPeriod === 'yearly' ? 'per year' : `per ${plan.period}`}
                     </div>
                     {billingPeriod === 'yearly' && plan.monthlyEquivalent && (
-                      <div className="text-xs text-green-600 font-medium mt-1">
+                      <div className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-1">
                         ₦{plan.monthlyEquivalent.toLocaleString()}/month when billed annually
                       </div>
                     )}
                     {billingPeriod === 'monthly' && plan.yearlyPrice && (
-                      <div className="text-xs text-blue-600 font-semibold mt-1">
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-1">
                         💰 Save ₦{(plan.price * 12 - plan.yearlyPrice).toLocaleString()} with yearly billing
                       </div>
                     )}
@@ -560,11 +570,11 @@ const Subscription = () => {
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
                         {feature.included ? (
-                          <FaCheck className="text-green-500 mt-1 flex-shrink-0" />
+                          <FaCheck className="text-primary-500 mt-1 flex-shrink-0" />
                         ) : (
                           <FaTimes className="text-gray-300 mt-1 flex-shrink-0" />
                         )}
-                        <span className={`text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400'}`}>
+                        <span className={`text-sm ${feature.included ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
                           {feature.text}
                         </span>
                       </li>
@@ -576,7 +586,7 @@ const Subscription = () => {
                     disabled={isCurrent}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
                       isCurrent
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                         : `${colors.button} text-white`
                     }`}
                   >
@@ -589,13 +599,96 @@ const Subscription = () => {
           </div>
         </div>
 
-        {/* Payment Notice */}
-        <div className="card bg-blue-50 border-2 border-blue-200">
-          <div className="flex items-start gap-3">
-            <FaInfoCircle className="text-blue-600 text-xl mt-1" />
+        {/* Boost Section */}
+        <div className="card mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Payment Integration Coming Soon</h3>
-              <p className="text-sm text-blue-700">
+              <h2 className="text-xl font-bold mb-1 dark:text-white">Boost your product</h2>
+              <p className="text-gray-600 dark:text-gray-300">Get featured at the top of the marketplace. Pricing: ₦400/hour.</p>
+            </div>
+            <button
+              onClick={() => setBoostOpen(true)}
+              className="px-5 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+            >
+              Boost a Product
+            </button>
+          </div>
+        </div>
+
+        {/* Boost Modal */}
+        {boostOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold dark:text-white">Start a Boost</h3>
+                <button onClick={() => setBoostOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"><FiX /></button>
+              </div>
+              {products.length === 0 ? (
+                <div className="space-y-3">
+                  <p className="text-gray-700 dark:text-gray-300">You don’t have any products yet.</p>
+                  <a href="/dashboard/products" className="btn btn-primary inline-block">Add a Product</a>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Select Product</label>
+                    <select
+                      className="input"
+                      value={boostProductId}
+                      onChange={(e) => setBoostProductId(e.target.value)}
+                    >
+                      {products.map((p) => (
+                        <option key={p._id} value={p._id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Hours</label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="input"
+                      value={boostHours}
+                      onChange={(e) => setBoostHours(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Total</span>
+                    <span className="text-lg font-semibold">₦{(Number(boostHours || 0) * BOOST_RATE).toLocaleString()}</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!boostProductId) { toast.error('Select a product'); return; }
+                      if (!boostHours || boostHours < 1) { toast.error('Enter at least 1 hour'); return; }
+                      try {
+                        setBoostLoading(true);
+                        await productAPI.boostProduct(boostProductId, { hours: Number(boostHours) });
+                        toast.success('Boost activated');
+                        setBoostOpen(false);
+                      } catch (e) {
+                        toast.error(e.userMessage || 'Failed to start boost');
+                      } finally {
+                        setBoostLoading(false);
+                      }
+                    }}
+                    className={`w-full py-3 rounded-lg text-white font-semibold ${boostLoading ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+                    disabled={boostLoading}
+                  >
+                    {boostLoading ? 'Starting…' : 'Start Boost'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Payment Notice */}
+        <div className="card bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700">
+          <div className="flex items-start gap-3">
+            <FaInfoCircle className="text-blue-600 dark:text-blue-400 text-xl mt-1" />
+            <div>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Payment Integration Coming Soon</h3>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
                 We&apos;re currently integrating Paystack for secure payment processing. 
                 For now, plan changes are free for testing purposes. 
                 Once payment is live, you&apos;ll be charged automatically based on your selected plan.
@@ -644,7 +737,7 @@ const Subscription = () => {
                 {billingPeriod === 'yearly' && selectedPlan.monthlyEquivalent && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600 dark:text-gray-300">Monthly Equivalent</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">
+                    <span className="font-semibold text-primary-600 dark:text-primary-400">
                       ₦{selectedPlan.monthlyEquivalent.toLocaleString()}/month
                     </span>
                   </div>

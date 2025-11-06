@@ -96,11 +96,11 @@ const SingleImageUpload = ({
         {...getRootProps()}
         className={`relative border-2 border-dashed rounded-lg transition-colors ${
           isDragActive
-            ? 'border-green-500 bg-green-50'
+            ? 'border-primary-500 bg-primary-50'
             : error
             ? 'border-red-500 bg-red-50'
             : preview
-            ? 'border-green-500 bg-gray-50'
+            ? 'border-primary-500 bg-gray-50'
             : 'border-gray-300 bg-gray-50 hover:border-gray-400'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
@@ -115,7 +115,7 @@ const SingleImageUpload = ({
               className="w-full h-48 object-contain rounded-lg p-2"
             />
             <div className="absolute top-2 right-2 flex gap-2">
-              <div className="bg-green-500 text-white rounded-full p-2">
+              <div className="bg-primary-600 text-white rounded-full p-2">
                 <FaCheckCircle />
               </div>
               {!disabled && (
@@ -134,10 +134,10 @@ const SingleImageUpload = ({
           // Empty State
           <div className="p-8 text-center">
             <FaImage className={`mx-auto text-4xl mb-3 ${
-              isDragActive ? 'text-green-500' : 'text-gray-400'
+              isDragActive ? 'text-primary-600' : 'text-gray-400'
             }`} />
             {isDragActive ? (
-              <p className="text-green-600 font-medium">Drop image here...</p>
+              <p className="text-primary-700 font-medium">Drop image here...</p>
             ) : (
               <>
                 <p className="text-gray-600 font-medium mb-1">

@@ -17,7 +17,7 @@ const UploadProgress = ({ files = [], onCancel, className = '' }) => {
       case 'uploading':
         return 'text-blue-600';
       case 'success':
-        return 'text-green-600';
+        return 'text-primary-600';
       case 'error':
         return 'text-red-600';
       default:
@@ -39,8 +39,8 @@ const UploadProgress = ({ files = [], onCancel, className = '' }) => {
   };
 
   const getProgressColor = (progress, status) => {
-    if (status === 'error') return 'bg-red-500';
-    if (status === 'success') return 'bg-green-500';
+  if (status === 'error') return 'bg-red-500';
+  if (status === 'success') return 'bg-primary-500';
     return 'bg-blue-500';
   };
 
@@ -117,7 +117,7 @@ export const SimpleProgressBar = ({
   const getColor = () => {
     switch (status) {
       case 'success':
-        return 'bg-green-500';
+        return 'bg-primary-500';
       case 'error':
         return 'bg-red-500';
       default:

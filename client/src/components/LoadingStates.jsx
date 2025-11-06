@@ -47,7 +47,7 @@ export const ContentLoading = ({
     return loadingComponent || (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-green-500 mx-auto mb-4" />
+          <FaSpinner className="animate-spin text-4xl text-primary-500 mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export const ContentLoading = ({
 export const ProgressBar = ({ 
   progress = 0, 
   showPercentage = true,
-  color = 'bg-green-500',
+  color = 'bg-primary-500',
   className = ''
 }) => {
   return (
@@ -134,8 +134,8 @@ export const StepIndicator = ({
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center
                   transition-all duration-200
-                  ${isCompleted ? 'bg-green-500 text-white' : ''}
-                  ${isCurrent ? 'bg-green-500 text-white ring-4 ring-green-200' : ''}
+                  ${isCompleted ? 'bg-primary-500 text-white' : ''}
+                  ${isCurrent ? 'bg-primary-500 text-white ring-4 ring-primary-200' : ''}
                   ${isUpcoming ? 'bg-gray-200 text-gray-500' : ''}
                 `}
               >
@@ -150,7 +150,7 @@ export const StepIndicator = ({
               <span
                 className={`
                   absolute -bottom-6 text-xs whitespace-nowrap
-                  ${isCurrent ? 'text-green-600 font-medium' : 'text-gray-500'}
+                  ${isCurrent ? 'text-primary-600 font-medium' : 'text-gray-500'}
                 `}
               >
                 {step}
@@ -163,7 +163,7 @@ export const StepIndicator = ({
                 <div
                   className={`
                     h-full transition-all duration-300
-                    ${isCompleted ? 'bg-green-500' : 'bg-gray-200'}
+                    ${isCompleted ? 'bg-primary-500' : 'bg-gray-200'}
                   `}
                 />
               </div>
@@ -185,7 +185,7 @@ export const PulseLoader = ({ className = '' }) => {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="w-3 h-3 bg-green-500 rounded-full animate-pulse"
+          className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"
           style={{ animationDelay: `${i * 0.15}s` }}
         />
       ))}
@@ -212,7 +212,7 @@ export const RefreshIndicator = ({
       ) : (
         <button
           onClick={onRefresh}
-          className="text-sm text-green-600 hover:text-green-700 font-medium"
+          className="text-sm text-primary-600 hover:text-primary-700 font-medium"
         >
           Pull to refresh
         </button>
@@ -238,7 +238,7 @@ export const InlineStatus = ({
     },
     success: {
       icon: FaCheckCircle,
-      color: 'text-green-500',
+      color: 'text-primary-500',
       animate: ''
     },
     error: {
@@ -270,7 +270,7 @@ export const CardLoading = ({ loading, children, className = '' }) => {
     <div className={`relative ${className}`}>
       {children}
       <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-        <FaSpinner className="animate-spin text-3xl text-green-500" />
+        <FaSpinner className="animate-spin text-3xl text-primary-500" />
       </div>
     </div>
   );

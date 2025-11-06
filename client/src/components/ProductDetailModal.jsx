@@ -3,12 +3,12 @@ import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart, FiCredit
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { FaThumbsUp } from 'react-icons/fa';
 import StarRating from './StarRating';
-import { reviewAPI } from '../utils/api';
+import { reviewAPI, productAPI } from '../utils/api';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/currency';
 
-const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
+const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectProduct }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -16,6 +16,8 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
   const [totalReviews, setTotalReviews] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
   
   // Cart functionality
   const { addToCart } = useCart();
@@ -44,6 +46,29 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewPage, product?._id]);
+
+  // Fetch related products by category (exclude current)
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (!product?.category) {
+        setRelatedProducts([]);
+        return;
+      }
+      try {
+        setLoadingRelated(true);
+        const list = await productAPI.getMarketplaceProducts({ category: product.category, limit: 12 });
+        const items = Array.isArray(list) ? list : [];
+        const filtered = items.filter((p) => p._id !== product._id);
+        setRelatedProducts(filtered.slice(0, 8));
+      } catch (e) {
+        console.error('Failed to load related products', e);
+        setRelatedProducts([]);
+      } finally {
+        setLoadingRelated(false);
+      }
+    };
+    fetchRelated();
+  }, [product?._id, product?.category]);
 
   const fetchReviews = async () => {
     try {
@@ -117,6 +142,32 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
 
     window.open(`https://wa.me/?text=${shareMessage}`, '_blank');
     toast.success('Opening WhatsApp to share product');
+  };
+
+  // Fallback for WhatsApp order if parent did not provide a handler
+  const handleOrderOnWhatsApp = async () => {
+    if (typeof onWhatsAppClick === 'function') {
+      onWhatsAppClick(product);
+      return;
+    }
+    try {
+      const number = shop?.owner?.whatsapp || product?.shop?.owner?.whatsapp;
+      if (!number) {
+        toast.error('Seller WhatsApp not available');
+        return;
+      }
+      const currency = shop?.paymentSettings?.currency || 'NGN';
+      const formattedPrice = formatPrice(product?.price, currency);
+      const message = encodeURIComponent(
+        `Hello! I'm interested in your product: ${product?.name}\nPrice: ${formattedPrice}`
+      );
+      const link = `https://wa.me/${String(number).replace(/\D/g, '')}?text=${message}`;
+      window.open(link, '_blank');
+      // Track click (non-blocking)
+  try { await productAPI.trackClick(product._id); } catch (e) { /* no-op */ }
+    } catch (err) {
+      console.error('WhatsApp order failed', err);
+    }
   };
 
   const nextImage = () => {
@@ -236,9 +287,9 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
                   Only {product.stock} left - Order soon!
                 </span>
               ) : product.stock !== null ? (
-                <span className="text-green-600 text-sm font-medium">In Stock ({product.stock} available)</span>
+                <span className="text-primary-600 text-sm font-medium">In Stock ({product.stock} available)</span>
               ) : (
-                <span className="text-green-600 text-sm font-medium">In Stock</span>
+                <span className="text-primary-600 text-sm font-medium">In Stock</span>
               )}
             </div>
 
@@ -326,7 +377,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               {/* WhatsApp Button - Show if payment not configured or if negotiation is allowed */}
               {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
                 <button
-                  onClick={() => onWhatsAppClick(product)}
+                  onClick={handleOrderOnWhatsApp}
                   disabled={isOutOfStock}
                   className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
                 >
@@ -338,13 +389,52 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick }) => {
               {/* Share to WhatsApp Button */}
               <button
                 onClick={handleShareToWhatsApp}
-                className="btn btn-outline w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                className="btn btn-outline w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-primary-500 text-primary-600 hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-900/20"
               >
                 <FiShare2 size={22} />
                 Share on WhatsApp
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Related Products Section */}
+        <div className="border-t border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold">Related Products</h3>
+            {product?.category && (
+              <span className="text-sm text-gray-500 capitalize">in {product.category}</span>
+            )}
+          </div>
+          {loadingRelated ? (
+            <div className="text-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            </div>
+          ) : !Array.isArray(relatedProducts) || relatedProducts.length === 0 ? (
+            <p className="text-gray-500">No related products found.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {relatedProducts.map((rp) => (
+                <button
+                  key={rp._id}
+                  onClick={() => {
+                    if (typeof onSelectProduct === 'function') {
+                      onSelectProduct(rp);
+                    }
+                  }}
+                  className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div className="aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden">
+                    <img src={rp.images?.[0]?.url ?? rp.images?.[0] ?? ''} alt={rp.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <p className="font-medium text-sm line-clamp-2 mb-1">{rp.name}</p>
+                    <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(rp.price, 'NGN')}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Reviews Section */}

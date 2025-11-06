@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import AuthLayout from '../components/AuthLayout';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,8 +14,9 @@ const Login = () => {
     password: '',
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/marketplace';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,85 +27,82 @@ const Login = () => {
     setLoading(true);
 
     const result = await login(formData);
-    
     if (result.success) {
-      navigate(from, { replace: true });
+      const target = result.user?.role === 'seller' ? (from.startsWith('/dashboard') ? from : '/dashboard') : '/marketplace';
+      navigate(target, { replace: true });
     }
     
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <Navbar />
-      
-      <div className="flex-grow flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 p-6 sm:p-8">
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h2>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">Login to your WaZhop account</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              <div>
-                <label htmlFor="email" className="label text-sm sm:text-base">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="input text-sm sm:text-base"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="label text-sm sm:text-base">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="input text-sm sm:text-base"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <div className="mt-2 text-right">
-                  <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
-                    Forgot your password?
-                  </Link>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full text-sm sm:text-base py-3"
-              >
-                {loading ? 'Logging in...' : 'Login'}
-              </button>
-            </form>
-
-            <div className="mt-4 sm:mt-6 text-center">
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Don&apos;t have an account?{' '}
-                <Link to="/register" className="text-gray-900 dark:text-gray-100 font-semibold hover:underline">
-                  Sign up
-                </Link>
-              </p>
-            </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to manage your shop or keep exploring the marketplace."
+      altLink={<Link to="/register" className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:underline">Create account</Link>}
+      footer={<span>Don&apos;t have an account? <Link to="/register" className="font-semibold text-gray-900 dark:text-white hover:underline">Sign up</Link></span>}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        <div>
+          <label htmlFor="email" className="label">Email Address</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <FaEnvelope />
+            </span>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="input pl-10"
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={handleChange}
+            />
           </div>
         </div>
-      </div>
-    </div>
+
+        <div>
+          <label htmlFor="password" className="label">Password</label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <FaLock />
+            </span>
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              className="input pl-10 pr-10"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+          <div className="mt-2 text-right">
+            <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn btn-primary w-full py-3"
+        >
+          {loading ? 'Logging in…' : 'Login'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

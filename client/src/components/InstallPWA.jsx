@@ -174,7 +174,7 @@ const InstallPWA = ({ onClose }) => {
                   </span>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Scroll and tap <strong>"Add to Home Screen"</strong>
+                      Scroll and tap <strong>&quot;Add to Home Screen&quot;</strong>
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                       Look for the plus icon (+) next to it
@@ -187,7 +187,7 @@ const InstallPWA = ({ onClose }) => {
                   </span>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Tap <strong>"Add"</strong> to confirm
+                      Tap <strong>&quot;Add&quot;</strong> to confirm
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                       The app will appear on your home screen! 🎉
@@ -208,8 +208,8 @@ const InstallPWA = ({ onClose }) => {
           {isAndroid && !isIOS && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                  <FaAndroid className="text-3xl text-green-600 dark:text-green-400" />
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+                  <FaAndroid className="text-3xl text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900 dark:text-gray-100">
@@ -223,7 +223,7 @@ const InstallPWA = ({ onClose }) => {
 
               <ol className="space-y-3 text-sm">
                 <li className="flex gap-3">
-                  <span className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                  <span className="w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
                     1
                   </span>
                   <div>
@@ -236,25 +236,25 @@ const InstallPWA = ({ onClose }) => {
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <span className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                  <span className="w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
                     2
                   </span>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Tap <strong>"Add to Home screen"</strong>
+                      Tap <strong>&quot;Add to Home screen&quot;</strong>
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                      Or "Install app" if available
+                      Or &quot;Install app&quot; if available
                     </p>
                   </div>
                 </li>
                 <li className="flex gap-3">
-                  <span className="w-7 h-7 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                  <span className="w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
                     3
                   </span>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Tap <strong>"Add"</strong> or <strong>"Install"</strong>
+                      Tap <strong>&quot;Add&quot;</strong> or <strong>&quot;Install&quot;</strong>
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                       The app will appear on your home screen! 🎉
@@ -263,8 +263,8 @@ const InstallPWA = ({ onClose }) => {
                 </li>
               </ol>
 
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-4">
-                <p className="text-xs text-green-800 dark:text-green-300">
+              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3 mt-4">
+                <p className="text-xs text-primary-800 dark:text-primary-300">
                   <strong>Tip:</strong> You can also look for the install banner at the bottom of your screen
                 </p>
               </div>
@@ -295,7 +295,7 @@ const InstallPWA = ({ onClose }) => {
                     On iPhone/iPad (Safari):
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 text-xs">
-                    Tap Share (⬆️) → "Add to Home Screen" → Add
+                    Tap Share (⬆️) → &quot;Add to Home Screen&quot; → Add
                   </p>
                 </div>
 
@@ -305,7 +305,7 @@ const InstallPWA = ({ onClose }) => {
                     On Android (Chrome):
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 text-xs">
-                    Menu (⋮) → "Add to Home screen" → Add
+                    Menu (⋮) → &quot;Add to Home screen&quot; → Add
                   </p>
                 </div>
 
@@ -328,19 +328,19 @@ const InstallPWA = ({ onClose }) => {
             </h5>
             <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
               <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-primary-600">✓</span>
                 <span>Instant access from your home screen</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-primary-600">✓</span>
                 <span>Faster loading and better performance</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-primary-600">✓</span>
                 <span>Works offline when network is poor</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-primary-600">✓</span>
                 <span>Full-screen experience like a native app</span>
               </li>
             </ul>

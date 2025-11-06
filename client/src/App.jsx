@@ -27,6 +27,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Marketplace = lazy(() => import('./pages/Marketplace'))
+const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 
 // Lazy load dashboard pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
@@ -50,6 +51,7 @@ const Storefront = lazy(() => import('./pages/Storefront'))
 
 // Protected Route Component
 import ProtectedRoute from './components/ProtectedRoute'
+import HideForBuyers from './components/HideForBuyers'
 
 // Wrapper component that lives inside Router so we can use useLocation safely
 function AppRoutes() {
@@ -90,10 +92,11 @@ function AppRoutes() {
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/pricing" element={<HideForBuyers><Pricing /></HideForBuyers>} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -102,16 +105,16 @@ function AppRoutes() {
                 <Route path="/terms-of-service" element={<TermsOfService />} />
 
                 {/* Protected Dashboard Routes */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/dashboard/shops" element={<ProtectedRoute><ManageShops /></ProtectedRoute>} />
-                <Route path="/dashboard/shop" element={<ProtectedRoute><ShopSettings /></ProtectedRoute>} />
-                <Route path="/dashboard/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-                <Route path="/dashboard/inventory" element={<ProtectedRoute><InventoryManagement /></ProtectedRoute>} />
-                <Route path="/dashboard/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-                <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/dashboard/reviews" element={<ProtectedRoute><Reviews /></ProtectedRoute>} />
-                <Route path="/dashboard/referrals" element={<ProtectedRoute><ReferralProgram /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute sellerOnly><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard/profile" element={<ProtectedRoute sellerOnly><Profile /></ProtectedRoute>} />
+                <Route path="/dashboard/shops" element={<ProtectedRoute sellerOnly><ManageShops /></ProtectedRoute>} />
+                <Route path="/dashboard/shop" element={<ProtectedRoute sellerOnly><ShopSettings /></ProtectedRoute>} />
+                <Route path="/dashboard/products" element={<ProtectedRoute sellerOnly><Products /></ProtectedRoute>} />
+                <Route path="/dashboard/inventory" element={<ProtectedRoute sellerOnly><InventoryManagement /></ProtectedRoute>} />
+                <Route path="/dashboard/subscription" element={<ProtectedRoute sellerOnly><Subscription /></ProtectedRoute>} />
+                <Route path="/dashboard/analytics" element={<ProtectedRoute sellerOnly><Analytics /></ProtectedRoute>} />
+                <Route path="/dashboard/reviews" element={<ProtectedRoute sellerOnly><Reviews /></ProtectedRoute>} />
+                <Route path="/dashboard/referrals" element={<ProtectedRoute sellerOnly><ReferralProgram /></ProtectedRoute>} />
                 
                 {/* Demo Pages (Development) */}
                 <Route path="/demo/error-handling" element={<ProtectedRoute><ErrorHandlingExamples /></ProtectedRoute>} />

@@ -37,7 +37,7 @@ const ShopSettings = () => {
 
   // Theme state
   const [theme, setTheme] = useState({
-    primaryColor: '#10b981',
+    primaryColor: '#f97316',
     accentColor: '#3b82f6',
     layout: 'grid',
     fontFamily: 'inter'
@@ -112,7 +112,7 @@ const ShopSettings = () => {
 
       // Populate theme
       setTheme({
-        primaryColor: data.theme?.primaryColor || '#10b981',
+        primaryColor: data.theme?.primaryColor || '#f97316',
         accentColor: data.theme?.accentColor || '#3b82f6',
         layout: data.theme?.layout || 'grid',
         fontFamily: data.theme?.font || 'inter'
@@ -524,7 +524,7 @@ const ShopSettings = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         </div>
       </DashboardLayout>
     );
@@ -542,7 +542,7 @@ const ShopSettings = () => {
           {/* Basic Information */}
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <FaStore className="text-green-500" />
+              <FaStore className="text-primary-500" />
               Basic Information
             </h2>
             
@@ -985,7 +985,7 @@ const ShopSettings = () => {
                             <span className="text-xs text-blue-600 font-medium">✓ Active Theme</span>
                           )}
                           {themeOption.animations && (
-                            <span className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                            <span className="text-xs text-primary-600 flex items-center gap-1 mt-1">
                               ⚡ Animations
                             </span>
                           )}
@@ -1169,7 +1169,7 @@ const ShopSettings = () => {
                       onClick={() => handleLayoutSelect(layout.value)}
                       className={`p-4 border-2 rounded-lg text-left transition-all ${
                         theme.layout === layout.value
-                          ? 'border-green-500 bg-green-50'
+                          ? 'border-primary-500 bg-primary-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -1268,7 +1268,7 @@ const ShopSettings = () => {
                     </TouchButton>
                   </div>
                   {shop?.subdomain && (
-                    <p className="text-sm text-green-600 mt-2">
+                    <p className="text-sm text-primary-600 mt-2">
                       ✓ Your shop is accessible at:{' '}
                       <a 
                         href={`https://${shop.subdomain}.wazhop.com`}
@@ -1340,7 +1340,7 @@ const ShopSettings = () => {
                         <p className="text-lg font-semibold text-gray-900 mt-1">
                           {shop.customDomain}
                         </p>
-                        <p className={`text-sm mt-1 ${domainVerified ? 'text-green-600' : 'text-orange-600'}`}>
+                        <p className={`text-sm mt-1 ${domainVerified ? 'text-primary-600' : 'text-primary-600'}`}>
                           {domainVerified ? '✓ Verified' : '⚠ Pending Verification'}
                         </p>
                       </div>
@@ -1398,8 +1398,8 @@ const ShopSettings = () => {
                     )}
 
                     {domainVerified && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <p className="text-sm text-green-800">
+                      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+                        <p className="text-sm text-primary-800">
                           ✓ Your shop is accessible at:{' '}
                           <a 
                             href={`https://${shop.customDomain}`}
@@ -1421,7 +1421,7 @@ const ShopSettings = () => {
           {/* Social Links */}
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <FaGlobe className="text-green-500" />
+              <FaGlobe className="text-primary-500" />
               Social Media Links
             </h2>
             

@@ -37,6 +37,11 @@ const reviewSchema = new mongoose.Schema({
     minlength: [10, 'Review must be at least 10 characters'],
     maxlength: [1000, 'Review cannot exceed 1000 characters']
   },
+  // Optional single image attached by the reviewer
+  image: {
+    url: { type: String },
+    publicId: { type: String }
+  },
   isVerified: {
     type: Boolean,
     default: false // Could be set to true if they purchased through a future order system

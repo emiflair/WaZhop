@@ -270,8 +270,8 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center gap-3">
-                <FaWhatsapp className="text-green-500 text-2xl" />
+        <div className="flex items-center gap-3">
+          <FaWhatsapp className="text-primary-600 text-2xl" />
                 <div>
                   <h4 className="font-semibold dark:text-gray-100">Allow WhatsApp Negotiation</h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -282,7 +282,7 @@ const PaymentSettings = ({ shop, onUpdate, isPremium }) => {
               <button
                 onClick={() => handleToggleChange('allowWhatsAppNegotiation', !paymentData.allowWhatsAppNegotiation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  paymentData.allowWhatsAppNegotiation ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+                  paymentData.allowWhatsAppNegotiation ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span

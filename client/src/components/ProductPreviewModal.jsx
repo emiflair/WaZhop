@@ -93,7 +93,7 @@ const ProductPreviewModal = ({ product, onClose }) => {
             </div>
 
             <div className="mb-4">
-              <span className={`inline-block text-xs font-semibold px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <span className={`inline-block text-xs font-semibold px-2 py-1 rounded ${product.inStock ? 'bg-primary-100 text-primary-700' : 'bg-red-100 text-red-700'}`}>
                 {product.inStock ? 'In Stock' : 'Out of Stock'}
               </span>
               <span className="ml-2 inline-block text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700 capitalize">

@@ -39,8 +39,8 @@ const ErrorAlert = ({
       IconComponent: FaInfoCircle
     },
     success: {
-      container: 'bg-green-50 border-green-200 text-green-800',
-      icon: 'text-green-500',
+      container: 'bg-primary-50 border-primary-200 text-primary-800',
+      icon: 'text-primary-500',
       IconComponent: FaInfoCircle
     }
   };

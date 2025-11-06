@@ -109,15 +109,18 @@ const Products = () => {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + images.length > 10) {
-      toast.error('Maximum 10 images allowed per product');
+    if (files.length + images.length > 5) {
+      toast.error('Maximum 5 images allowed per product');
       return;
     }
 
-    setImages([...images, ...files]);
+  // Only allow up to 5 in total
+  const remaining = 5 - images.length;
+  const toAdd = files.slice(0, Math.max(0, remaining));
+  setImages([...images, ...toAdd]);
 
     // Create previews
-    files.forEach((file) => {
+    toAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews((prev) => [...prev, reader.result]);
@@ -552,7 +555,7 @@ const Products = () => {
                           onClick={(e) => { e.stopPropagation(); toggleInStock(product._id, product.inStock); }}
                           className={`text-xs px-2 py-1 rounded-full ${
                             product.inStock
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-primary-100 text-primary-700'
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
@@ -574,7 +577,7 @@ const Products = () => {
                   <div className="flex items-center justify-end gap-2 ml-20">
                     <TouchButton
                       onClick={() => openBoost(product)}
-                      variant="accent"
+                      variant="purple"
                       size="sm"
                       title="Boost"
                     >
@@ -697,7 +700,7 @@ const Products = () => {
                           onClick={() => toggleInStock(product._id, product.inStock)}
                           className={`text-sm px-3 py-1 rounded-full ${
                             product.inStock
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-primary-100 text-primary-700'
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
@@ -720,7 +723,7 @@ const Products = () => {
                         <div className="flex items-center justify-end gap-2">
                           <TouchButton
                             onClick={() => openBoost(product)}
-                            variant="accent"
+                            variant="purple"
                             size="sm"
                             title="Boost"
                           >
@@ -900,7 +903,7 @@ const Products = () => {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="label text-sm sm:text-base">Product Images (Max 10)</label>
+                  <label className="label text-sm sm:text-base">Product Images (Max 5)</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center">
                     <input
                       type="file"
@@ -909,17 +912,17 @@ const Products = () => {
                       accept="image/*"
                       onChange={handleImageSelect}
                       className="hidden"
-                      disabled={images.length >= 10}
+                      disabled={images.length >= 5}
                     />
                     <label
                       htmlFor="images"
-                      className={`cursor-pointer ${images.length >= 10 ? 'opacity-50' : ''}`}
+                      className={`cursor-pointer ${images.length >= 5 ? 'opacity-50' : ''}`}
                     >
                       <FiUpload className="mx-auto text-gray-400 mb-2" size={28} />
                       <p className="text-xs sm:text-sm text-gray-600">
                         Click to upload or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB • Up to 5 images</p>
                     </label>
                   </div>
 
@@ -1072,7 +1075,7 @@ const Products = () => {
                 <span className="text-sm text-gray-700">Total</span>
                 <span className="text-lg font-semibold">₦{(Number(boostForm.hours || 0) * 400).toLocaleString()}</span>
               </div>
-              <TouchButton onClick={submitBoost} variant="primary" size="md" className="w-full">Start Boost</TouchButton>
+              <TouchButton onClick={submitBoost} variant="purple" size="md" className="w-full">Start Boost</TouchButton>
             </div>
           </div>
         </div>

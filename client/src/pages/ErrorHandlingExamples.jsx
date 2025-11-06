@@ -458,7 +458,7 @@ showError('An error occurred!');`}
           
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Components</h3>
+              <h3 className="font-semibold text-primary-600">Components</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ ErrorBoundary - Catch component errors</li>
                 <li>✅ ErrorAlert - Contextual error messages</li>
@@ -471,7 +471,7 @@ showError('An error occurred!');`}
             </div>
             
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Utilities</h3>
+              <h3 className="font-semibold text-primary-600">Utilities</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ parseApiError - Parse API errors</li>
                 <li>✅ handleApiError - Handle with toast</li>

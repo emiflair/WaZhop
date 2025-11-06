@@ -354,7 +354,7 @@ const LoadingStatesExamples = () => {
                   <span
                     className={`
                       px-2 py-1 rounded text-xs font-medium
-                      ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}
+                      ${item.status === 'active' ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-700'}
                     `}
                   >
                     {item.status}
@@ -389,7 +389,7 @@ const LoadingStatesExamples = () => {
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Skeleton Loaders</h3>
+              <h3 className="font-semibold text-primary-600">Skeleton Loaders</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ Base Skeleton component</li>
                 <li>✅ Text skeleton (multi-line)</li>
@@ -404,7 +404,7 @@ const LoadingStatesExamples = () => {
             </div>
             
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Loading Indicators</h3>
+              <h3 className="font-semibold text-primary-600">Loading Indicators</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ Button loading state</li>
                 <li>✅ Content loading wrapper</li>
@@ -418,7 +418,7 @@ const LoadingStatesExamples = () => {
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Optimistic Updates</h3>
+              <h3 className="font-semibold text-primary-600">Optimistic Updates</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ useOptimistic hook</li>
                 <li>✅ Optimistic add with rollback</li>
@@ -430,7 +430,7 @@ const LoadingStatesExamples = () => {
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Custom Hooks</h3>
+              <h3 className="font-semibold text-primary-600">Custom Hooks</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>✅ useOptimistic</li>
                 <li>✅ useOptimisticAction</li>

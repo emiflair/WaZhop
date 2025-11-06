@@ -99,7 +99,8 @@ export const authAPI = {
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.put('/auth/change-password', data),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password })
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+  upgradeToSeller: (whatsapp) => api.put('/auth/upgrade-to-seller', { whatsapp })
 };
 
 // Shop endpoints
@@ -183,7 +184,22 @@ export const userAPI = {
 // Review endpoints
 export const reviewAPI = {
   getProductReviews: (productId, params) => api.get(`/reviews/product/${productId}`, { params }),
-  createReview: (data) => api.post('/reviews', data),
+  createReview: (data) => {
+    // Support both JSON and multipart with a single image
+    if (data instanceof FormData) {
+      return api.post('/reviews', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+    }
+    if (data && data.imageFile) {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (key === 'imageFile') return;
+        if (value !== undefined && value !== null) formData.append(key, value);
+      });
+      formData.append('image', data.imageFile);
+      return api.post('/reviews', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    }
+    return api.post('/reviews', data);
+  },
   getMyShopReviews: (shopId, params) => api.get(`/reviews/shop/my${shopId ? `?shopId=${shopId}` : ''}`, { params }),
   approveReview: (id, isApproved) => api.put(`/reviews/${id}/approve`, { isApproved }),
   deleteReview: (id) => api.delete(`/reviews/${id}`),

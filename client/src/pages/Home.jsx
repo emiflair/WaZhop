@@ -43,7 +43,7 @@ const Home = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="flex-grow bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-800 dark:to-gray-900 py-16 sm:py-20 md:py-24 px-4">
+  <section className="flex-grow bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-gray-800 dark:to-gray-900 py-16 sm:py-20 md:py-24 px-4">
         <div className="container-custom">
           <div className="text-center max-w-5xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">

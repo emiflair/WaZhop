@@ -22,8 +22,8 @@ const Contact = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiPhone className="text-green-600" size={24} />
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiPhone className="text-primary-600" size={24} />
               </div>
               <h3 className="font-semibold mb-2">WhatsApp</h3>
               <p className="text-gray-600">+234 801 234 5678</p>

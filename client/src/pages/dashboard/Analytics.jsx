@@ -29,7 +29,7 @@ const Analytics = () => {
     { name: 'Other', value: 5 },
   ];
 
-  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#f97316', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   useEffect(() => {
     fetchData();
@@ -125,7 +125,7 @@ const Analytics = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Views</p>
                 <p className="text-3xl font-bold text-gray-900">{totalViews}</p>
-                <p className="text-sm text-green-600 mt-1">↑ 12% vs last period</p>
+                <p className="text-sm text-primary-600 mt-1">↑ 12% vs last period</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FiEye className="text-blue-600" size={24} />
@@ -139,10 +139,10 @@ const Analytics = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Clicks</p>
                 <p className="text-3xl font-bold text-gray-900">{totalClicks}</p>
-                <p className="text-sm text-green-600 mt-1">↑ 8% vs last period</p>
+                <p className="text-sm text-primary-600 mt-1">↑ 8% vs last period</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <FiMousePointer className="text-green-600" size={24} />
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <FiMousePointer className="text-primary-600" size={24} />
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ const Analytics = () => {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Conversion Rate</p>
                 <p className="text-3xl font-bold text-gray-900">{conversionRate}%</p>
-                <p className="text-sm text-green-600 mt-1">↑ 3% vs last period</p>
+                <p className="text-sm text-primary-600 mt-1">↑ 3% vs last period</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <FiTrendingUp className="text-purple-600" size={24} />
@@ -189,7 +189,7 @@ const Analytics = () => {
                 <Tooltip />
                 <Legend />
                 <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} />
-                <Line type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={2} />
+                <Line type="monotone" dataKey="clicks" stroke="#f97316" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -266,7 +266,7 @@ const Analytics = () => {
                         <td className="py-3 px-4">{productViews}</td>
                         <td className="py-3 px-4">{productClicks}</td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
+                          <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded text-sm">
                             {productConversion}%
                           </span>
                         </td>
@@ -294,10 +294,10 @@ const Analytics = () => {
               <p className="text-2xl font-bold text-blue-900">Saturday</p>
               <p className="text-sm text-blue-700 mt-1">90 views, 40 clicks</p>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-600 font-medium mb-1">Most Popular Category</p>
-              <p className="text-2xl font-bold text-green-900">Fashion</p>
-              <p className="text-sm text-green-700 mt-1">35% of total products</p>
+            <div className="p-4 bg-primary-50 rounded-lg">
+              <p className="text-sm text-primary-600 font-medium mb-1">Most Popular Category</p>
+              <p className="text-2xl font-bold text-primary-900">Fashion</p>
+              <p className="text-sm text-primary-700 mt-1">35% of total products</p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg">
               <p className="text-sm text-purple-600 font-medium mb-1">Average Time on Shop</p>

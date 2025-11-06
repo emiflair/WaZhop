@@ -205,7 +205,7 @@ const Reviews = () => {
                             <StarBadge rating={r.rating} />
                             <span className="text-xs text-gray-500">{formatDate(r.createdAt)}</span>
                             {r.isApproved ? (
-                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"><FiCheckCircle /> Approved</span>
+                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-700"><FiCheckCircle /> Approved</span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700"><FiXCircle /> Pending</span>
                             )}

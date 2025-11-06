@@ -27,7 +27,9 @@ export const TouchButton = ({
     secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-200',
     outline: 'border-2 border-gray-900 text-gray-900 hover:bg-gray-50 active:bg-white',
     danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-600',
-    success: 'bg-green-600 text-white hover:bg-green-700 active:bg-green-600',
+    success: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-600',
+    accent: 'bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-600',
+    purple: 'bg-purple-600 text-white hover:bg-purple-700 active:bg-purple-600',
   };
 
   return (

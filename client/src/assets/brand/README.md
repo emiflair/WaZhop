@@ -4,7 +4,7 @@ This folder contains the primary WaZhop lettermark and guidance for using it acr
 
 ## Files
 
-- `wazhop-icon.svg` — Primary lettermark. Green rounded square with a white, friendly “W”. Works on both light and dark backgrounds.
+- `wazhop-icon.svg` — Primary lettermark. Orange rounded square with a white, friendly “W”. Works on both light and dark backgrounds.
 
 ## Usage
 
@@ -15,7 +15,7 @@ This folder contains the primary WaZhop lettermark and guidance for using it acr
 
 ## Colors
 
-- Gradient: `#34D399` → `#10B981` → `#059669`
+- Gradient: `#FB923C` → `#F97316` → `#EA580C`
 - Letter: white `#FFFFFF`
 
 ## PWA icons (optional)

@@ -208,7 +208,7 @@ const ImageCropUpload = ({
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <FaCrop className="text-green-500" />
+                  <FaCrop className="text-primary-600" />
                   Crop Image
                 </h3>
                 <p className="text-sm text-gray-500">
@@ -270,7 +270,7 @@ const ImageCropUpload = ({
 
       {/* Preview or Upload Button */}
       {preview && !isCropping ? (
-        <div className="relative border-2 border-green-500 rounded-lg p-2 bg-gray-50">
+        <div className="relative border-2 border-primary-500 rounded-lg p-2 bg-gray-50">
           <img
             src={preview}
             alt="Cropped preview"

@@ -1,6 +1,25 @@
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../utils/helpers');
+const { cloudinary } = require('../config/cloudinary');
+
+// Helper to upload a single image buffer to Cloudinary
+const uploadFromBuffer = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: 'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+};
 
 // @desc    Get reviews for a product
 // @route   GET /api/reviews/product/:productId
@@ -64,6 +83,18 @@ exports.createReview = asyncHandler(async (req, res) => {
     }
   }
 
+  // Optional image upload (single)
+  let image = undefined;
+  try {
+    if (req.file && req.file.buffer && cloudinary?.uploader) {
+      const result = await uploadFromBuffer(req.file.buffer, 'wazhop/reviews');
+      image = { url: result.secure_url || result.url, publicId: result.public_id };
+    }
+  } catch (err) {
+    // Don't fail the whole review if image upload fails; proceed without image
+    console.error('Review image upload failed:', err?.message || err);
+  }
+
   // Create review
   const review = await Review.create({
     product: productId,
@@ -71,7 +102,8 @@ exports.createReview = asyncHandler(async (req, res) => {
     customerName,
     customerEmail: customerEmail || undefined,
     rating,
-    comment
+    comment,
+    image
   });
 
   res.status(201).json({

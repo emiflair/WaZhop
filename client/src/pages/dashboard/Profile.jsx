@@ -168,7 +168,7 @@ const Profile = () => {
       case 'medium':
         return 'bg-yellow-500';
       case 'strong':
-        return 'bg-green-500';
+        return 'bg-primary-500';
       default:
         return 'bg-gray-300';
     }
@@ -198,7 +198,7 @@ const Profile = () => {
         {/* Account Information */}
         <div className="card mb-6">
           <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
-            <FaUser className="text-green-500" />
+            <FaUser className="text-primary-600" />
             Account Information
           </h2>
           <p className="text-sm text-gray-500 mb-4">
@@ -241,7 +241,7 @@ const Profile = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <FaWhatsapp className="inline mr-2 text-green-500" />
+                <FaWhatsapp className="inline mr-2 text-primary-600" />
                 WhatsApp Number *
               </label>
               <input
@@ -291,7 +291,7 @@ const Profile = () => {
         {/* Change Password */}
         <div className="card mb-6">
           <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
-            <FaLock className="text-green-500" />
+            <FaLock className="text-primary-600" />
             Password & Security
           </h2>
           <p className="text-sm text-gray-500 mb-4">
@@ -344,7 +344,7 @@ const Profile = () => {
                       <span className={`text-sm font-medium capitalize ${
                         passwordStrength === 'weak' ? 'text-red-500' :
                         passwordStrength === 'medium' ? 'text-yellow-500' :
-                        'text-green-500'
+                        'text-primary-600'
                       }`}>
                         {passwordStrength}
                       </span>
@@ -377,7 +377,7 @@ const Profile = () => {
                   </p>
                 )}
                 {passwordData.confirmPassword && passwordMatch && (
-                  <p className="text-sm text-green-500 mt-1 flex items-center gap-1">
+                  <p className="text-sm text-primary-600 mt-1 flex items-center gap-1">
                     <FaCheckCircle />
                     Passwords match
                   </p>

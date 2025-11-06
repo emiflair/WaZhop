@@ -243,7 +243,7 @@ const InventoryManagement = () => {
                           ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                           : product.stock <= product.lowStockThreshold
                           ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                          : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                          : 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                       }`}>
                         {!product.inStock || product.stock === 0 ? 'Out of Stock' : 
                          product.stock <= product.lowStockThreshold ? 'Low Stock' : 'In Stock'}

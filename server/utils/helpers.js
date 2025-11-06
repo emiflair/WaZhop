@@ -16,6 +16,7 @@ exports.sendTokenResponse = (user, statusCode, res) => {
     token,
     user: {
       id: user._id,
+      role: user.role,
       name: user.name,
       email: user.email,
       whatsapp: user.whatsapp,

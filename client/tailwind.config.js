@@ -8,30 +8,31 @@ export default {
   theme: {
     extend: {
       colors: {
-        // WhatsApp-inspired green color palette
+        // Orange brand palette
         primary: {
-          50: '#e8f9f0',   // Very light green
-          100: '#d1f4e0',  // Light green background
-          200: '#a3e9c1',  // Soft green
-          300: '#75dea2',  // Light WhatsApp green
-          400: '#47d383',  // Medium green
-          500: '#25D366',  // WhatsApp primary green
-          600: '#1ead52',  // Darker green
-          700: '#128C7E',  // WhatsApp teal
-          800: '#0d6b5f',  // Deep teal
-          900: '#075E54',  // WhatsApp dark teal
+          50: '#FFF7ED',   // orange-50
+          100: '#FFEDD5',  // orange-100
+          200: '#FED7AA',  // orange-200
+          300: '#FDBA74',  // orange-300
+          400: '#FB923C',  // orange-400
+          500: '#F97316',  // orange-500 (brand primary)
+          600: '#EA580C',  // orange-600
+          700: '#C2410C',  // orange-700
+          800: '#9A3412',  // orange-800
+          900: '#7C2D12',  // orange-900
         },
+        // Warm accent (amber)
         accent: {
-          50: '#fffef5',   // Very light lime
-          100: '#fffceb',  // Light lime
-          200: '#fef9c7',  // Soft yellow-green
-          300: '#fdf5a3',  // Lime highlight
-          400: '#dcf8c6',  // WhatsApp chat bubble green
-          500: '#c8e6c9',  // Light accent green
-          600: '#a5d6a7',  // Medium accent
-          700: '#81c784',  // Vibrant accent
-          800: '#66bb6a',  // Deep accent
-          900: '#4caf50',  // Rich green accent
+          50: '#FFFBEB',   // amber-50
+          100: '#FEF3C7',  // amber-100
+          200: '#FDE68A',  // amber-200
+          300: '#FCD34D',  // amber-300
+          400: '#FBBF24',  // amber-400
+          500: '#F59E0B',  // amber-500
+          600: '#D97706',  // amber-600
+          700: '#B45309',  // amber-700
+          800: '#92400E',  // amber-800
+          900: '#78350F',  // amber-900
         },
       },
       fontFamily: {
@@ -56,6 +57,12 @@ export default {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+      },
+      spacing: {
+        safe: 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
       },
     },
   },

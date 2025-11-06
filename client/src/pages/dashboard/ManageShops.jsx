@@ -99,7 +99,7 @@ const ManageShops = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         </div>
       </DashboardLayout>
     );
@@ -121,7 +121,7 @@ const ManageShops = () => {
             disabled={!canCreateMore}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               canCreateMore
-                ? 'bg-green-600 hover:bg-green-700 text-white'
+                ? 'bg-primary-600 hover:bg-primary-700 text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >

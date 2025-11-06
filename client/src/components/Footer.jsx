@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FiTwitter, FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { isAuthenticated, user } = useAuth();
+  const isBuyer = isAuthenticated && user?.role === 'buyer';
 
   return (
     <footer className="bg-gray-900 text-white pt-12 pb-6">
@@ -25,7 +28,9 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/pricing" className="hover:text-white transition">Pricing</Link></li>
+              {!isBuyer && (
+                <li><Link to="/pricing" className="hover:text-white transition">Pricing</Link></li>
+              )}
               <li><Link to="/how-it-works" className="hover:text-white transition">How It Works</Link></li>
               <li><Link to="/register" className="hover:text-white transition">Get Started</Link></li>
             </ul>

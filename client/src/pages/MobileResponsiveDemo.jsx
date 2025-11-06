@@ -197,7 +197,7 @@ const MobileResponsiveDemo = () => {
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
                         item.stock === 'In Stock'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-primary-100 text-primary-700'
                           : item.stock === 'Low Stock'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
@@ -283,7 +283,7 @@ const MobileResponsiveDemo = () => {
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
                         item.stock === 'In Stock'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-primary-100 text-primary-700'
                           : item.stock === 'Low Stock'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
@@ -309,7 +309,7 @@ const MobileResponsiveDemo = () => {
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
                         item.stock === 'In Stock'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-primary-100 text-primary-700'
                           : item.stock === 'Low Stock'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
@@ -385,7 +385,7 @@ const MobileResponsiveDemo = () => {
             <p className="text-sm text-gray-600 mb-2">Long Press Detection:</p>
             <div
               {...longPressHandlers}
-              className="h-32 bg-gradient-to-r from-green-400 to-blue-400 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer"
+              className="h-32 bg-gradient-to-r from-primary-400 to-accent-400 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer"
             >
               Press and hold for 800ms
             </div>

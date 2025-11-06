@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,8 @@ import logo from '../assets/brand/wazhop-icon.svg';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -30,13 +31,35 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
-  const menuLinks = [
+  // Base menu links
+  let menuLinks = [
     { to: '/marketplace', label: 'Marketplace' },
     { to: '/how-it-works', label: 'How It Works' },
     { to: '/pricing', label: 'Pricing' },
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
   ];
+
+  // Hide seller-focused links for buyers
+  const isBuyer = isAuthenticated && user?.role === 'buyer';
+  if (isBuyer) {
+    menuLinks = menuLinks.filter((l) => l.to !== '/pricing');
+  }
+
+  const isActive = (to) => {
+    // Consider a link active if the current path starts with the target path
+    // Handles nested routes like /pricing/faq etc.
+    try {
+      if (to === '/') return location.pathname === '/';
+      // Treat product detail pages as part of marketplace for highlighting
+      if (to === '/marketplace' && location.pathname.startsWith('/product/')) {
+        return true;
+      }
+      return location.pathname === to || location.pathname.startsWith(`${to}/`);
+    } catch {
+      return false;
+    }
+  };
 
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
@@ -55,24 +78,33 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {menuLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition font-medium"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center space-x-4">
+            {menuLinks.map((link) => {
+              const active = isActive(link.to);
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={
+                    active
+                      ? 'px-4 py-2 rounded-lg bg-primary-600 text-white shadow-sm hover:bg-primary-700 transition font-semibold'
+                      : 'px-2 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition font-medium'
+                  }
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             
             <ThemeToggle />
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link to="/dashboard" className="btn btn-primary">
-                  Dashboard
-                </Link>
+                {(user?.role === 'seller' || user?.role === 'admin') && (
+                  <Link to="/dashboard" className="btn btn-primary">
+                    Dashboard
+                  </Link>
+                )}
                 <button 
                   onClick={logout}
                   className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -138,16 +170,24 @@ const Navbar = () => {
             </div>
             
             <div className="px-6 py-6 space-y-2">
-              {menuLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setIsOpen(false)}
-                  className="block min-h-[52px] px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-lg font-medium transition"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {menuLinks.map((link) => {
+                const active = isActive(link.to);
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setIsOpen(false)}
+                    className={
+                      `block min-h-[52px] px-4 py-3 rounded-lg font-medium transition ` +
+                      (active
+                        ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600')
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               
               <div className="py-4">
                 <div className="flex items-center justify-between px-4">
@@ -159,13 +199,15 @@ const Navbar = () => {
               <div className="pt-4 border-t dark:border-gray-700 mt-4">
                 {isAuthenticated ? (
                   <>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setIsOpen(false)}
-                      className="block min-h-[52px] px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-lg font-medium transition"
-                    >
-                      Dashboard
-                    </Link>
+                    {(user?.role === 'seller' || user?.role === 'admin') && (
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setIsOpen(false)}
+                        className="block min-h-[52px] px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-lg font-medium transition"
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();

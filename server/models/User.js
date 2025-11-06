@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ['buyer', 'seller', 'admin'],
+    default: 'buyer',
+    index: true
+  },
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -25,7 +31,7 @@ const userSchema = new mongoose.Schema({
   },
   whatsapp: {
     type: String,
-    required: [true, 'WhatsApp number is required'],
+    required: [function() { return this.role !== 'buyer'; }, 'WhatsApp number is required for sellers'],
     match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid WhatsApp number with country code']
   },
   plan: {

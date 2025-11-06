@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
@@ -175,6 +176,7 @@ export const CartProvider = ({ children }) => {
 
   const value = {
     cartItems,
+    isValidating,
     addToCart,
     removeFromCart,
     updateQuantity,

@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         success: {
           duration: 3000,
           iconTheme: {
-            primary: '#10b981',
+            primary: '#f97316',
             secondary: '#fff',
           },
         },

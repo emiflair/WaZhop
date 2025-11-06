@@ -1,4 +1,4 @@
-import { FiX, FiShoppingCart, FiMinus, FiPlus, FiTrash2, FiCreditCard } from 'react-icons/fi';
+import { FiX, FiShoppingCart, FiMinus, FiPlus, FiTrash2, FiCreditCard, FiShoppingBag } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
@@ -10,7 +10,25 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
   const handleWhatsAppCheckout = () => {
     const itemsByShop = getItemsByShop();
     
-    itemsByShop.forEach(({ shop: itemShop, items }) => {
+    if (itemsByShop.length === 0) {
+      toast.error('No items in cart');
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+    
+    itemsByShop.forEach(({ shop: itemShop, items }, index) => {
+      // Check if WhatsApp number exists
+      const whatsappNumber = itemShop?.owner?.whatsapp?.replace(/\D/g, '');
+      
+      if (!whatsappNumber) {
+        console.error('Missing WhatsApp for shop:', itemShop.shopName);
+        errorCount++;
+        toast.error(`${itemShop.shopName}: WhatsApp contact not available`);
+        return;
+      }
+
       const currency = itemShop.paymentSettings?.currency || 'NGN';
       let message = `Hello! I'd like to order the following items from ${itemShop.shopName}:\n\n`;
       
@@ -30,14 +48,25 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
 
       message += `\nTotal: ${formatPrice(shopTotal, currency)}`;
 
-      const whatsappNumber = itemShop.owner.whatsapp.replace(/\D/g, '');
-      window.open(
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
-        '_blank'
-      );
+      // Use setTimeout to stagger the window opens (prevents popup blockers)
+      setTimeout(() => {
+        window.open(
+          `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+          '_blank'
+        );
+      }, index * 500); // 500ms delay between each window
+
+      successCount++;
     });
 
-    onClose();
+    if (successCount > 0) {
+      toast.success(`Opening ${successCount} WhatsApp conversation${successCount > 1 ? 's' : ''}`);
+    }
+
+    if (errorCount === 0 && successCount > 0) {
+      // Only close if all were successful
+      setTimeout(() => onClose(), itemsByShop.length * 500 + 500);
+    }
   };
 
   const handlePaymentCheckout = () => {
@@ -104,70 +133,86 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                 <p className="text-gray-600 dark:text-gray-300 text-base">Your cart is empty</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {cartItems.map((item, idx) => {
-                  const price = item.variant?.price || item.product.price;
-                  const image = item.product.images?.[0]?.url;
-
-                  return (
-                    <div key={idx} className="flex gap-3 border-b pb-4 border-gray-200 dark:border-gray-700">
-                      {/* Product Image */}
-                      {image ? (
-                        <img
-                          src={image}
-                          alt={item.product.name}
-                          className="w-20 h-20 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
-                          <FiShoppingCart className="text-gray-300 dark:text-gray-500" size={24} />
-                        </div>
-                      )}
-
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm mb-1 line-clamp-2 text-gray-900 dark:text-gray-100">
-                          {item.product.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{item.shop.shopName}</p>
-                        {item.variant && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
-                            {Object.entries(item.variant).map(([key, value]) => 
-                              key !== 'price' && key !== 'stock' && key !== 'sku' ? value : null
-                            ).filter(Boolean).join(', ')}
-                          </p>
-                        )}
-                        <p className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                          {formatPrice(price, shop?.paymentSettings?.currency || 'NGN')}
-                        </p>
-
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => updateQuantity(item.product._id, item.variant, item.quantity - 1)}
-                            className="p-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                          >
-                            <FiMinus size={14} />
-                          </button>
-                          <span className="w-8 text-center font-medium text-gray-800 dark:text-gray-200">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.product._id, item.variant, item.quantity + 1)}
-                            className="p-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                            disabled={item.product.stock !== null && item.quantity >= item.product.stock}
-                          >
-                            <FiPlus size={14} />
-                          </button>
-                          <button
-                            onClick={() => removeFromCart(item.product._id, item.variant)}
-                            className="ml-auto p-1 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
+              <div className="space-y-6">
+                {/* Group items by shop */}
+                {getItemsByShop().map(({ shop: itemShop, items }, shopIdx) => (
+                  <div key={shopIdx} className="space-y-3">
+                    {/* Shop Header */}
+                    <div className="flex items-center justify-between pb-2 border-b-2 border-primary-200 dark:border-primary-700">
+                      <div className="flex items-center gap-2">
+                        <FiShoppingBag className="text-primary-600 dark:text-primary-400" size={18} />
+                        <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">{itemShop.shopName}</h3>
                       </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {items.length} item{items.length > 1 ? 's' : ''}
+                      </span>
                     </div>
-                  );
-                })}
+
+                    {/* Shop Items */}
+                    {items.map((item, idx) => {
+                      const price = item.variant?.price || item.product.price;
+                      const image = item.product.images?.[0]?.url;
+
+                      return (
+                        <div key={idx} className="flex gap-3 pb-3">
+                          {/* Product Image */}
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={item.product.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                              <FiShoppingCart className="text-gray-300 dark:text-gray-500" size={20} />
+                            </div>
+                          )}
+
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1 line-clamp-2 text-gray-900 dark:text-gray-100">
+                              {item.product.name}
+                            </h4>
+                            {item.variant && (
+                              <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                                {Object.entries(item.variant).map(([key, value]) => 
+                                  key !== 'price' && key !== 'stock' && key !== 'sku' ? value : null
+                                ).filter(Boolean).join(', ')}
+                              </p>
+                            )}
+                            <p className="font-bold text-base text-gray-900 dark:text-gray-100">
+                              {formatPrice(price, itemShop.paymentSettings?.currency || 'NGN')}
+                            </p>
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => updateQuantity(item.product._id, item.variant, item.quantity - 1)}
+                                className="p-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                              >
+                                <FiMinus size={14} />
+                              </button>
+                              <span className="w-8 text-center font-medium text-gray-800 dark:text-gray-200">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.product._id, item.variant, item.quantity + 1)}
+                                className="p-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                                disabled={item.product.stock !== null && item.quantity >= item.product.stock}
+                              >
+                                <FiPlus size={14} />
+                              </button>
+                              <button
+                                onClick={() => removeFromCart(item.product._id, item.variant)}
+                                className="ml-auto p-1 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                              >
+                                <FiTrash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -175,6 +220,15 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
           {/* Footer */}
           {cartItems.length > 0 && (
             <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-3 text-gray-900 dark:text-gray-100">
+              {/* Multiple shops notice */}
+              {getItemsByShop().length > 1 && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-2">
+                  <p className="text-xs text-blue-800 dark:text-blue-200">
+                    <strong>📦 Multiple Shops:</strong> You&apos;ll send separate WhatsApp messages to each shop owner.
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-between items-center mb-2">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-2xl font-bold">

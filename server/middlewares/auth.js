@@ -55,15 +55,47 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// Check if user is admin
+// Check if user is admin (supports legacy isAdmin flag and new role field)
 exports.isAdmin = async (req, res, next) => {
-  if (!req.user.isAdmin) {
+  const isAdmin = req.user?.role === 'admin' || req.user?.isAdmin === true;
+  if (!isAdmin) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. Admin privileges required.'
     });
   }
   next();
+};
+
+// Require specific role(s) to access a route
+// Usage: requireRole('seller') or requireRole('seller', 'admin')
+exports.requireRole = (...roles) => {
+  return (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Not authorized to access this route. Please login.'
+        });
+      }
+
+      const userRole = req.user.role || (req.user.isAdmin ? 'admin' : undefined);
+
+      // Admins are allowed unless explicitly excluded
+      const isAllowed = roles.includes(userRole) || userRole === 'admin';
+      if (!isAllowed) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Insufficient permissions.'
+        });
+      }
+
+      next();
+    } catch (err) {
+      console.error('requireRole middleware error:', err);
+      return res.status(500).json({ success: false, message: 'Server error during authorization' });
+    }
+  };
 };
 
 // Check plan limits

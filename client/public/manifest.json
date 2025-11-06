@@ -4,8 +4,8 @@
   "description": "Manage your online shop, products, and orders on WaZhop",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#10B981",
-  "theme_color": "#10B981",
+  "background_color": "#F97316",
+  "theme_color": "#F97316",
   "orientation": "portrait-primary",
   "categories": ["shopping", "business", "productivity"],
   "icons": [
