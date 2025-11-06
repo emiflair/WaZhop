@@ -19,13 +19,7 @@ const app = express();
 // Middleware
 app.use(helmet()); // Security headers
 
-// CORS configuration - support multiple origins
-const allowedOrigins = process.env.CLIENT_URL 
-  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : ['http://localhost:5173'];
-
-console.log('🔓 Allowed CORS origins:', allowedOrigins);
-
+// CORS configuration - allow localhost and any local network IP
 app.use(cors({
   origin: function (origin, callback) {
     console.log('📥 Request from origin:', origin);
@@ -36,13 +30,16 @@ app.use(cors({
       return callback(null, true);
     }
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Allow localhost and any private IP address (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+    const privateIPPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+    
+    if (localhostPattern.test(origin) || privateIPPattern.test(origin)) {
       console.log('✅ Origin allowed:', origin);
       return callback(null, true);
     }
     
     console.log('❌ Origin blocked:', origin);
-    console.log('   Expected one of:', allowedOrigins);
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },
