@@ -137,7 +137,10 @@ const Pricing = () => {
       if (isBuyer && (params.get('upgrade') === 'seller' || params.get('upgrade') === '1' || params.has('upgrade'))) {
         setUpgradeOpen(true);
       }
-    } catch {}
+    } catch (e) {
+      // Safe fallback if query parsing fails
+      console.warn('Failed to parse upgrade query param', e);
+    }
   }, [location.search, isBuyer]);
 
   const openBoostFlow = () => {

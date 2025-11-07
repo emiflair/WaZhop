@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
@@ -7,7 +7,6 @@ import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';

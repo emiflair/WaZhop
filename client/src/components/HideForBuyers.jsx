@@ -14,7 +14,10 @@ export default function HideForBuyers({ children, redirectTo = '/marketplace' })
     if (isBuyer && (params.get('upgrade') === 'seller' || params.get('upgrade') === '1' || params.has('upgrade'))) {
       return children;
     }
-  } catch {}
+  } catch (e) {
+    // Ignore malformed query strings; default behavior applies
+    console.warn('HideForBuyers: failed to parse query params', e);
+  }
 
   if (isBuyer) {
     return <Navigate to={redirectTo} replace />;

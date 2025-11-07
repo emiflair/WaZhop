@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiTwitter, FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
+import logo from '../assets/brand/wazhop-icon.svg';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -13,11 +14,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-1 mb-4">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-gray-900 font-bold text-lg">W</span>
-              </div>
-              <span className="text-xl font-bold">aZhop</span>
+            <div className="flex items-center space-x-0 mb-4">
+              <img src={logo} alt="WaZhop logo" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
+              <span className="-ml-2 tracking-tighter text-2xl font-bold">aZhop</span>
             </div>
             <p className="text-gray-400 text-sm">
               Create your WhatsApp shop in minutes. Customize, share, and sell smarter.

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiDownload, FiSmartphone, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { FaApple, FaAndroid } from 'react-icons/fa';
+import { FiX, FiDownload, FiChevronDown, FiChevronUp, FiSmartphone } from 'react-icons/fi';
+import logo from '../assets/brand/wazhop-icon.svg';
+import { FaApple, FaAndroid, FaStar } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 const InstallPWA = ({ onClose }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -8,6 +10,7 @@ const InstallPWA = ({ onClose }) => {
   const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     // Check if already installed
@@ -32,14 +35,37 @@ const InstallPWA = ({ onClose }) => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    // Gently nudge with a native-like sheet on mobile
+    const dontShow = localStorage.getItem('pwaDontShowAgain') === '1';
+    const hideUntil = Number(localStorage.getItem('pwaHideUntil') || '0');
+    const shouldNudge = !standalone && !dontShow && Date.now() > hideUntil && (iOS || android);
+    let timer;
+    if (shouldNudge) {
+      timer = setTimeout(() => setIsSheetOpen(true), 1200);
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
+  // Celebrate install and hide UI
+  useEffect(() => {
+    const onInstalled = () => {
+      setIsSheetOpen(false);
+      if (toast && typeof toast.success === 'function') {
+        toast.success('WaZhop installed');
+      }
+      if (onClose) onClose();
+    };
+    window.addEventListener('appinstalled', onInstalled);
+    return () => window.removeEventListener('appinstalled', onInstalled);
+  }, [onClose]);
+
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      setShowInstructions(!showInstructions);
+      setIsSheetOpen(true);
       return;
     }
 
@@ -56,6 +82,20 @@ const InstallPWA = ({ onClose }) => {
 
     // Clear the deferredPrompt
     setDeferredPrompt(null);
+  };
+
+  const handleSnooze = () => {
+    // Hide for 3 days
+    const ttl = 3 * 24 * 60 * 60 * 1000;
+    localStorage.setItem('pwaHideUntil', String(Date.now() + ttl));
+    setIsSheetOpen(false);
+    if (onClose) onClose();
+  };
+
+  const handleDontShowAgain = () => {
+    localStorage.setItem('pwaDontShowAgain', '1');
+    setIsSheetOpen(false);
+    if (onClose) onClose();
   };
 
   if (isStandalone) {
@@ -90,16 +130,15 @@ const InstallPWA = ({ onClose }) => {
         />
         
         <div className="flex items-center gap-3 relative z-10">
-          {/* Icon */}
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0">
-            <FiSmartphone className="text-white" size={20} />
+          {/* Brand lockup: icon + aZhop (chip to match navbar look on gradient) */}
+          <div className="flex items-center space-x-0 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg pl-1 pr-2 py-1 shadow-sm">
+            <img src={logo} alt="WaZhop logo" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
+            <span className="-ml-2 tracking-tighter font-extrabold text-gray-900 dark:text-gray-100 text-base sm:text-lg">aZhop</span>
           </div>
           
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm sm:text-base font-bold text-white mb-0.5">
-              Install WaZhop App
-            </h3>
+            <h3 className="text-sm sm:text-base font-bold text-white mb-0.5">Install WaZhop App</h3>
             <p className="text-xs text-white/90 line-clamp-1">
               {getInstructionText()}
             </p>
@@ -134,8 +173,107 @@ const InstallPWA = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Instructions Panel */}
-      {showInstructions && (
+      {/* Native-like Install Bottom Sheet */}
+      {isSheetOpen && (
+        <div className="fixed inset-0 z-[60]">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleSnooze} />
+
+          {/* Sheet */}
+          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl border-t border-gray-200 dark:border-gray-800 p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+            <div className="flex items-start gap-3">
+              <img src={logo} alt="WaZhop logo" className="w-12 h-12 rounded-xl shadow-sm" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center space-x-0">
+                      <span className="-ml-0.5 text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">WaZhop</span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Free • Shopping</p>
+                  </div>
+                  <button onClick={handleSnooze} aria-label="Close" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+                    <FiX />
+                  </button>
+                </div>
+                <div className="mt-2 flex items-center gap-1 text-amber-500">
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar key={i} className="h-4 w-4" />
+                  ))}
+                  <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">4.9 • PWA</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA row */}
+            <div className="mt-4 flex items-center gap-2">
+              {deferredPrompt ? (
+                <button onClick={handleInstallClick} className="btn btn-primary flex-1 py-3">
+                  <FiDownload className="mr-2" /> Install
+                </button>
+              ) : isIOS ? (
+                <button onClick={() => setShowInstructions((s) => !s)} className="btn btn-primary flex-1 py-3">
+                  Add to Home Screen
+                </button>
+              ) : (
+                <button onClick={() => setShowInstructions((s) => !s)} className="btn btn-primary flex-1 py-3">
+                  How to Install
+                </button>
+              )}
+              <button onClick={handleSnooze} className="btn bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-3">Not now</button>
+            </div>
+
+            {/* Instructions inside sheet */}
+            {showInstructions && (
+              <div className="mt-4 animate-fadeIn">
+                {/* iOS Instructions */}
+                {isIOS && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center"><FaApple className="text-gray-800 dark:text-gray-200" /></div>
+                      <div>
+                        <p className="font-semibold">Install on iPhone/iPad</p>
+                        <p className="text-xs text-gray-500">Open in Safari</p>
+                      </div>
+                    </div>
+                    <ol className="text-sm space-y-2 pl-5 list-decimal">
+                      <li>Tap Share (⬆️) in Safari</li>
+                      <li>Scroll and choose &quot;Add to Home Screen&quot;</li>
+                      <li>Tap Add</li>
+                    </ol>
+                  </div>
+                )}
+
+                {/* Android */}
+                {isAndroid && !deferredPrompt && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center"><FaAndroid className="text-primary-600 dark:text-primary-400" /></div>
+                      <div>
+                        <p className="font-semibold">Install on Android</p>
+                        <p className="text-xs text-gray-500">Open in Chrome</p>
+                      </div>
+                    </div>
+                    <ol className="text-sm space-y-2 pl-5 list-decimal">
+                      <li>Tap the three-dot menu (⋮)</li>
+                      <li>Choose &quot;Add to Home screen&quot; or &quot;Install app&quot;</li>
+                      <li>Confirm</li>
+                    </ol>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer actions */}
+            <div className="mt-3 flex items-center justify-between">
+              <button onClick={handleDontShowAgain} className="text-xs text-gray-500 hover:underline">Don’t show again</button>
+              <p className="text-[11px] text-gray-400">Looks and works like a native app</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instructions Panel (desktop fallback) */}
+      {showInstructions && !isSheetOpen && (
         <div className="card animate-fadeIn">
           {/* iOS Instructions */}
           {isIOS && (
