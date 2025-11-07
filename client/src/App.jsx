@@ -29,6 +29,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Marketplace = lazy(() => import('./pages/Marketplace'))
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 
 // Lazy load dashboard pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
@@ -115,6 +116,7 @@ function AppRoutes() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
                 {/* Protected Dashboard Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute sellerOnly><Dashboard /></ProtectedRoute>} />
