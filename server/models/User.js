@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  role: {
-    type: String,
-    enum: ['buyer', 'seller', 'admin'],
-    default: 'buyer',
-    index: true
-  },
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -21,7 +15,8 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
+    // Allow common valid characters like +._% in the local part and longer TLDs
+    match: [/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i, 'Please provide a valid email']
   },
   password: {
     type: String,
@@ -31,8 +26,36 @@ const userSchema = new mongoose.Schema({
   },
   whatsapp: {
     type: String,
-    required: [function() { return this.role !== 'buyer'; }, 'WhatsApp number is required for sellers'],
+    required: [true, 'WhatsApp number is required'],
     match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid WhatsApp number with country code']
+  },
+  // Verification flags
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  // Email verification token + expiry
+  emailVerificationToken: {
+    type: String,
+    default: null,
+    index: true
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null
+  },
+  // SMS verification code + expiry
+  phoneVerificationCode: {
+    type: String,
+    default: null
+  },
+  phoneVerificationExpires: {
+    type: Date,
+    default: null
   },
   plan: {
     type: String,
@@ -55,16 +78,6 @@ const userSchema = new mongoose.Schema({
   isAdmin: {
     type: Boolean,
     default: false
-  },
-  passwordResetToken: {
-    type: String,
-    default: null,
-    select: false
-  },
-  passwordResetExpires: {
-    type: Date,
-    default: null,
-    select: false
   },
   referralCode: {
     type: String,
@@ -168,7 +181,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.getPlanLimits = function() {
   const limits = {
     free: { 
-      products: 10,
+      products: 4,
       themes: 1,
       maxShops: 1,
       storage: 0, // No storage - images only
@@ -183,7 +196,7 @@ userSchema.methods.getPlanLimits = function() {
       features: [
         'Basic shop setup',
         '1 shop',
-        'Up to 10 products',
+        'Up to 4 products',
         '1 default theme (white)',
         'Basic product management',
         'Standard support'
