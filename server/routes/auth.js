@@ -6,25 +6,21 @@ const {
   login,
   getMe,
   updateProfile,
-  upgradeToSeller,
   changePassword,
-  forgotPassword,
-  resetPassword
+  requestEmailVerification,
+  requestEmailVerificationPublic,
+  verifyEmail,
+  requestSmsCode,
+  verifySmsCode
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/auth');
 
 // Validation rules
 const registerValidation = [
-  body('role').optional().isIn(['buyer', 'seller']).withMessage('Role must be buyer or seller'),
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  // WhatsApp required only for sellers
-  body('whatsapp')
-    .if((value, { req }) => (req.body.role || 'buyer') === 'seller')
-    .notEmpty().withMessage('WhatsApp number is required for sellers')
-    .bail()
-    .matches(/^\+?[1-9]\d{1,14}$/).withMessage('Please provide a valid WhatsApp number with country code')
+  body('whatsapp').notEmpty().withMessage('WhatsApp number is required')
 ];
 
 const loginValidation = [
@@ -35,16 +31,15 @@ const loginValidation = [
 // Public routes
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
-router.post('/forgot-password', [ body('email').isEmail().withMessage('Please provide a valid email') ], forgotPassword);
-router.post('/reset-password', [ 
-  body('token').notEmpty().withMessage('Token is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], resetPassword);
+router.get('/verify-email', verifyEmail);
+router.post('/request-email-verification-public', requestEmailVerificationPublic);
 
 // Protected routes
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
-router.put('/upgrade-to-seller', protect, upgradeToSeller);
+router.post('/request-email-verification', protect, requestEmailVerification);
+router.post('/request-sms-code', protect, requestSmsCode);
+router.post('/verify-sms', protect, verifySmsCode);
 
 module.exports = router;

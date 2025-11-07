@@ -8,6 +8,7 @@ const {
   generateSlug 
 } = require('../utils/helpers');
 const crypto = require('crypto');
+const { sendEmail, sendSMS } = require('../utils/notify');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -22,7 +23,7 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  const { name, email, password, whatsapp, role = 'buyer' } = req.body;
+  const { name, email, password, whatsapp } = req.body;
 
   // Normalize email (trim and lowercase)
   const normalizedEmail = email.trim().toLowerCase();
@@ -41,31 +42,52 @@ exports.register = asyncHandler(async (req, res) => {
     name,
     email: normalizedEmail,
     password,
-    whatsapp: role === 'seller' ? whatsapp : undefined,
-    plan: 'free',
-    role
+    whatsapp,
+    plan: 'free'
   });
 
-  // Create default shop only for sellers
-  if (role === 'seller') {
-    const baseSlug = generateSlug(name);
-    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+  // Create default shop for user
+  const baseSlug = generateSlug(name);
+  const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
-    const shop = await Shop.create({
-      owner: user._id,
-      shopName: `${name}'s Shop`,
-      slug: uniqueSlug,
-      description: 'Welcome to my shop!',
-      theme: {
-        primaryColor: '#000000',
-        accentColor: '#FFD700',
-        layout: 'grid',
-        font: 'inter'
-      }
-    });
+  const shop = await Shop.create({
+    owner: user._id,
+    shopName: `${name}'s Shop`,
+    slug: uniqueSlug,
+    description: 'Welcome to my shop!',
+    theme: {
+      primaryColor: '#000000',
+      accentColor: '#FFD700',
+      layout: 'grid',
+      font: 'inter'
+    }
+  });
 
-    user.shop = shop._id;
-    await user.save();
+  // Update user with shop reference
+  user.shop = shop._id;
+  
+  // Prepare email verification token
+  const emailToken = crypto.randomBytes(24).toString('hex');
+  user.emailVerificationToken = emailToken;
+  user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+  await user.save();
+
+  // Kick off email (fire-and-forget)
+  try {
+    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verifyUrl = `${appUrl}/verify-email?token=${emailToken}`;
+    const html = `
+      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+        <h2>Verify your email</h2>
+        <p>Hi ${name.split(' ')[0]}, thanks for joining WaZhop.</p>
+        <p>Click the button below to verify your email address.</p>
+        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+        <p>Or copy this link: <a href="${verifyUrl}">${verifyUrl}</a></p>
+      </div>
+    `;
+    await sendEmail({ to: normalizedEmail, subject: 'Verify your email', html });
+  } catch (e) {
+    console.warn('Email verification send failed:', e.message);
   }
 
   // Send token response
@@ -117,6 +139,25 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
+  // If email not verified, resend token and block login
+  if (!user.emailVerified) {
+    const token = require('crypto').randomBytes(24).toString('hex');
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    await user.save();
+    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+    const html = `
+      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+        <h2>Verify your email</h2>
+        <p>Hi ${user.name.split(' ')[0]}, please verify your email to continue.</p>
+        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+      </div>
+    `;
+    try { await sendEmail({ to: user.email, subject: 'Verify your email', html }); } catch {}
+    return res.status(403).json({ success: false, message: 'Please verify your email. We just sent you a new verification link.' });
+  }
+
   // Send token response
   sendTokenResponse(user, 200, res);
 });
@@ -163,87 +204,6 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Upgrade a buyer account to seller and create default shop
-// @route   PUT /api/auth/upgrade-to-seller
-// @access  Private
-exports.upgradeToSeller = asyncHandler(async (req, res) => {
-  const currentUser = await User.findById(req.user.id);
-
-  if (!currentUser) {
-    return res.status(404).json({ success: false, message: 'User not found' });
-  }
-
-  // If already seller/admin, nothing to do
-  if (currentUser.role === 'seller' || currentUser.role === 'admin') {
-    return res.status(200).json({ success: true, data: currentUser, message: 'Account already has seller access' });
-  }
-
-  const { whatsapp, referralCode } = req.body || {};
-  if (!whatsapp) {
-    return res.status(400).json({ success: false, message: 'WhatsApp number is required to become a seller' });
-  }
-
-  currentUser.whatsapp = whatsapp;
-  currentUser.role = 'seller';
-  await currentUser.save();
-
-  // If a referral code is provided and user doesn't already have a referrer, link it
-  if (referralCode && !currentUser.referredBy) {
-    try {
-      const code = String(referralCode).toUpperCase();
-      const referrer = await User.findOne({ referralCode: code });
-      if (referrer && String(referrer._id) !== String(currentUser._id)) {
-        currentUser.referredBy = referrer._id;
-        await currentUser.save();
-
-        // Initialize stats if missing
-        if (!referrer.referralStats) {
-          referrer.referralStats = {
-            totalReferrals: 0,
-            freeReferred: 0,
-            proReferred: 0,
-            premiumReferred: 0,
-            rewardsEarned: 0,
-            rewardsUsed: 0
-          };
-        }
-        // Update referrer counters (user starts on free plan)
-        referrer.referralStats.totalReferrals += 1;
-        referrer.referralStats.freeReferred += 1;
-        await referrer.save();
-      }
-    } catch (e) {
-      // Non-blocking: ignore referral linking errors
-      console.error('Referral linking failed during upgrade-to-seller:', e?.message || e);
-    }
-  }
-
-  // Create a default shop if none exists
-  if (!currentUser.shop) {
-    const baseSlug = generateSlug(currentUser.name || 'my-shop');
-    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
-
-    const shop = await Shop.create({
-      owner: currentUser._id,
-      shopName: `${currentUser.name || 'My'}'s Shop`,
-      slug: uniqueSlug,
-      description: 'Welcome to my shop!',
-      theme: {
-        primaryColor: '#000000',
-        accentColor: '#FFD700',
-        layout: 'grid',
-        font: 'inter'
-      }
-    });
-
-    currentUser.shop = shop._id;
-    await currentUser.save();
-  }
-
-  // Return fresh token containing updated role
-  return sendTokenResponse(currentUser, 200, res);
-});
-
 // @desc    Change password
 // @route   PUT /api/auth/change-password
 // @access  Private
@@ -279,69 +239,117 @@ exports.changePassword = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Request password reset
-// @route   POST /api/auth/forgot-password
-// @access  Public
-exports.forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ success: false, message: 'Email is required' });
-  }
-
-  const normalizedEmail = email.trim().toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail });
-
-  // Always respond with success message to avoid user enumeration
-  if (!user) {
-    return res.status(200).json({ success: true, message: 'If an account exists, a reset link has been generated.' });
-  }
-
-  // Generate reset token
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const hashed = crypto.createHash('sha256').update(resetToken).digest('hex');
-  const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
-
-  user.passwordResetToken = hashed;
-  user.passwordResetExpires = expires;
-  await user.save({ validateBeforeSave: false });
-
-  const baseUrl = process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:3000';
-  const resetLink = `${baseUrl}/reset-password/${resetToken}`;
-
-  // In production, you would send email via a provider. For development, return link.
-  const response = { success: true, message: 'If an account exists, a reset link has been generated.' };
-  if (process.env.NODE_ENV !== 'production') {
-    response.resetLink = resetLink;
-    response.expiresAt = expires;
-  }
-
-  res.status(200).json(response);
-});
-
-// @desc    Reset password using token
-// @route   POST /api/auth/reset-password
-// @access  Public
-exports.resetPassword = asyncHandler(async (req, res) => {
-  const { token, password } = req.body;
-  if (!token || !password) {
-    return res.status(400).json({ success: false, message: 'Token and new password are required' });
-  }
-
-  const hashed = crypto.createHash('sha256').update(token).digest('hex');
-
-  const user = await User.findOne({ 
-    passwordResetToken: hashed, 
-    passwordResetExpires: { $gt: new Date() }
-  }).select('+password');
-
-  if (!user) {
-    return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
-  }
-
-  user.password = password;
-  user.passwordResetToken = null;
-  user.passwordResetExpires = null;
+// @desc    Request email verification (resend)
+// @route   POST /api/auth/request-email-verification
+// @access  Private
+exports.requestEmailVerification = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const token = crypto.randomBytes(24).toString('hex');
+  user.emailVerificationToken = token;
+  user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
   await user.save();
 
-  res.status(200).json({ success: true, message: 'Password has been reset. You can now log in.' });
+  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+      <h2>Verify your email</h2>
+      <p>Click below to verify your email for WaZhop.</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+    </div>
+  `;
+  await sendEmail({ to: user.email, subject: 'Verify your email', html });
+
+  res.json({ success: true, message: 'Verification email sent' });
+});
+
+// @desc    Request email verification (public, by email)
+// @route   POST /api/auth/request-email-verification-public
+// @access  Public
+exports.requestEmailVerificationPublic = asyncHandler(async (req, res) => {
+  const { email } = req.body || {};
+  const normalizedEmail = (email || '').trim().toLowerCase();
+
+  // Always respond with success to avoid account enumeration
+  const genericResponse = () => res.json({ success: true, message: 'If an account exists, a verification email has been sent.' });
+
+  if (!normalizedEmail) return genericResponse();
+
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) return genericResponse();
+  if (user.emailVerified) return genericResponse();
+
+  const token = crypto.randomBytes(24).toString('hex');
+  user.emailVerificationToken = token;
+  user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
+  await user.save();
+
+  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+      <h2>Verify your email</h2>
+      <p>Click below to verify your email for WaZhop.</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+    </div>
+  `;
+  try { await sendEmail({ to: user.email, subject: 'Verify your email', html }); } catch {}
+
+  return genericResponse();
+});
+
+// @desc    Verify email token
+// @route   GET /api/auth/verify-email
+// @access  Public
+exports.verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ success: false, message: 'Missing token' });
+
+  const user = await User.findOne({ emailVerificationToken: token });
+  if (!user) return res.status(400).json({ success: false, message: 'Invalid token' });
+  if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
+    return res.status(400).json({ success: false, message: 'Token expired' });
+  }
+  user.emailVerified = true;
+  user.emailVerificationToken = null;
+  user.emailVerificationExpires = null;
+  await user.save();
+  res.json({ success: true, message: 'Email verified successfully' });
+});
+
+// @desc    Request SMS code
+// @route   POST /api/auth/request-sms-code
+// @access  Private
+exports.requestSmsCode = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  user.phoneVerificationCode = code;
+  user.phoneVerificationExpires = new Date(Date.now() + 1000 * 60 * 10); // 10 min
+  await user.save();
+
+  const text = `Your WaZhop verification code is ${code}. It expires in 10 minutes.`;
+  await sendSMS({ to: user.whatsapp, text });
+  res.json({ success: true, message: 'Verification code sent' });
+});
+
+// @desc    Verify SMS code
+// @route   POST /api/auth/verify-sms
+// @access  Private
+exports.verifySmsCode = asyncHandler(async (req, res) => {
+  const { code } = req.body;
+  const user = await User.findById(req.user.id);
+  if (!code || !user.phoneVerificationCode) {
+    return res.status(400).json({ success: false, message: 'Invalid code' });
+  }
+  if (user.phoneVerificationExpires && user.phoneVerificationExpires < new Date()) {
+    return res.status(400).json({ success: false, message: 'Code expired' });
+  }
+  if (user.phoneVerificationCode !== code) {
+    return res.status(400).json({ success: false, message: 'Incorrect code' });
+  }
+  user.phoneVerified = true;
+  user.phoneVerificationCode = null;
+  user.phoneVerificationExpires = null;
+  await user.save();
+  res.json({ success: true, message: 'Phone verified successfully' });
 });
