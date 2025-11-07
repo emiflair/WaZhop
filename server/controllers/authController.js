@@ -23,7 +23,8 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  const { name, email, password, whatsapp } = req.body;
+  const { name, email, password, whatsapp, role: roleInput } = req.body;
+  const role = (roleInput === 'seller' ? 'seller' : 'buyer');
 
   // Normalize email (trim and lowercase)
   const normalizedEmail = email.trim().toLowerCase();
@@ -42,29 +43,31 @@ exports.register = asyncHandler(async (req, res) => {
     name,
     email: normalizedEmail,
     password,
-    whatsapp,
+    whatsapp: role === 'seller' ? whatsapp : undefined,
+    role,
     plan: 'free'
   });
 
-  // Create default shop for user
-  const baseSlug = generateSlug(name);
-  const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+  // Create default shop only for sellers
+  if (role === 'seller') {
+    const baseSlug = generateSlug(name);
+    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
-  const shop = await Shop.create({
-    owner: user._id,
-    shopName: `${name}'s Shop`,
-    slug: uniqueSlug,
-    description: 'Welcome to my shop!',
-    theme: {
-      primaryColor: '#000000',
-      accentColor: '#FFD700',
-      layout: 'grid',
-      font: 'inter'
-    }
-  });
+    const shop = await Shop.create({
+      owner: user._id,
+      shopName: `${name}'s Shop`,
+      slug: uniqueSlug,
+      description: 'Welcome to my shop!',
+      theme: {
+        primaryColor: '#000000',
+        accentColor: '#FFD700',
+        layout: 'grid',
+        font: 'inter'
+      }
+    });
 
-  // Update user with shop reference
-  user.shop = shop._id;
+    user.shop = shop._id;
+  }
   
   // Prepare email verification token
   const emailToken = crypto.randomBytes(24).toString('hex');

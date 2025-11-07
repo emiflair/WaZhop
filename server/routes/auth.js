@@ -20,7 +20,11 @@ const registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('whatsapp').notEmpty().withMessage('WhatsApp number is required')
+  body('role').optional().isIn(['buyer', 'seller']).withMessage('Invalid role'),
+  // whatsapp required only if role=seller
+  body('whatsapp')
+    .if(body('role').equals('seller'))
+    .notEmpty().withMessage('WhatsApp number is required for sellers')
 ];
 
 const loginValidation = [

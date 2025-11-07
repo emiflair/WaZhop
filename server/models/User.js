@@ -26,8 +26,15 @@ const userSchema = new mongoose.Schema({
   },
   whatsapp: {
     type: String,
-    required: [true, 'WhatsApp number is required'],
+    // Required for sellers, optional for buyers
+    required: false,
     match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid WhatsApp number with country code']
+  },
+  role: {
+    type: String,
+    enum: ['buyer', 'seller', 'admin'],
+    default: 'buyer',
+    index: true
   },
   // Verification flags
   emailVerified: {
