@@ -10,6 +10,8 @@ const {
   requestEmailVerification,
   requestEmailVerificationPublic,
   verifyEmail,
+  forgotPassword,
+  resetPassword,
   requestSmsCode,
   verifySmsCode
 } = require('../controllers/authController');
@@ -37,6 +39,8 @@ router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 router.get('/verify-email', verifyEmail);
 router.post('/request-email-verification-public', requestEmailVerificationPublic);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Protected routes
 router.get('/me', protect, getMe);

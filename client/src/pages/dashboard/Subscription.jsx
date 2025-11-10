@@ -28,6 +28,11 @@ const Subscription = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
+  const [couponCode, setCouponCode] = useState('');
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [couponData, setCouponData] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   // Boost flow state
   const [boostOpen, setBoostOpen] = useState(false);
   const [boostHours, setBoostHours] = useState(5);
@@ -228,6 +233,52 @@ const Subscription = () => {
     }
     setSelectedPlan(plan);
     setShowUpgradeModal(true);
+    setCouponCode('');
+    setCouponData(null);
+    setCouponError('');
+  };
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    try {
+      setCouponValidating(true);
+      setCouponError('');
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          code: couponCode.trim(), 
+          plan: selectedPlan.id 
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid coupon code');
+      }
+
+      setCouponData(data.coupon);
+      toast.success('Coupon applied successfully!');
+      // Open preview modal after successful validation
+      setShowUpgradeModal(false);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      setCouponError(error.message);
+      setCouponData(null);
+    } finally {
+      setCouponValidating(false);
+    }
   };
 
   const handleConfirmUpgrade = async () => {
@@ -240,9 +291,19 @@ const Subscription = () => {
       const isUpgrade = getPlanLevel(selectedPlan.id) > getPlanLevel(user?.plan);
       
       if (isUpgrade) {
-        const data = await userAPI.upgradePlan(selectedPlan.id, billingPeriod === 'yearly' ? 12 : 1, billingPeriod);
+        const data = await userAPI.upgradePlan(
+          selectedPlan.id, 
+          billingPeriod === 'yearly' ? 12 : 1, 
+          billingPeriod,
+          couponData ? couponCode.trim() : null
+        );
         updateUser(data.user);
-        toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
+        
+        if (data.payment?.discountApplied) {
+          toast.success(`Successfully upgraded with ${data.payment.discountApplied.discountPercentage}% discount!`);
+        } else {
+          toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
+        }
       } else {
         const data = await userAPI.downgradePlan(selectedPlan.id);
         updateUser(data.user);
@@ -251,6 +312,9 @@ const Subscription = () => {
       
       setShowUpgradeModal(false);
       setSelectedPlan(null);
+      setCouponCode('');
+      setCouponData(null);
+      setCouponError('');
       fetchData();
     } catch (error) {
       console.error('Error changing plan:', error);
@@ -356,6 +420,103 @@ const Subscription = () => {
                   Your {currentPlan.name} plan will expire in {daysUntilExpiry} day{daysUntilExpiry !== 1 ? 's' : ''}. 
                   Renew now to continue enjoying premium features.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Auto-Renewal & Manual Renewal Controls */}
+          {user?.plan !== 'free' && daysUntilExpiry !== null && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 mb-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2 dark:text-white">
+                <FaInfoCircle className="text-primary-500" />
+                Subscription Management
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Manual Renewal Button */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">Manual Renewal</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Renew your subscription for another {billingInfo.isYearly ? 'year' : '30 days'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+                        const response = await fetch(`${API_URL}/subscription/renew`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({
+                            isYearly: billingInfo.isYearly
+                          })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                          toast.success(data.message);
+                          fetchData();
+                          updateUser({ ...user, planExpiry: data.data.planExpiry });
+                        } else {
+                          toast.error(data.message || 'Failed to renew subscription');
+                        }
+                      } catch (error) {
+                        console.error('Error renewing:', error);
+                        toast.error('Failed to renew subscription');
+                      }
+                    }}
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center"
+                  >
+                    <FaCheck /> Renew Now
+                  </button>
+                </div>
+
+                {/* Auto-Renewal Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">Auto-Renewal</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Automatically renew before expiration
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+                        const response = await fetch(`${API_URL}/subscription/auto-renew`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ autoRenew: !user?.autoRenew })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                          toast.success(data.message);
+                          updateUser({ ...user, autoRenew: data.data.autoRenew });
+                        } else {
+                          toast.error(data.message || 'Failed to update auto-renewal');
+                        }
+                      } catch (error) {
+                        console.error('Error toggling auto-renewal:', error);
+                        toast.error('Failed to update auto-renewal');
+                      }
+                    }}
+                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                      user?.autoRenew ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                        user?.autoRenew ? 'translate-x-7' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -723,6 +884,208 @@ const Subscription = () => {
           </div>
         </div>
 
+        {/* Checkout Preview Modal - Shows discount breakdown */}
+        {showPreviewModal && selectedPlan && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-lg w-full p-6 shadow-xl">
+              <div className="text-center mb-6">
+                <div className={`w-20 h-20 ${couponData ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  {couponData ? (
+                    <FaCheck className="text-green-600 dark:text-green-400 text-4xl" />
+                  ) : (
+                    <FaInfoCircle className="text-blue-600 dark:text-blue-400 text-4xl" />
+                  )}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  {couponData ? 'Discount Applied!' : 'Review Your Order'}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {couponData ? 'Review your order before proceeding to payment' : 'Confirm your subscription details before proceeding'}
+                </p>
+              </div>
+
+              {/* Order Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 mb-6 border-2 border-green-200 dark:border-green-700">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">Order Summary</h4>
+                
+                {/* Plan Details */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 dark:text-gray-300">Plan:</span>
+                    <span className="font-bold text-gray-900 dark:text-white text-lg">{selectedPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 dark:text-gray-300">Billing:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {billingPeriod === 'yearly' ? 'Yearly' : 'Monthly'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t-2 border-dashed border-gray-300 dark:border-gray-600 my-4"></div>
+
+                {/* Price Breakdown */}
+                <div className="space-y-3">
+                  {/* Original Price */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 dark:text-gray-300">{couponData ? 'Original Price:' : 'Price:'}</span>
+                    <span className={couponData ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-white font-semibold'}>
+                      ₦{(billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                        ? selectedPlan.yearlyPrice 
+                        : selectedPlan.price).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Discount - Only show if coupon applied */}
+                  {couponData && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-green-700 dark:text-green-300 font-medium">Discount:</span>
+                          <span className="px-2 py-0.5 bg-green-600 text-white text-xs font-bold rounded uppercase">
+                            {couponData.code}
+                          </span>
+                        </div>
+                        <span className="text-green-600 dark:text-green-400 font-bold">
+                          {couponData.discountType === 'percentage' 
+                            ? `${couponData.discountValue}% OFF`
+                            : `-₦${couponData.discountValue.toLocaleString()}`
+                          }
+                        </span>
+                      </div>
+
+                      {/* Discount Amount */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">You Save:</span>
+                        <span className="text-green-600 dark:text-green-400 font-bold">
+                          {(() => {
+                            const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                              ? selectedPlan.yearlyPrice 
+                              : selectedPlan.price;
+                            const discountAmount = couponData.discountType === 'percentage'
+                              ? (originalPrice * couponData.discountValue) / 100
+                              : couponData.discountValue;
+                            return `-₦${discountAmount.toLocaleString()}`;
+                          })()}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {couponData && <div className="border-t-2 border-dashed border-gray-300 dark:border-gray-600 my-4"></div>}
+
+                {/* Final Price */}
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">Total Amount:</span>
+                  <div className="text-right">
+                    <div className={`text-3xl font-bold ${couponData ? 'text-green-600 dark:text-green-400' : 'text-primary-600 dark:text-primary-400'}`}>
+                      {(() => {
+                        const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                          ? selectedPlan.yearlyPrice 
+                          : selectedPlan.price;
+                        if (!couponData) return `₦${originalPrice.toLocaleString()}`;
+                        
+                        const discountAmount = couponData.discountType === 'percentage'
+                          ? (originalPrice * couponData.discountValue) / 100
+                          : couponData.discountValue;
+                        const finalPrice = originalPrice - discountAmount;
+                        return `₦${finalPrice.toLocaleString()}`;
+                      })()}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {billingPeriod === 'yearly' ? 'per year' : 'per month'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Monthly Equivalent for Yearly */}
+                {billingPeriod === 'yearly' && selectedPlan.monthlyEquivalent && (
+                  <div className="mt-3 text-center p-2 bg-blue-100 dark:bg-blue-900/30 rounded">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Just ₦{(() => {
+                        const originalPrice = selectedPlan.yearlyPrice;
+                        if (!couponData) return Math.floor(originalPrice / 12).toLocaleString();
+                        
+                        const discountAmount = couponData.discountType === 'percentage'
+                          ? (originalPrice * couponData.discountValue) / 100
+                          : couponData.discountValue;
+                        const finalPrice = originalPrice - discountAmount;
+                        return Math.floor(finalPrice / 12).toLocaleString();
+                      })()}/month</strong> when billed annually!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Benefits Reminder */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <FaStar className="text-yellow-500" />
+                  What You&apos;ll Get:
+                </h5>
+                <ul className="space-y-2">
+                  {selectedPlan.features.slice(0, 5).map((feature, idx) => (
+                    feature.included && (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <FaCheck className="text-primary-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300">{feature.text}</span>
+                      </li>
+                    )
+                  ))}
+                  {selectedPlan.features.filter(f => f.included).length > 5 && (
+                    <li className="text-sm text-gray-500 dark:text-gray-400 italic">
+                      + {selectedPlan.features.filter(f => f.included).length - 5} more features...
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Notice */}
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-6">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
+                  <FaInfoCircle className="mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Note:</strong> Payment integration is coming soon. 
+                    This upgrade is currently free for testing purposes.
+                  </span>
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    setShowUpgradeModal(true);
+                  }}
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-gray-700 dark:text-gray-200"
+                  disabled={upgrading}
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    handleConfirmUpgrade();
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"
+                  disabled={upgrading}
+                >
+                  {upgrading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </span>
+                  ) : (
+                    'Confirm & Upgrade'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Upgrade Confirmation Modal */}
         {showUpgradeModal && selectedPlan && (
           <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -739,6 +1102,56 @@ const Subscription = () => {
                 </div>
               </div>
 
+              {/* Coupon Code Input - Only for Pro and Premium */}
+              {(selectedPlan.id === 'pro' || selectedPlan.id === 'premium') && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Have a Coupon Code? (Optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponError('');
+                        setCouponData(null);
+                      }}
+                      placeholder="Enter coupon code"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-white font-mono text-sm"
+                      disabled={couponValidating}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleValidateCoupon}
+                      disabled={couponValidating || !couponCode.trim()}
+                      className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+                    >
+                      {couponValidating ? 'Validating...' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{couponError}</p>
+                  )}
+                  {couponData && (
+                    <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <FaCheck className="text-green-600 dark:text-green-400" />
+                        <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                          {couponData.discountType === 'percentage' 
+                            ? `${couponData.discountValue}% discount applied!`
+                            : `₦${couponData.discountValue} discount applied!`
+                          }
+                        </span>
+                      </div>
+                      {couponData.description && (
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">{couponData.description}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600 dark:text-gray-300">Plan</span>
@@ -752,7 +1165,7 @@ const Subscription = () => {
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600 dark:text-gray-300">Price</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className={`font-semibold ${couponData ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
                     {billingPeriod === 'yearly' && selectedPlan.yearlyPrice ? (
                       <>₦{selectedPlan.yearlyPrice.toLocaleString()}/year</>
                     ) : (
@@ -760,6 +1173,23 @@ const Subscription = () => {
                     )}
                   </span>
                 </div>
+                {couponData && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600 dark:text-gray-300">Final Price</span>
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      {(() => {
+                        const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                          ? selectedPlan.yearlyPrice 
+                          : selectedPlan.price;
+                        const discountAmount = couponData.discountType === 'percentage'
+                          ? (originalPrice * couponData.discountValue) / 100
+                          : couponData.discountValue;
+                        const finalPrice = originalPrice - discountAmount;
+                        return `₦${finalPrice.toLocaleString()}${billingPeriod === 'yearly' ? '/year' : `/${selectedPlan.period}`}`;
+                      })()}
+                    </span>
+                  </div>
+                )}
                 {billingPeriod === 'yearly' && selectedPlan.monthlyEquivalent && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600 dark:text-gray-300">Monthly Equivalent</span>
@@ -798,6 +1228,9 @@ const Subscription = () => {
                   onClick={() => {
                     setShowUpgradeModal(false);
                     setSelectedPlan(null);
+                    setCouponCode('');
+                    setCouponData(null);
+                    setCouponError('');
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-gray-700 dark:text-gray-200"
                   disabled={upgrading}
@@ -805,11 +1238,26 @@ const Subscription = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleConfirmUpgrade}
+                  onClick={() => {
+                    // If coupon code is entered but not validated, require validation
+                    if (couponCode.trim() && !couponData && !couponError) {
+                      toast.error('Please click "Apply" to validate your coupon code first');
+                      return;
+                    }
+                    
+                    // Always show preview for paid plans (Pro/Premium)
+                    if (selectedPlan.id !== 'free') {
+                      setShowUpgradeModal(false);
+                      setShowPreviewModal(true);
+                    } else {
+                      // Free plan - proceed directly
+                      handleConfirmUpgrade();
+                    }
+                  }}
                   className={`flex-1 px-4 py-2 ${getColorClasses(selectedPlan.color).button} text-white rounded-lg transition-colors font-medium`}
                   disabled={upgrading}
                 >
-                  {upgrading ? 'Processing...' : 'Confirm'}
+                  {upgrading ? 'Processing...' : 'Continue to Preview'}
                 </button>
               </div>
             </div>

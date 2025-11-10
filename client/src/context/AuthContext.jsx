@@ -48,15 +48,32 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      const { token, user: newUser } = response;
+      // Support two shapes:
+      // 1) { token, user } when backend chooses to auto-login (legacy)
+      // 2) { success, pendingVerification, message } for verify-before-login
+      if (response?.token && response?.user) {
+        const { token, user: newUser } = response;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        setUser(newUser);
+        setIsAuthenticated(true);
+        toast.success('Account created successfully! Welcome to WaZhop!');
+        return { success: true, user: newUser };
+      }
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      setUser(newUser);
-      setIsAuthenticated(true);
+      // Pending verification path (no token returned)
+      if (response?.pendingVerification) {
+        // Store the email to help with verification/resend flows
+        if (userData?.email) {
+          localStorage.setItem('pendingVerifyEmail', userData.email.trim().toLowerCase());
+        }
+        toast.success(response?.message || 'Account created. Check your email for a 6-digit code to verify.');
+        return { success: true, pendingVerification: true };
+      }
 
-      toast.success('Account created successfully! Welcome to WaZhop!');
-      return { success: true, user: newUser };
+      // Fallback: treat as success without login
+      toast.success('Account created. Please verify your email.');
+      return { success: true, pendingVerification: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);
@@ -79,6 +96,8 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
+      // Email verification is not required for login - users can log in immediately
+      // Verification is only for registration and password reset flows
       toast.error(message);
       return { success: false, error: message };
     }

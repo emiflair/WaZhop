@@ -181,7 +181,7 @@ export default function ProductDetail() {
         <div className="flex-1 container-custom py-16 text-center">
           <h1 className="text-2xl font-bold mb-3">Product not found</h1>
           <p className="text-gray-600 mb-6">{error || 'This product may have been removed or is inactive.'}</p>
-          <Link to="/marketplace" className="btn btn-primary">Back to Marketplace</Link>
+          <Link to="/" className="btn btn-primary">Back to Home</Link>
         </div>
         <Footer />
       </div>
@@ -202,7 +202,7 @@ export default function ProductDetail() {
               <Link to={`/${shop?.slug || ''}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-600">{shop?.shopName || 'Shop'}</Link>
               {shop?.location && <div className="text-xs text-gray-500">{shop.location}</div>}
             </div>
-            <Link to="/marketplace" className="text-sm text-primary-600 hover:underline">← Back to Marketplace</Link>
+            <Link to="/" className="text-sm text-primary-600 hover:underline">← Back to Home</Link>
           </div>
         </div>
 

@@ -64,6 +64,16 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Password reset token + expiry
+  passwordResetToken: {
+    type: String,
+    default: null,
+    index: true
+  },
+  passwordResetExpires: {
+    type: Date,
+    default: null
+  },
   plan: {
     type: String,
     enum: ['free', 'pro', 'premium'],
@@ -72,6 +82,24 @@ const userSchema = new mongoose.Schema({
   planExpiry: {
     type: Date,
     default: null
+  },
+  autoRenew: {
+    type: Boolean,
+    default: false
+  },
+  billingPeriod: {
+    type: String,
+    enum: ['monthly', 'yearly'],
+    default: 'monthly'
+  },
+  lastBillingDate: {
+    type: Date,
+    default: null
+  },
+  subscriptionStatus: {
+    type: String,
+    enum: ['active', 'expired', 'cancelled'],
+    default: 'active'
   },
   storageUsed: {
     type: Number,
@@ -188,7 +216,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.getPlanLimits = function() {
   const limits = {
     free: { 
-      products: 4,
+      products: 10,
       themes: 1,
       maxShops: 1,
       storage: 0, // No storage - images only
@@ -203,7 +231,7 @@ userSchema.methods.getPlanLimits = function() {
       features: [
         'Basic shop setup',
         '1 shop',
-        'Up to 4 products',
+        'Up to 10 products',
         '1 default theme (white)',
         'Basic product management',
         'Standard support'

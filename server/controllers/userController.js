@@ -38,7 +38,7 @@ exports.getSubscriptionInfo = asyncHandler(async (req, res) => {
 // @route   POST /api/users/upgrade
 // @access  Private
 exports.upgradePlan = asyncHandler(async (req, res) => {
-  const { plan, duration, billingPeriod } = req.body; // plan: 'pro' or 'premium', duration: number of months, billingPeriod: 'monthly' or 'yearly'
+  const { plan, duration, billingPeriod, couponCode } = req.body; // plan: 'pro' or 'premium', duration: number of months, billingPeriod: 'monthly' or 'yearly'
 
   if (!['pro', 'premium'].includes(plan)) {
     return res.status(400).json({
@@ -73,12 +73,80 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   // Calculate expiry date and amount
   const isYearly = billingPeriod === 'yearly';
   const months = isYearly ? 12 : (duration || 1);
-  const amount = isYearly ? planPrices[plan].yearly : planPrices[plan].monthly * (duration || 1);
+  let originalAmount = isYearly ? planPrices[plan].yearly : planPrices[plan].monthly * (duration || 1);
+  let finalAmount = originalAmount;
+  let discountApplied = null;
   const expiryDate = calculatePlanExpiry(months);
+
+  // Apply coupon if provided
+  if (couponCode) {
+    const Coupon = require('../models/Coupon');
+    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+    
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invalid coupon code'
+      });
+    }
+
+    // Validate coupon
+    const validation = coupon.isValid();
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message
+      });
+    }
+
+    // Check if applicable to the plan
+    if (!coupon.applicablePlans.includes(plan)) {
+      return res.status(400).json({
+        success: false,
+        message: `This coupon is not applicable to ${plan} plan`
+      });
+    }
+
+    // Check if user already used this coupon
+    const alreadyUsed = coupon.usedBy.some(
+      usage => usage.user.toString() === req.user.id
+    );
+
+    if (alreadyUsed) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already used this coupon'
+      });
+    }
+
+    // Calculate discount
+    const discount = coupon.calculateDiscount(originalAmount);
+    finalAmount = discount.finalAmount;
+    discountApplied = {
+      code: coupon.code,
+      discountAmount: discount.discountAmount,
+      discountPercentage: discount.discountPercentage
+    };
+
+    // Record usage
+    coupon.usedBy.push({
+      user: req.user.id,
+      usedAt: new Date(),
+      plan,
+      originalAmount: discount.originalAmount,
+      discountAmount: discount.discountAmount,
+      finalAmount: discount.finalAmount
+    });
+    coupon.usedCount += 1;
+    await coupon.save();
+  }
 
   // Update user plan (In production, this should happen after payment)
   user.plan = plan;
+  user.billingPeriod = billingPeriod || 'monthly';
   user.planExpiry = expiryDate;
+  user.lastBillingDate = new Date();
+  user.subscriptionStatus = 'active';
   await user.save();
 
   console.log('✅ User plan upgraded:', { userId: user._id, email: user.email, plan, planExpiry: expiryDate });
@@ -117,9 +185,14 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
     data: {
       plan: user.plan,
       planExpiry: user.planExpiry,
-      amount: amount,
+      amount: finalAmount,
       billingPeriod: isYearly ? 'yearly' : 'monthly',
       months: months
+    },
+    payment: {
+      originalAmount,
+      finalAmount,
+      discountApplied
     },
     message: `Successfully upgraded to ${plan} plan!`
   });
@@ -229,6 +302,9 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
   user.plan = plan;
   if (plan === 'free') {
     user.planExpiry = null;
+    user.billingPeriod = 'monthly';
+    user.autoRenew = false;
+    user.subscriptionStatus = 'active';
   }
   await user.save();
 
@@ -275,5 +351,110 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
       }
     },
     message: `Successfully downgraded to ${plan} plan. ${plan === 'free' ? 'Only your oldest shop remains active. ' : ''}Some features have been restricted.`
+  });
+});
+
+// @desc    Get all users (Admin)
+// @route   GET /api/users/admin/all
+// @access  Admin
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({})
+    .select('-password')
+    .sort({ createdAt: -1 });
+
+  // Calculate stats
+  const stats = {
+    total: users.length,
+    free: users.filter(u => u.plan === 'free').length,
+    pro: users.filter(u => u.plan === 'pro').length,
+    premium: users.filter(u => u.plan === 'premium').length,
+    verified: users.filter(u => u.isVerified).length,
+    unverified: users.filter(u => !u.isVerified).length
+  };
+
+  res.status(200).json({
+    success: true,
+    count: users.length,
+    stats,
+    data: users
+  });
+});
+
+// @desc    Update user subscription (Admin)
+// @route   PATCH /api/users/admin/:userId
+// @access  Admin
+exports.updateUserSubscription = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { plan, billingPeriod, subscriptionEndDate, isVerified } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Update plan if provided
+  if (plan && ['free', 'pro', 'premium'].includes(plan)) {
+    user.plan = plan;
+  }
+
+  // Update billing period if provided
+  if (billingPeriod && ['monthly', 'yearly'].includes(billingPeriod)) {
+    user.billingPeriod = billingPeriod;
+  }
+
+  // Update subscription end date if provided
+  if (subscriptionEndDate) {
+    user.subscriptionEndDate = new Date(subscriptionEndDate);
+    user.planExpiry = new Date(subscriptionEndDate);
+  }
+
+  // Update verification status if provided
+  if (typeof isVerified === 'boolean') {
+    user.isVerified = isVerified;
+  }
+
+  // Update subscription status
+  if (plan === 'free') {
+    user.subscriptionStatus = 'active';
+    user.planExpiry = null;
+    user.subscriptionEndDate = null;
+  } else {
+    user.subscriptionStatus = 'active';
+  }
+
+  await user.save();
+
+  // Update shop branding based on plan
+  const Shop = require('../models/Shop');
+  if (plan === 'pro' || plan === 'premium') {
+    await Shop.updateMany(
+      { owner: user._id },
+      { $set: { showBranding: false, showWatermark: false } }
+    );
+  } else if (plan === 'free') {
+    await Shop.updateMany(
+      { owner: user._id },
+      { $set: { showBranding: true, showWatermark: true } }
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'User subscription updated successfully',
+    data: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      plan: user.plan,
+      billingPeriod: user.billingPeriod,
+      planExpiry: user.planExpiry,
+      subscriptionEndDate: user.subscriptionEndDate,
+      isVerified: user.isVerified,
+      subscriptionStatus: user.subscriptionStatus
+    }
   });
 });

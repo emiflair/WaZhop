@@ -13,6 +13,14 @@ const productRoutes = require('./routes/product');
 const userRoutes = require('./routes/user');
 const reviewRoutes = require('./routes/review');
 const referralRoutes = require('./routes/referral');
+const orderRoutes = require('./routes/order');
+const subscriptionRoutes = require('./routes/subscription');
+const couponRoutes = require('./routes/coupon');
+const adminRoutes = require('./routes/admin');
+const settingsRoutes = require('./routes/settings');
+
+// Import cron jobs
+const { startSubscriptionCron } = require('./utils/subscriptionCron');
 
 const app = express();
 
@@ -59,7 +67,12 @@ app.use('/api/', limiter);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('✅ MongoDB Connected Successfully'))
+.then(() => {
+  console.log('✅ MongoDB Connected Successfully');
+  
+  // Start subscription cron job after DB connection
+  startSubscriptionCron();
+})
 .catch((err) => {
   console.error('❌ MongoDB Connection Error:', err.message);
   process.exit(1);
@@ -72,6 +85,11 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

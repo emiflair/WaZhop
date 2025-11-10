@@ -28,6 +28,13 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017/wazhop
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-key-change-in-production}
       - JWT_EXPIRE=30d
+      - APP_BASE_URL=${APP_BASE_URL:-http://localhost:3000}
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-brevo}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - BREVO_SENDER_EMAIL=${BREVO_SENDER_EMAIL}
+      - BREVO_SENDER_NAME=${BREVO_SENDER_NAME:-WaZhop}
+      - SMS_PROVIDER=${SMS_PROVIDER:-brevo}
+      - BREVO_SMS_SENDER=${BREVO_SMS_SENDER:-WaZhop}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}

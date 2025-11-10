@@ -33,7 +33,7 @@ const Navbar = () => {
 
   // Base menu links
   let menuLinks = [
-    { to: '/marketplace', label: 'Marketplace' },
+    { to: '/', label: 'Home' },
     { to: '/how-it-works', label: 'How It Works' },
     { to: '/pricing', label: 'Pricing' },
     { to: '/about', label: 'About' },
@@ -50,10 +50,9 @@ const Navbar = () => {
     // Consider a link active if the current path starts with the target path
     // Handles nested routes like /pricing/faq etc.
     try {
-      if (to === '/') return location.pathname === '/';
-      // Treat product detail pages as part of marketplace for highlighting
-      if (to === '/marketplace' && location.pathname.startsWith('/product/')) {
-        return true;
+      if (to === '/') {
+        // Home (Marketplace) is active if on root or product detail pages
+        return location.pathname === '/' || location.pathname.startsWith('/product/');
       }
       return location.pathname === to || location.pathname.startsWith(`${to}/`);
     } catch {
@@ -95,6 +94,24 @@ const Navbar = () => {
                 </Link>
               );
             })}
+            
+            {/* BUY and SELL buttons - only show for non-authenticated users */}
+            {!isAuthenticated && (
+              <>
+                <Link 
+                  to="/register?role=buyer" 
+                  className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all shadow-sm"
+                >
+                  BUY
+                </Link>
+                <Link 
+                  to="/register?role=seller" 
+                  className="px-4 py-2 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm"
+                >
+                  SELL
+                </Link>
+              </>
+            )}
             
             <ThemeToggle />
             
@@ -188,6 +205,26 @@ const Navbar = () => {
                   </Link>
                 );
               })}
+              
+              {/* BUY and SELL buttons for mobile - only show for non-authenticated users */}
+              {!isAuthenticated && (
+                <div className="flex gap-2 pt-2">
+                  <Link 
+                    to="/register?role=buyer" 
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 min-h-[52px] px-4 py-3 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 active:bg-green-800 transition-all shadow-sm text-center"
+                  >
+                    BUY
+                  </Link>
+                  <Link 
+                    to="/register?role=seller" 
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 min-h-[52px] px-4 py-3 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 active:bg-red-800 transition-all shadow-sm text-center"
+                  >
+                    SELL
+                  </Link>
+                </div>
+              )}
               
               <div className="py-4">
                 <div className="flex items-center justify-between px-4">

@@ -3,8 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
-import { authAPI } from '../utils/api';
-import toast from 'react-hot-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,9 +15,8 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [unverified, setUnverified] = useState(false);
 
-  const from = location.state?.from?.pathname || '/marketplace';
+  const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,16 +28,10 @@ const Login = () => {
 
     const result = await login(formData);
     if (result.success) {
-      const target = result.user?.role === 'seller' ? (from.startsWith('/dashboard') ? from : '/dashboard') : '/marketplace';
+      const target = result.user?.role === 'seller' ? (from.startsWith('/dashboard') ? from : '/dashboard') : '/';
       navigate(target, { replace: true });
     }
-    if (!result.success) {
-      // Heuristic: backend returns 403 with this message for unverified accounts
-      const msg = (result.error || '').toLowerCase();
-      if (msg.includes('verify your email')) {
-        setUnverified(true);
-      }
-    }
+    // Email verification is optional - removed verification UI logic
     
     setLoading(false);
   };
@@ -112,25 +103,6 @@ const Login = () => {
           {loading ? 'Logging in…' : 'Login'}
         </button>
       </form>
-      {unverified && (
-        <div className="mt-4 p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
-          <p className="text-sm">Your email isn&apos;t verified yet.</p>
-          <button
-            type="button"
-            className="mt-2 inline-flex items-center px-3 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700"
-            onClick={async () => {
-              try {
-                await authAPI.requestEmailVerificationPublic(formData.email);
-                toast.success('If an account exists, we sent a verification email.');
-              } catch (e) {
-                toast.error('Could not request verification at this time.');
-              }
-            }}
-          >
-            Resend verification email
-          </button>
-        </div>
-      )}
     </AuthLayout>
   );
 };

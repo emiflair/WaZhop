@@ -1,10 +1,12 @@
-import { FiX, FiShoppingCart, FiMinus, FiPlus, FiTrash2, FiCreditCard, FiShoppingBag } from 'react-icons/fi';
+import { FiX, FiShoppingCart, FiMinus, FiPlus, FiTrash2, FiShoppingBag } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/currency';
 
 const CartSidebar = ({ isOpen, onClose, shop }) => {
+  const navigate = useNavigate();
   const { cartItems, updateQuantity, removeFromCart, clearCart, getCartTotal, getItemsByShop } = useCart();
 
   const handleWhatsAppCheckout = () => {
@@ -67,36 +69,6 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
       // Only close if all were successful
       setTimeout(() => onClose(), itemsByShop.length * 500 + 500);
     }
-  };
-
-  const handlePaymentCheckout = () => {
-    if (!shop?.paymentSettings?.provider) {
-      toast.error('Payment integration not configured');
-      return;
-    }
-
-    const paymentLink = shop.paymentSettings[shop.paymentSettings.provider]?.paymentLink;
-    if (!paymentLink) {
-      toast.error('Payment link not configured');
-      return;
-    }
-
-    // Build cart summary for payment
-    const itemsByShop = getItemsByShop();
-    const shopItems = itemsByShop.find(item => item.shop._id === shop._id);
-    
-    if (!shopItems || shopItems.items.length === 0) {
-      toast.error('No items from this shop in cart');
-      return;
-    }
-
-    // Append cart details to payment link
-    const urlWithParams = new URL(paymentLink);
-    urlWithParams.searchParams.append('amount', getCartTotal());
-    urlWithParams.searchParams.append('items', shopItems.items.length);
-    window.open(urlWithParams.toString(), '_blank');
-    
-    onClose();
   };
 
   return (
@@ -236,31 +208,30 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                 </span>
               </div>
 
-              {/* Payment Button - Show if payment provider is configured */}
-              {shop?.paymentSettings?.provider && shop?.paymentSettings[shop.paymentSettings.provider]?.paymentLink && (
-                <button
-                  onClick={handlePaymentCheckout}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <FiCreditCard size={20} />
-                  Pay Now
-                </button>
-              )}
+              {/* Primary Checkout Button */}
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate('/checkout');
+                }}
+                className="btn btn-primary w-full flex items-center justify-center gap-2 mb-2"
+              >
+                <FiShoppingBag size={20} />
+                Proceed to Checkout
+              </button>
 
-              {/* WhatsApp Button - Show if payment not configured or if negotiation is allowed */}
-              {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
-                <button
-                  onClick={handleWhatsAppCheckout}
-                  className="btn btn-whatsapp w-full flex items-center justify-center gap-2"
-                >
-                  <IoLogoWhatsapp size={20} />
-                  {shop?.paymentSettings?.provider ? 'Checkout via WhatsApp' : 'Checkout on WhatsApp'}
-                </button>
-              )}
+              {/* WhatsApp Quick Checkout - Alternative option */}
+              <button
+                onClick={handleWhatsAppCheckout}
+                className="btn btn-whatsapp w-full flex items-center justify-center gap-2"
+              >
+                <IoLogoWhatsapp size={20} />
+                Quick Order via WhatsApp
+              </button>
 
               <button
                 onClick={clearCart}
-                className="w-full py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium"
+                className="w-full py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium mt-2"
               >
                 Clear Cart
               </button>

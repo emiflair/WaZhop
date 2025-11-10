@@ -30,6 +30,10 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Marketplace = lazy(() => import('./pages/Marketplace'))
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const Checkout = lazy(() => import('./pages/Checkout'))
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'))
+const MyOrders = lazy(() => import('./pages/MyOrders'))
+const OrderTracking = lazy(() => import('./pages/OrderTracking'))
 
 // Lazy load dashboard pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
@@ -43,6 +47,17 @@ const ReferralProgram = lazy(() => import('./pages/dashboard/ReferralProgram'))
 const InventoryManagement = lazy(() => import('./pages/dashboard/InventoryManagement'))
 const Reviews = lazy(() => import('./pages/dashboard/Reviews'))
 
+// Lazy load admin pages
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'))
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'))
+const AdminShops = lazy(() => import('./pages/admin/AdminShops'))
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
+const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue'))
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
+
 // Lazy load demo pages
 const ErrorHandlingExamples = lazy(() => import('./pages/ErrorHandlingExamples'))
 const LoadingStatesExamples = lazy(() => import('./pages/LoadingStatesExamples'))
@@ -51,8 +66,9 @@ const MobileResponsiveDemo = lazy(() => import('./pages/MobileResponsiveDemo'))
 // Lazy load storefront
 const Storefront = lazy(() => import('./pages/Storefront'))
 
-// Protected Route Component
+// Protected Route Components
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import HideForBuyers from './components/HideForBuyers'
 
 // Wrapper component that lives inside Router so we can use useLocation safely
@@ -103,12 +119,11 @@ function AppRoutes() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
+                <Route path="/" element={<Marketplace />} />
+                <Route path="/about" element={<Home />} />
                 <Route path="/pricing" element={<HideForBuyers><Pricing /></HideForBuyers>} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -117,6 +132,21 @@ function AppRoutes() {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+                <Route path="/orders/:orderId" element={<OrderTracking />} />
+
+                {/* Admin Routes - Protected with admin authentication */}
+                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+                <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
+                <Route path="/admin/shops" element={<AdminRoute><AdminShops /></AdminRoute>} />
+                <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+                <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+                <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+                <Route path="/admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
+                <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
                 {/* Protected Dashboard Routes */}
                 <Route path="/dashboard" element={<ProtectedRoute sellerOnly><Dashboard /></ProtectedRoute>} />

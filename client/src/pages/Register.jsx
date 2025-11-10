@@ -92,9 +92,9 @@ const Register = () => {
     };
 
     const result = await register(payload);
-    
-    // Apply referral code after successful registration
-    if (result.success) {
+
+    // Auto-login after successful registration - no verification required
+    if (result.success && result.user) {
       // Apply referral only for sellers
       if (result.user.role === 'seller') {
         const codeToApply = formData.referralCodeInput.trim() || referralCode;
@@ -110,8 +110,8 @@ const Register = () => {
           }
         }
       }
-      
-      navigate(result.user.role === 'seller' ? '/dashboard' : '/marketplace');
+
+      navigate(result.user.role === 'seller' ? '/dashboard' : '/');
     }
     
     setLoading(false);

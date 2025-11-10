@@ -69,31 +69,9 @@ exports.register = asyncHandler(async (req, res) => {
     user.shop = shop._id;
   }
   
-  // Prepare email verification token
-  const emailToken = crypto.randomBytes(24).toString('hex');
-  user.emailVerificationToken = emailToken;
-  user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
   await user.save();
 
-  // Kick off email (fire-and-forget)
-  try {
-    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-    const verifyUrl = `${appUrl}/verify-email?token=${emailToken}`;
-    const html = `
-      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-        <h2>Verify your email</h2>
-        <p>Hi ${name.split(' ')[0]}, thanks for joining WaZhop.</p>
-        <p>Click the button below to verify your email address.</p>
-        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
-        <p>Or copy this link: <a href="${verifyUrl}">${verifyUrl}</a></p>
-      </div>
-    `;
-    await sendEmail({ to: normalizedEmail, subject: 'Verify your email', html });
-  } catch (e) {
-    console.warn('Email verification send failed:', e.message);
-  }
-
-  // Send token response
+  // Email verification is optional - auto-login user after registration
   sendTokenResponse(user, 201, res);
 });
 
@@ -142,25 +120,9 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
-  // If email not verified, resend token and block login
-  if (!user.emailVerified) {
-    const token = require('crypto').randomBytes(24).toString('hex');
-    user.emailVerificationToken = token;
-    user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
-    await user.save();
-    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-    const verifyUrl = `${appUrl}/verify-email?token=${token}`;
-    const html = `
-      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-        <h2>Verify your email</h2>
-        <p>Hi ${user.name.split(' ')[0]}, please verify your email to continue.</p>
-        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
-      </div>
-    `;
-    try { await sendEmail({ to: user.email, subject: 'Verify your email', html }); } catch {}
-    return res.status(403).json({ success: false, message: 'Please verify your email. We just sent you a new verification link.' });
-  }
-
+  // Allow login regardless of email verification status
+  // Email verification is optional, not required for login
+  
   // Send token response
   sendTokenResponse(user, 200, res);
 });
@@ -247,7 +209,7 @@ exports.changePassword = asyncHandler(async (req, res) => {
 // @access  Private
 exports.requestEmailVerification = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
-  const token = crypto.randomBytes(24).toString('hex');
+  const token = Math.floor(100000 + Math.random() * 900000).toString();
   user.emailVerificationToken = token;
   user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
   await user.save();
@@ -261,7 +223,15 @@ exports.requestEmailVerification = asyncHandler(async (req, res) => {
       <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
     </div>
   `;
-  await sendEmail({ to: user.email, subject: 'Verify your email', html });
+  try {
+    const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+    if (!resp?.ok) {
+      console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+    }
+  } catch (e) {
+    console.warn('Email verification send failed:', e.message);
+    console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+  }
 
   res.json({ success: true, message: 'Verification email sent' });
 });
@@ -282,7 +252,7 @@ exports.requestEmailVerificationPublic = asyncHandler(async (req, res) => {
   if (!user) return genericResponse();
   if (user.emailVerified) return genericResponse();
 
-  const token = crypto.randomBytes(24).toString('hex');
+  const token = Math.floor(100000 + Math.random() * 900000).toString();
   user.emailVerificationToken = token;
   user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
   await user.save();
@@ -296,7 +266,15 @@ exports.requestEmailVerificationPublic = asyncHandler(async (req, res) => {
       <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
     </div>
   `;
-  try { await sendEmail({ to: user.email, subject: 'Verify your email', html }); } catch {}
+  try {
+    const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+    if (!resp?.ok) {
+      console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+    }
+  } catch (e) {
+    console.warn('Email verification send failed:', e.message);
+    console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+  }
 
   return genericResponse();
 });
@@ -317,6 +295,12 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   user.emailVerificationToken = null;
   user.emailVerificationExpires = null;
   await user.save();
+  // Auto-login support: if client requested autoLogin=1, issue JWT like normal login
+  if (req.query.autoLogin === '1') {
+    // populate shop for redirect logic if needed
+    await user.populate('shop');
+    return sendTokenResponse(user, 200, res);
+  }
   res.json({ success: true, message: 'Email verified successfully' });
 });
 
@@ -355,4 +339,92 @@ exports.verifySmsCode = asyncHandler(async (req, res) => {
   user.phoneVerificationExpires = null;
   await user.save();
   res.json({ success: true, message: 'Phone verified successfully' });
+});
+
+// @desc    Forgot password (public)
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body || {};
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  const generic = () => res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+  if (!normalizedEmail) return generic();
+
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) return generic();
+
+  // If email is not verified, do not send reset link. Instead, (re)send verification code.
+  if (!user.emailVerified) {
+    try {
+      const token = Math.floor(100000 + Math.random() * 900000).toString();
+      user.emailVerificationToken = token;
+      user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
+      await user.save();
+
+      const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+      const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+      const html = `
+        <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+          <h2>Verify your email</h2>
+          <p>To reset your password, please verify your email first using this code:</p>
+          <p style="font-size:22px;letter-spacing:4px;font-weight:700;margin:12px 0 18px">${token}</p>
+          <p>Or click below to verify automatically:</p>
+          <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+        </div>
+      `;
+      try {
+        const resp = await sendEmail({ to: user.email, subject: 'Verify your email to reset password', html });
+        if (!resp?.ok) {
+          console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+        }
+      } catch (e) {
+        console.warn('Email verification (forgot-password) send failed:', e.message);
+        console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+      }
+    } catch {}
+    return generic();
+  }
+
+  const token = crypto.randomBytes(24).toString('hex');
+  user.passwordResetToken = token;
+  user.passwordResetExpires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
+  await user.save();
+
+  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const resetUrl = `${appUrl}/reset-password/${token}`;
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+      <h2>Reset your password</h2>
+      <p>Click the button below to set a new password. This link expires in 15 minutes.</p>
+      <p><a href="${resetUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Reset Password</a></p>
+      <p>Or copy this link: <a href="${resetUrl}">${resetUrl}</a></p>
+    </div>
+  `;
+  try { await sendEmail({ to: user.email, subject: 'Reset your password', html }); } catch {}
+
+  // In development, include token to ease testing (never in production)
+  if ((process.env.NODE_ENV || 'development') !== 'production') {
+    return res.json({ success: true, message: 'Reset email simulated (dev).', token });
+  }
+  return generic();
+});
+
+// @desc    Reset password with token
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { token, password } = req.body || {};
+  if (!token || !password) {
+    return res.status(400).json({ success: false, message: 'Token and new password are required' });
+  }
+  const user = await User.findOne({ passwordResetToken: token });
+  if (!user) return res.status(400).json({ success: false, message: 'Invalid reset token' });
+  if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
+    return res.status(400).json({ success: false, message: 'Reset token expired' });
+  }
+  user.password = password;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+  res.json({ success: true, message: 'Password reset successful. You can now log in.' });
 });

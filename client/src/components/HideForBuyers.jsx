@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 // Redirects authenticated buyers away from seller-focused pages
 // Renders children for guests, sellers, and admins
-export default function HideForBuyers({ children, redirectTo = '/marketplace' }) {
+export default function HideForBuyers({ children, message = "Seller feature", redirectTo = '/' }) {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
   const isBuyer = isAuthenticated && user?.role === 'buyer';

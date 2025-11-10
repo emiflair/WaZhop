@@ -1,15 +1,38 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp } from 'react-icons/fi';
+import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp, FiArrowRight } from 'react-icons/fi';
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
+import LazyImage from '../components/LazyImage';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
   const { isAuthenticated, user } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';
+  
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await api.get('/products/marketplace?limit=8&sort=-createdAt');
+        // API interceptor already extracts data from { success: true, data: [...] }
+        setFeaturedProducts(Array.isArray(response) ? response : []);
+      } catch (error) {
+        console.error('Failed to fetch featured products:', error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   const getStartedHref = () => {
     if (!isAuthenticated) return '/register?role=seller';
@@ -68,14 +91,92 @@ const Home = () => {
               <Link to={getStartedHref()} className="btn btn-primary text-lg px-10 py-4 shadow-lg hover:shadow-xl transition-all">
                 Create Your Shop Now - Free Forever
               </Link>
-              <Link to="/how-it-works" className="btn btn-outline text-lg px-10 py-4">
-                See How It Works
+              <Link to="/" className="btn btn-outline text-lg px-10 py-4">
+                Browse Products
               </Link>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               ✨ No credit card required • Setup in minutes • Free forever plan
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-16 sm:py-20 bg-white dark:bg-gray-900 px-4">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Trending Products
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-6">
+              See what sellers are offering on Wazhop. Your products could be here too!
+            </p>
+          </div>
+
+          {loadingProducts ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {featuredProducts.map((product) => (
+                  <Link
+                    key={product._id}
+                    to={`/marketplace`}
+                    className="group bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+                      <LazyImage
+                        src={product.images?.[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                          ₦{product.price?.toLocaleString()}
+                        </span>
+                        {product.shop?.shopName && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
+                            by {product.shop.shopName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="text-center">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 btn btn-primary text-lg px-8 py-4"
+                >
+                  View All Products
+                  <FiArrowRight size={20} />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <FiShoppingBag className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={64} />
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-6">
+                No products yet. Be the first seller on Wazhop!
+              </p>
+              <Link to={getStartedHref()} className="btn btn-primary">
+                Start Selling Now
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

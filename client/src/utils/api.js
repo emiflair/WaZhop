@@ -182,7 +182,12 @@ export const productAPI = {
 // User/Subscription endpoints
 export const userAPI = {
   getSubscription: () => api.get('/users/subscription'),
-  upgradePlan: (plan, duration, billingPeriod) => api.post('/users/upgrade', { plan, duration, billingPeriod }),
+  upgradePlan: (plan, duration, billingPeriod, couponCode) => api.post('/users/upgrade', { 
+    plan, 
+    duration, 
+    billingPeriod,
+    couponCode 
+  }),
   downgradePlan: (plan) => api.post('/users/downgrade', { plan }),
 };
 
@@ -209,6 +214,39 @@ export const reviewAPI = {
   approveReview: (id, isApproved) => api.put(`/reviews/${id}/approve`, { isApproved }),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
   markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
+};
+
+// Order endpoints
+export const orderAPI = {
+  createOrder: (data) => api.post('/orders', data),
+  getMyOrders: () => api.get('/orders/my-orders'),
+  getOrderById: (id) => api.get(`/orders/${id}`),
+  getShopOrders: (shopId, params) => api.get(`/orders/shop/${shopId}`, { params }),
+  getOrderStats: (shopId) => api.get(`/orders/shop/${shopId}/stats`),
+  updateOrderStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
+  cancelOrder: (id) => api.patch(`/orders/${id}/cancel`),
+};
+
+// Coupon endpoints
+export const couponAPI = {
+  create: (data) => api.post('/coupons', data),
+  getAll: () => api.get('/coupons'),
+  getStats: () => api.get('/coupons/stats'),
+  validate: (code, plan) => api.post('/coupons/validate', { code, plan }),
+  apply: (code, plan) => api.post('/coupons/apply', { code, plan }),
+  toggle: (id) => api.patch(`/coupons/${id}/toggle`),
+  delete: (id) => api.delete(`/coupons/${id}`),
+};
+
+// Admin endpoints
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
+  getAllUsers: (params) => api.get('/admin/users', { params }),
+  updateUserRole: (id, role) => api.patch(`/admin/users/${id}/role`, { role }),
+  toggleUserStatus: (id) => api.patch(`/admin/users/${id}/status`),
+  updateUserPlan: (id, plan, duration) => api.patch(`/admin/users/${id}/plan`, { plan, duration }),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getActivity: (limit) => api.get('/admin/activity', { params: { limit } }),
 };
 
 export default api;
