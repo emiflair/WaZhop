@@ -19,6 +19,7 @@ const {
 } = require('../controllers/shopController');
 const { protect, requireRole } = require('../middlewares/auth');
 const { upload } = require('../config/cloudinary');
+const { moderateText } = require('../middlewares/contentModeration');
 const {
   checkShopLimit,
   checkStorageAccess,
@@ -30,10 +31,10 @@ const {
 // Protected routes (must come before dynamic routes)
 router.get('/my/shop', protect, requireRole('seller'), getMyShop);
 router.get('/my/shops', protect, requireRole('seller'), getMyShops);
-router.post('/', protect, requireRole('seller'), checkShopLimit, createShop);
+router.post('/', protect, requireRole('seller'), checkShopLimit, moderateText, createShop);
 router.delete('/:id', protect, requireRole('seller'), deleteShop);
 router.get('/themes', protect, requireRole('seller'), getAvailableThemes);
-router.put('/my/shop', protect, requireRole('seller'), updateShop);
+router.put('/my/shop', protect, requireRole('seller'), moderateText, updateShop);
 router.put('/my/theme', protect, requireRole('seller'), checkThemeCustomizationAccess, updateTheme);
 router.post('/my/logo', protect, requireRole('seller'), checkStorageAccess, upload.single('logo'), uploadLogo);
 router.post('/my/banner', protect, requireRole('seller'), checkStorageAccess, upload.single('banner'), uploadBanner);

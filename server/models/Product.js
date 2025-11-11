@@ -151,6 +151,39 @@ const productSchema = new mongoose.Schema({
   position: {
     type: Number,
     default: 0
+  },
+  // Content Moderation
+  moderation: {
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'flagged'],
+      default: 'approved'
+    },
+    checkedAt: {
+      type: Date,
+      default: Date.now
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
+    severity: {
+      type: String,
+      enum: ['none', 'low', 'medium', 'high'],
+      default: 'none'
+    },
+    flaggedCategories: [{
+      type: String
+    }],
+    overriddenBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    overriddenAt: {
+      type: Date,
+      default: null
+    }
   }
 }, {
   timestamps: true

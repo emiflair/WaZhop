@@ -1,8 +1,10 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
+import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const HowItWorks = () => {
+  useMarketingTheme(); // Force light mode for marketing page
   const sellerSteps = [
     {
       number: '1',
@@ -51,53 +53,91 @@ const HowItWorks = () => {
         description="Learn how to create your digital shop in 4 easy steps. Sign up, customize, share, and start selling on WhatsApp in minutes."
       />
       <Navbar />
-      <div className="flex-grow py-16">
-        <div className="container-custom">
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 dark:text-gray-100">How It Works</h1>
-          <p className="text-lg text-center text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto">
-            WaZhop is WhatsApp‑first. Sellers create shops and can optionally Boost to reach buyers in specific locations.
-            Buyers browse, filter by State/Area, and chat on WhatsApp to buy.
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
-            <section>
-              <h2 className="text-2xl font-bold mb-6 dark:text-gray-100">For Sellers</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-                {sellerSteps.map((step) => (
-                  <div key={`s-${step.number}`} className="text-center">
-                    <div className="w-14 h-14 bg-primary-600 dark:bg-primary-500 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3 shadow-lg">
-                      {step.number}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-1.5 dark:text-gray-100">{step.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">{step.description}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-6 dark:text-gray-100">For Buyers</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-                {buyerSteps.map((step) => (
-                  <div key={`b-${step.number}`} className="text-center">
-                    <div className="w-14 h-14 bg-blue-600 dark:bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3 shadow-lg">
-                      {step.number}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-1.5 dark:text-gray-100">{step.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">{step.description}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
+      <div className="flex-grow">
+        {/* Hero Section */}
+        <section className="app-section bg-gradient-to-br from-primary-500 via-primary-600 to-accent-600 dark:from-primary-700 dark:via-primary-800 dark:to-accent-800 text-white">
+          <div className="app-container text-center">
+            <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 mb-8">
+              <span className="text-sm font-semibold">Simple & Powerful</span>
+            </div>
+            <h1 className="app-heading mb-6">How It Works</h1>
+            <p className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+              WaZhop is WhatsApp‑first. Sellers create shops and boost visibility. Buyers browse and connect instantly.
+            </p>
           </div>
+        </section>
 
-          <div className="mt-12 max-w-3xl mx-auto">
-            <div className="card bg-gray-50 dark:bg-gray-800">
-              <h3 className="text-xl font-semibold mb-2 dark:text-gray-100">About Boosts</h3>
-              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                Boosting improves marketplace visibility within the State and Area you choose. It does not guarantee
-                clicks or sales. Keep products accurate and responsive on WhatsApp for best results.
-              </p>
+        {/* Main Content */}
+        <div className="app-section bg-white dark:bg-gray-900">
+          <div className="app-container">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+              {/* For Sellers */}
+              <section>
+                <div className="mb-10">
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-sm font-semibold mb-4">
+                    For Sellers
+                  </div>
+                  <h2 className="app-subheading text-gray-900 dark:text-gray-100 mb-4">Start Selling in Minutes</h2>
+                </div>
+                <div className="space-y-6">
+                  {sellerSteps.map((step) => (
+                    <div key={`s-${step.number}`} className="app-card group">
+                      <div className="flex items-start gap-6">
+                        <div className="flex-shrink-0 w-16 h-16 app-gradient-primary rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          {step.number}
+                        </div>
+                        <div className="flex-1 pt-1">
+                          <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">{step.title}</h3>
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* For Buyers */}
+              <section>
+                <div className="mb-10">
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold mb-4">
+                    For Buyers
+                  </div>
+                  <h2 className="app-subheading text-gray-900 dark:text-gray-100 mb-4">Shop with Confidence</h2>
+                </div>
+                <div className="space-y-6">
+                  {buyerSteps.map((step) => (
+                    <div key={`b-${step.number}`} className="app-card group">
+                      <div className="flex items-start gap-6">
+                        <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          {step.number}
+                        </div>
+                        <div className="flex-1 pt-1">
+                          <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">{step.title}</h3>
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            {/* About Boosts Section */}
+            <div className="mt-16 max-w-4xl mx-auto">
+              <div className="app-card-elevated bg-gradient-to-br from-accent-50 to-primary-50 dark:from-accent-900/20 dark:to-primary-900/20">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-accent-600 dark:bg-accent-700 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">🚀</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-gray-100">About Boosts</h3>
+                    <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+                      Boosting improves marketplace visibility within the State and Area you choose. It does not guarantee
+                      clicks or sales. Keep products accurate and responsive on WhatsApp for best results.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

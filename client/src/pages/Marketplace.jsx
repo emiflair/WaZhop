@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
 export default function Marketplace() {
+  // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -278,7 +279,9 @@ export default function Marketplace() {
                     <ProductCard 
                       key={product._id} 
                       product={product} 
-                      onOpen={() => navigate(`/product/${product._id}`)}
+                      onOpen={() => navigate(`/product/${product._id}`, { 
+                        state: { fromMarketplace: true }
+                      })}
                     />
                   ))}
                 </div>

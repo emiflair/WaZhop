@@ -781,8 +781,8 @@ const Subscription = () => {
 
         {/* Boost Modal */}
         {boostOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md p-6">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-md p-6 my-8 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold dark:text-white">Start a Boost</h3>
                 <button onClick={() => setBoostOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"><FiX /></button>
@@ -886,8 +886,8 @@ const Subscription = () => {
 
         {/* Checkout Preview Modal - Shows discount breakdown */}
         {showPreviewModal && selectedPlan && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-lg w-full p-6 shadow-xl">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-lg w-full p-6 shadow-xl my-8 max-h-[90vh] overflow-y-auto">
               <div className="text-center mb-6">
                 <div className={`w-20 h-20 ${couponData ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'} rounded-full flex items-center justify-center mx-auto mb-4`}>
                   {couponData ? (
@@ -1088,8 +1088,8 @@ const Subscription = () => {
 
         {/* Upgrade Confirmation Modal */}
         {showUpgradeModal && selectedPlan && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6 shadow-xl my-8 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 rounded-full ${getColorClasses(selectedPlan.color).bg} flex items-center justify-center`}>
                   <selectedPlan.icon className={`text-2xl ${getColorClasses(selectedPlan.color).text}`} />

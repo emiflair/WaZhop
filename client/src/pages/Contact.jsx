@@ -1,8 +1,10 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const Contact = () => {
+  useMarketingTheme(); // Force light mode for marketing page
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -38,10 +38,44 @@ const Storefront = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  // IMPORTANT: Do not alter global theme here.
-  // We intentionally avoid toggling document.documentElement 'dark' class
-  // so the user's chosen theme remains sticky across all routes and browsers.
-  useEffect(() => {}, [shop]);
+  // Apply shop's theme mode (independent of dashboard theme)
+  useEffect(() => {
+    if (!shop) return;
+
+    // Save current theme state before applying shop theme
+    const html = document.documentElement;
+    const previousThemeWasDark = html.classList.contains('dark');
+
+    const applyShopTheme = () => {
+      const themeMode = shop.theme?.mode || 'light';
+      
+      if (themeMode === 'dark') {
+        html.classList.add('dark');
+      } else if (themeMode === 'light') {
+        html.classList.remove('dark');
+      } else if (themeMode === 'auto') {
+        // Auto mode: follow system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          html.classList.add('dark');
+        } else {
+          html.classList.remove('dark');
+        }
+      }
+    };
+
+    applyShopTheme();
+
+    // Cleanup: restore previous theme when leaving shop page
+    return () => {
+      // Restore the theme that was active before we entered this page
+      if (previousThemeWasDark) {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+    };
+  }, [shop]);
 
   const fetchShop = async () => {
     try {

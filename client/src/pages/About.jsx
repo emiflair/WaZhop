@@ -1,7 +1,9 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const About = () => {
+  useMarketingTheme(); // Force light mode for marketing page
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <Navbar />

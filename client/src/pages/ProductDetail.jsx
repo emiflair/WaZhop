@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
@@ -13,6 +13,7 @@ import SingleImageUpload from '../components/SingleImageUpload';
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,51 @@ export default function ProductDetail() {
     // reset image on id change
     setSelectedImage(0);
   }, [id]);
+
+  // Theme handling: Respect marketplace theme when coming from marketplace
+  // Apply shop theme only when coming from shop's storefront
+  useEffect(() => {
+    if (!shop) return;
+
+    const html = document.documentElement;
+    const previousThemeWasDark = html.classList.contains('dark');
+
+    // Check if user came from marketplace (public browsing)
+    const cameFromMarketplace = location.state?.fromMarketplace === true;
+
+    // If coming from marketplace, keep the marketplace's theme (user's preference)
+    // Only apply shop's custom theme if coming from shop's storefront or direct link
+    if (cameFromMarketplace) {
+      // Coming from marketplace - keep current theme (don't change anything)
+      // User's marketplace theme preference is already applied
+    } else {
+      // Coming from shop storefront or direct link - apply shop's custom theme
+      const themeMode = shop.theme?.mode || 'light';
+      
+      if (themeMode === 'dark') {
+        html.classList.add('dark');
+      } else if (themeMode === 'light') {
+        html.classList.remove('dark');
+      } else if (themeMode === 'auto') {
+        // Auto mode: follow system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          html.classList.add('dark');
+        } else {
+          html.classList.remove('dark');
+        }
+      }
+    }
+
+    // Cleanup: restore previous theme when leaving product page
+    return () => {
+      if (previousThemeWasDark) {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+    };
+  }, [shop, location]);
 
   // fetch related products and reviews when product changes
   useEffect(() => {
