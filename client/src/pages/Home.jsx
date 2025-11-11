@@ -21,7 +21,7 @@ const Home = () => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await api.get('/products/marketplace?limit=8&sort=-createdAt');
+        const response = await api.get('/products/marketplace?limit=4&sort=-createdAt');
         // API interceptor already extracts data from { success: true, data: [...] }
         setFeaturedProducts(Array.isArray(response) ? response : []);
       } catch (error) {

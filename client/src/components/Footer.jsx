@@ -68,7 +68,7 @@ const Footer = () => {
 
                 {/* Copyright */}
         <div className="border-t border-gray-800 pt-8 text-center">
-          <p>&copy; {currentYear} WaZhop. All rights reserved. Made with ❤️ in Nigeria.</p>
+          <p>&copy; {currentYear} WaZhop. All rights reserved. Made in Nigeria.</p>
         </div>
       </div>
     </footer>

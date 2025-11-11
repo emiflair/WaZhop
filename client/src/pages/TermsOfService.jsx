@@ -20,9 +20,6 @@ const TermsOfService = () => {
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 Terms of Service
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Last updated: November 7, 2025
-              </p>
             </div>
 
             {/* Content */}
