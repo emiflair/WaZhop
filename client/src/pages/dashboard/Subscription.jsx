@@ -33,6 +33,11 @@ const Subscription = () => {
   const [couponData, setCouponData] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  // Destructive downgrade confirmation state
+  const [showDowngradeModal, setShowDowngradeModal] = useState(false);
+  const [confirmPhrase, setConfirmPhrase] = useState('');
+  const [ackIrreversible, setAckIrreversible] = useState(false);
+  const [downgrading, setDowngrading] = useState(false);
   // Boost flow state
   const [boostOpen, setBoostOpen] = useState(false);
   const [boostHours, setBoostHours] = useState(5);
@@ -232,6 +237,15 @@ const Subscription = () => {
       return;
     }
     setSelectedPlan(plan);
+    // If moving to Free from a higher plan, require destructive downgrade confirmation
+    const isDowngradeToFree = plan.id === 'free' && getPlanLevel(user?.plan) > getPlanLevel('free');
+    if (isDowngradeToFree) {
+      setConfirmPhrase('');
+      setAckIrreversible(false);
+      setShowDowngradeModal(true);
+      setShowUpgradeModal(false);
+      return;
+    }
     setShowUpgradeModal(true);
     setCouponCode('');
     setCouponData(null);
@@ -305,6 +319,7 @@ const Subscription = () => {
           toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
         }
       } else {
+        // Non-destructive plan changes (e.g., Premium -> Pro) use standard flow
         const data = await userAPI.downgradePlan(selectedPlan.id);
         updateUser(data.user);
         toast.success(`Successfully changed to ${selectedPlan.name} plan!`);
@@ -321,6 +336,27 @@ const Subscription = () => {
       toast.error(error.response?.data?.message || 'Failed to change plan');
     } finally {
       setUpgrading(false);
+    }
+  };
+
+  // Destructive downgrade handler (to Free with data cleanup)
+  const handleConfirmDestructiveDowngrade = async () => {
+    if (!selectedPlan || selectedPlan.id !== 'free') return;
+    if (confirmPhrase.trim().toUpperCase() !== 'DOWNGRADE' || !ackIrreversible) return;
+
+    try {
+      setDowngrading(true);
+      const data = await userAPI.downgradePlan('free', { confirmLoss: true });
+      updateUser(data.user);
+      toast.success(data.message || 'Downgraded to Free and cleaned up data');
+      setShowDowngradeModal(false);
+      setSelectedPlan(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Error downgrading to free:', error);
+      toast.error(error.response?.data?.message || error.userMessage || 'Failed to downgrade');
+    } finally {
+      setDowngrading(false);
     }
   };
 
@@ -1250,14 +1286,91 @@ const Subscription = () => {
                       setShowUpgradeModal(false);
                       setShowPreviewModal(true);
                     } else {
-                      // Free plan - proceed directly
-                      handleConfirmUpgrade();
+                      // Free plan - this path is for safety fallback; normally we show destructive modal
+                      setShowUpgradeModal(false);
+                      setShowDowngradeModal(true);
                     }
                   }}
                   className={`flex-1 px-4 py-2 ${getColorClasses(selectedPlan.color).button} text-white rounded-lg transition-colors font-medium`}
                   disabled={upgrading}
                 >
                   {upgrading ? 'Processing...' : 'Continue to Preview'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Destructive Downgrade Modal (to Free) */}
+        {showDowngradeModal && selectedPlan?.id === 'free' && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-gray-900 rounded-lg max-w-lg w-full p-6 shadow-xl my-8 max-h-[90vh] overflow-y-auto border-2 border-red-300 dark:border-red-700">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <FaTimes className="text-2xl text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Downgrade to Free (Destructive)</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Read carefully — this action permanently removes data.</p>
+                </div>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
+                <p className="font-semibold text-red-800 dark:text-red-200 mb-2">What will happen:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-red-800 dark:text-red-200">
+                  <li>Only your oldest shop will remain. All other shops will be deleted.</li>
+                  <li>In the remaining shop, only the first 10 products will be kept. The rest will be deleted.</li>
+                  <li>All shop and product images will be permanently deleted from storage.</li>
+                  <li>Your storage usage will be reset and WaZhop branding/watermark will be enforced.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm text-gray-700 dark:text-gray-300">
+                  Type <span className="font-mono font-semibold">DOWNGRADE</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={confirmPhrase}
+                  onChange={(e) => setConfirmPhrase(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:text-white"
+                  placeholder="DOWNGRADE"
+                />
+
+                <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={ackIrreversible}
+                    onChange={(e) => setAckIrreversible(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>I understand this is irreversible and my extra shops, products, and images will be permanently deleted.</span>
+                </label>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowDowngradeModal(false);
+                    setSelectedPlan(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-gray-700 dark:text-gray-200"
+                  disabled={downgrading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDestructiveDowngrade}
+                  className={`flex-1 px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+                    confirmPhrase.trim().toUpperCase() === 'DOWNGRADE' && ackIrreversible && !downgrading
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-red-400 cursor-not-allowed'
+                  }`}
+                  disabled={
+                    confirmPhrase.trim().toUpperCase() !== 'DOWNGRADE' || !ackIrreversible || downgrading
+                  }
+                >
+                  {downgrading ? 'Downgrading…' : 'Confirm Downgrade'}
                 </button>
               </div>
             </div>

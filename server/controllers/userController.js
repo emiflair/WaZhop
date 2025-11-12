@@ -198,11 +198,11 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Downgrade subscription plan
+// @desc    Downgrade subscription plan (supports destructive cleanup on confirm)
 // @route   POST /api/users/downgrade
 // @access  Private
 exports.downgradePlan = asyncHandler(async (req, res) => {
-  const { plan } = req.body; // plan: 'free' or 'pro'
+  const { plan, confirmLoss = false } = req.body; // plan: 'free' or 'pro', confirmLoss: boolean
 
   if (!['free', 'pro'].includes(plan)) {
     return res.status(400).json({
@@ -232,15 +232,23 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
   // Get all user shops
   const shops = await Shop.find({ owner: user._id });
   
-  // Check shop count
-  if (shops.length > newLimits[plan].maxShops) {
-    return res.status(400).json({
-      success: false,
-      message: `Cannot downgrade. You have ${shops.length} shops, but ${plan} plan allows only ${newLimits[plan].maxShops}. Please delete ${shops.length - newLimits[plan].maxShops} shop(s) first.`,
-      requiresAction: true,
-      currentShops: shops.length,
-      allowedShops: newLimits[plan].maxShops
-    });
+  // If user confirmed destructive downgrade to Free, perform cleanup automatically
+  if (plan === 'free' && confirmLoss === true) {
+    const { enforceFreePlanForUser } = require('../utils/planEnforcement');
+    const stats = await enforceFreePlanForUser(user._id, { destructive: true });
+    // Proceed to plan update after enforcement
+    shops.length = Math.min(shops.length, 1);
+  } else {
+    // Check shop count only when not confirmed for destructive cleanup
+    if (shops.length > newLimits[plan].maxShops) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot downgrade. You have ${shops.length} shops, but ${plan} plan allows only ${newLimits[plan].maxShops}. Please delete ${shops.length - newLimits[plan].maxShops} shop(s) first.`,
+        requiresAction: true,
+        currentShops: shops.length,
+        allowedShops: newLimits[plan].maxShops
+      });
+    }
   }
 
   // Check total product count across all shops
@@ -250,26 +258,30 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
     totalProducts += count;
   }
 
-  if (totalProducts > newLimits[plan].products) {
-    return res.status(400).json({
-      success: false,
-      message: `Cannot downgrade. You have ${totalProducts} products, but ${plan} plan allows only ${newLimits[plan].products}. Please delete ${totalProducts - newLimits[plan].products} product(s) first.`,
-      requiresAction: true,
-      currentProducts: totalProducts,
-      allowedProducts: newLimits[plan].products
-    });
+  if (!(plan === 'free' && confirmLoss === true)) {
+    if (totalProducts > newLimits[plan].products) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot downgrade. You have ${totalProducts} products, but ${plan} plan allows only ${newLimits[plan].products}. Please delete ${totalProducts - newLimits[plan].products} product(s) first.`,
+        requiresAction: true,
+        currentProducts: totalProducts,
+        allowedProducts: newLimits[plan].products
+      });
+    }
   }
 
   // Check storage usage (only applicable when downgrading to free)
-  if (plan === 'free' && user.storageUsed > 0) {
-    const usedMB = (user.storageUsed / (1024 * 1024)).toFixed(2);
-    return res.status(400).json({
-      success: false,
-      message: `Cannot downgrade to Free plan. You are using ${usedMB}MB of storage. Free plan does not include storage. Please delete all images (logos, banners, product images) first.`,
-      requiresAction: true,
-      currentStorage: user.storageUsed,
-      allowedStorage: 0
-    });
+  if (!(plan === 'free' && confirmLoss === true)) {
+    if (plan === 'free' && user.storageUsed > 0) {
+      const usedMB = (user.storageUsed / (1024 * 1024)).toFixed(2);
+      return res.status(400).json({
+        success: false,
+        message: `Cannot downgrade to Free plan. You are using ${usedMB}MB of storage. Free plan does not include storage. Please delete all images (logos, banners, product images) first.`,
+        requiresAction: true,
+        currentStorage: user.storageUsed,
+        allowedStorage: 0
+      });
+    }
   }
 
   // If downgrading from Premium to Pro, check custom theme features
@@ -316,9 +328,8 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
     );
   }
 
-  // Deactivate extra shops if needed (keep the oldest shop active for free plan)
-  if (plan === 'free' && shops.length > 0) {
-    // Keep only the first shop active
+  // Deactivate extra shops if needed (keep the oldest shop active for free plan) – already handled in destructive mode
+  if (plan === 'free' && shops.length > 0 && !confirmLoss) {
     const primaryShop = shops.sort((a, b) => a.createdAt - b.createdAt)[0];
     await Shop.updateMany(
       { owner: user._id, _id: { $ne: primaryShop._id } },
@@ -350,7 +361,7 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
         customThemes: plan === 'premium'
       }
     },
-    message: `Successfully downgraded to ${plan} plan. ${plan === 'free' ? 'Only your oldest shop remains active. ' : ''}Some features have been restricted.`
+    message: `Successfully downgraded to ${plan} plan.${plan === 'free' && confirmLoss ? ' We removed extra shops/products and cleared images to fit Free plan limits.' : plan === 'free' ? ' Only your oldest shop remains active.' : ''} Some features have been restricted.`
   });
 });
 

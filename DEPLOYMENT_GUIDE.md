@@ -188,7 +188,21 @@ Open: `https://your-frontend.vercel.app`
 - [ ] `client/vercel.json` exists to enable SPA rewrites (no more 404s on `/admin` or PWA)
 - [ ] Health check returns 200 at `/api/health`
 
-## 💰 Pricing Overview
+## � Subscriptions & Plan Enforcement
+
+WaZhop supports two downgrade paths and runtime enforcement on the backend:
+
+- User‑initiated destructive downgrade to Free: The dashboard asks for explicit confirmation. If confirmed, the backend prunes data to fit Free limits (keeps oldest shop; caps products at Free tier; clears images where necessary) and enforces branding/watermark.
+- Automatic non‑destructive downgrade on expiry: When a paid plan expires (and auto‑renew is off), a scheduled check and a request‑time middleware move the user to Free without deleting data. Extra shops are deactivated and branding/watermark is enabled.
+
+Runtime behavior:
+- If a request arrives after expiry, the API may return HTTP 402 (Payment Required) with a message indicating plan expiry. You can surface this in the client and redirect users to the Subscription page.
+- Free tier limits (e.g., max shops/products/storage) are enforced server‑side in utilities and controllers.
+
+Optional client enhancement:
+- Add a global 402 handler (axios interceptor) to show a friendly toast and navigate to the Subscription screen when a 402 is returned.
+
+## �💰 Pricing Overview
 
 ### Railway (Backend)
 - **Free Tier**: $5 credit/month
@@ -276,7 +290,7 @@ Both Railway and Vercel automatically deploy when you push to GitHub:
 ```bash
 git add .
 git commit -m "Your changes"
-git push origin feature/verification-brevo
+git push origin main
 ```
 
 **Railway**: Deploys backend automatically

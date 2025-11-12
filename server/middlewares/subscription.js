@@ -33,6 +33,14 @@ const checkSubscriptionExpiry = async (req, res, next) => {
       user.autoRenew = false;
       
       await user.save();
+
+      // Enforce Free plan non-destructively (do not delete user data here)
+      try {
+        const { enforceFreePlanForUser } = require('../utils/planEnforcement');
+        await enforceFreePlanForUser(user._id, { destructive: false });
+      } catch (e) {
+        console.warn('[Subscription] Enforcement error (middleware):', e.message);
+      }
       
       // Update req.user with new plan info
       req.user.plan = 'free';

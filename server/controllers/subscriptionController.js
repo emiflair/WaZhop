@@ -364,6 +364,13 @@ exports.checkExpiredSubscriptions = async () => {
         user.autoRenew = false;
         
         await user.save();
+        // Enforce Free plan limits non-destructively (deactivate extra shops, show branding)
+        try {
+          const { enforceFreePlanForUser } = require('../utils/planEnforcement');
+          await enforceFreePlanForUser(user._id, { destructive: false });
+        } catch (e) {
+          console.warn('[Subscription] Enforcement error (non-fatal):', e.message);
+        }
         
         // TODO: Send email notification about expiration
         console.log(`[Subscription] User ${user.email} downgraded to free plan`);

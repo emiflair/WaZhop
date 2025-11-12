@@ -188,7 +188,7 @@ export const userAPI = {
     billingPeriod,
     couponCode 
   }),
-  downgradePlan: (plan) => api.post('/users/downgrade', { plan }),
+  downgradePlan: (plan, extra = {}) => api.post('/users/downgrade', { plan, ...extra }),
 };
 
 // Review endpoints

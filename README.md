@@ -103,9 +103,18 @@ Notes:
 
 ### Subscription Tiers
 
-- **Free:** Up to 4 products, 1 shop, basic themes, WaZhop branding, WhatsApp checkout only
+- **Free:** Up to 5 products, 1 shop, basic themes, WaZhop branding/watermark, WhatsApp checkout only
 - **Pro (₦9,000/month):** Up to 100 products, 2 shops, inventory management, custom colors, no branding, custom subdomain, advanced analytics
 - **Premium (₦18,000/month):** Unlimited products, 3 shops, payment integration (Flutterwave/Paystack), custom domain, advanced analytics, priority support
+
+### Downgrades and Expiry Behavior
+
+- User‑initiated downgrade to Free (destructive): Requires explicit confirmation in the dashboard. When confirmed, the system prunes data to meet Free limits (keeps oldest shop, limits products to Free cap, clears stored images where applicable) and enforces WaZhop branding/watermark.
+- Automatic downgrade on plan expiry (non‑destructive): If a paid plan expires and auto‑renew is off, the account is moved to Free without deleting data. Limits are enforced non‑destructively by deactivating extra shops and enabling branding/watermark. Requests during expiry may respond with HTTP 402 (Payment Required) to prompt renewal.
+
+Notes:
+- The client may handle HTTP 402 globally by showing a friendly message and redirecting users to the Subscription page to renew.
+- Exact limits are enforced server‑side. See server utils and controllers for details.
 
 ## License
 
