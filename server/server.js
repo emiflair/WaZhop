@@ -27,7 +27,13 @@ const app = express();
 // Middleware
 app.use(helmet()); // Security headers
 
-// CORS configuration - allow localhost and any local network IP
+// CORS configuration - allow localhost, local IPs, and production URLs
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.APP_BASE_URL, // Production frontend URL
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
   origin: function (origin, callback) {
     console.log('📥 Request from origin:', origin);
@@ -38,12 +44,18 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ Origin allowed (whitelist):', origin);
+      return callback(null, true);
+    }
+    
     // Allow localhost and any private IP address (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
     const privateIPPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
     
     if (localhostPattern.test(origin) || privateIPPattern.test(origin)) {
-      console.log('✅ Origin allowed:', origin);
+      console.log('✅ Origin allowed (local network):', origin);
       return callback(null, true);
     }
     
