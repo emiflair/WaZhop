@@ -28,7 +28,6 @@ Click on your service → **"Variables"** tab → Add these:
 
 ```bash
 NODE_ENV=production
-PORT=5001
 MONGODB_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRE=30d
@@ -100,6 +99,19 @@ Enter: `https://your-railway-backend-url.railway.app/api`
 vercel --prod
 ```
 
+### Step 6: Enable SPA Routing (Avoid 404 on /admin and PWA)
+
+Add a Vercel config inside `client/` so that all routes serve `index.html`:
+
+```
+client/vercel.json
+{
+   "rewrites": [
+      { "source": "/(.*)", "destination": "/index.html" }
+   ]
+}
+```
+
 ---
 
 ## ⚙️ Alternative: Deploy via Vercel Website
@@ -167,6 +179,14 @@ Open: `https://your-frontend.vercel.app`
 5. Upload products
 
 ---
+
+## ✅ Post‑Deploy Checklist (Production)
+
+- [ ] Railway → Variables: set `APP_BASE_URL` to your Vercel domain (e.g. `https://wazhop.vercel.app`)
+- [ ] Vercel → Env Vars: set `VITE_API_URL` to `https://<railway>.up.railway.app/api`
+- [ ] MongoDB Atlas → Network Access: allow your server IP (or temporarily `0.0.0.0/0` while testing)
+- [ ] `client/vercel.json` exists to enable SPA rewrites (no more 404s on `/admin` or PWA)
+- [ ] Health check returns 200 at `/api/health`
 
 ## 💰 Pricing Overview
 

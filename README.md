@@ -13,7 +13,7 @@ WhatsApp Shop Builder is a web platform that empowers small businesses and indiv
 - **Database:** MongoDB Atlas
 - **Authentication:** JWT (JSON Web Tokens)
 - **Cloud Storage:** Cloudinary
-- **Hosting:** Vercel (Frontend) + Render/Railway (Backend)
+ - **Hosting:** Vercel (Frontend) + Railway (Backend)
 
 ## Project Structure
 
@@ -61,6 +61,28 @@ cd client
 npm install
 npm run dev
 ```
+
+### Environment Variables (Reference)
+
+Configure these in the appropriate place:
+
+- Backend (Railway or server/.env):
+	- `MONGODB_URI` – MongoDB Atlas connection string
+	- `JWT_SECRET` – secure random string
+	- `APP_BASE_URL` – your frontend URL (e.g. https://wazhop.vercel.app)
+	- `EMAIL_PROVIDER` = `brevo`
+	- `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`
+	- `SMS_PROVIDER` (optional) + related SMS keys
+	- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+	- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+
+- Frontend (Vercel → Project → Settings → Environment Variables):
+	- `VITE_API_URL` – your backend API base, e.g. `https://<railway-domain>.up.railway.app/api`
+
+Notes:
+- Railway injects `PORT` for you in production.
+- CORS is controlled via `APP_BASE_URL`. Set it to your Vercel domain so the browser can call the API.
+- SPA routing on Vercel is enabled via `client/vercel.json` which rewrites all paths to `/index.html`.
 
 ## Features
 

@@ -278,6 +278,15 @@ config/
 ├── cloudinary.js         # Cloudinary setup (image hosting)
 ├── shopTemplates.js      # Default shop templates
 └── themePresets.js       # Default theme colors
+
+### ☁️ Hosting Configuration
+
+```
+client/
+└── vercel.json           # SPA rewrites so routes like /admin resolve to index.html
+```
+
+On Vercel, the project builds from `client/`. The `client/vercel.json` ensures client‑side routes and the PWA work without 404s.
 ```
 
 ### 🔄 Migrations
