@@ -162,7 +162,8 @@ const Home = () => {
                 {featuredProducts.map((product) => (
                   <Link
                     key={product._id}
-                    to={`/marketplace`}
+                    to={`/product/${product._id}`}
+                    state={{ fromMarketplace: true }}
                     className="group app-card hover:-translate-y-2 transform transition-all duration-300"
                   >
                     <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4">
