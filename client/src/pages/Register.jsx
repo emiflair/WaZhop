@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaUser, FaPhone, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
 import api from '../utils/api';
-import toast from 'react-hot-toast';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ const Register = () => {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   const roleParam = (searchParams.get('role') || '').toLowerCase();
-  
+
   const [formData, setFormData] = useState({
     role: 'buyer',
     name: '',
@@ -20,22 +19,36 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     whatsapp: '',
-    referralCodeInput: referralCode || '', // Pre-fill if from URL
+    referralCodeInput: referralCode || '',
   });
   const [loading, setLoading] = useState(false);
   const [referrerName, setReferrerName] = useState('');
   const [validatingReferral, setValidatingReferral] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [errors, setErrors] = useState({
+    role: '',
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    whatsapp: '',
+    general: ''
+  });
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+    whatsapp: false
+  });
 
-  // Validate referral code on mount if from URL
   useEffect(() => {
     if (referralCode) {
       validateReferralCode(referralCode);
     }
   }, [referralCode]);
 
-  // Preselect role from query param (?role=seller)
   useEffect(() => {
     if (roleParam === 'seller' || roleParam === 'buyer') {
       setFormData((prev) => ({ ...prev, role: roleParam }));
@@ -44,18 +57,15 @@ const Register = () => {
 
   const validateReferralCode = async (code) => {
     if (!code || code.trim() === '') return;
-    
     setValidatingReferral(true);
     try {
       const response = await api.get(`/referrals/validate/${code.toUpperCase()}`);
       if (response.valid) {
         setReferrerName(response.referrerName);
-        toast.success(`✅ Referred by ${response.referrerName}! You'll both earn rewards.`);
       }
     } catch (error) {
       console.error('Invalid referral code:', error);
       setReferrerName('');
-      toast.error('Invalid referral code');
     } finally {
       setValidatingReferral(false);
     }
@@ -63,6 +73,13 @@ const Register = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
   };
 
   const handleReferralCodeBlur = () => {
@@ -74,15 +91,15 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setErrors((prev) => ({ ...prev, password: 'Passwords do not match', confirmPassword: 'Passwords do not match' }));
+      setTouched((prev) => ({ ...prev, password: true, confirmPassword: true }));
+      setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    // Build minimal payload; omit whatsapp and referral for buyers
     const payload = {
       role: formData.role,
       name: formData.name,
@@ -93,9 +110,7 @@ const Register = () => {
 
     const result = await register(payload);
 
-    // Auto-login path (verification not required)
     if (result.success && result.user) {
-      // Apply referral only for sellers
       if (result.user.role === 'seller') {
         const codeToApply = formData.referralCodeInput.trim() || referralCode;
         if (codeToApply) {
@@ -104,26 +119,31 @@ const Register = () => {
               referralCode: codeToApply.toUpperCase(),
               newUserId: result.user._id || result.user.id
             });
-            console.log('✅ Referral code applied successfully');
           } catch (error) {
-            console.error('❌ Failed to apply referral:', error);
+            console.error('Failed to apply referral:', error);
           }
         }
       }
-
       navigate(result.user.role === 'seller' ? '/dashboard' : '/');
       setLoading(false);
       return;
     }
 
-    // Pending verification path
     if (result?.pendingVerification) {
-      // Navigate user to verification screen
       navigate('/verify-email');
       setLoading(false);
       return;
     }
-    
+
+    if (!result.success) {
+      const msg = (result.error || '').toLowerCase();
+      const newErrors = { ...errors, general: result.error || 'Registration failed' };
+      if (/email/.test(msg)) newErrors.email = result.error;
+      if (/whatsapp|phone/.test(msg)) newErrors.whatsapp = result.error;
+      setErrors(newErrors);
+      setTouched({ ...touched, email: true, whatsapp: true });
+    }
+
     setLoading(false);
   };
 
@@ -141,7 +161,10 @@ const Register = () => {
       footer={<span>Already have an account? <Link to="/login" className="font-semibold text-gray-900 dark:text-white hover:underline">Login</Link></span>}
     >
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        {/* Role Selection */}
+        {errors.general ? (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">{errors.general}</div>
+        ) : null}
+
         <div>
           <label className="label">I am a</label>
           <div className="grid grid-cols-2 gap-3">
@@ -160,7 +183,8 @@ const Register = () => {
           <label htmlFor="name" className="label">Full Name</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaUser /></span>
-            <input id="name" name="name" type="text" required className="input pl-10" placeholder="John Doe" value={formData.name} onChange={handleChange} />
+            <input id="name" name="name" type="text" required className={`input pl-10 ${touched.name && errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="John Doe" value={formData.name} onChange={handleChange} onBlur={handleBlur} />
+            {touched.name && errors.name ? (<p className="text-sm text-red-600 mt-1">{errors.name}</p>) : null}
           </div>
         </div>
 
@@ -168,7 +192,8 @@ const Register = () => {
           <label htmlFor="email" className="label">Email Address</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaEnvelope /></span>
-            <input id="email" name="email" type="email" required className="input pl-10" placeholder="you@example.com" value={formData.email} onChange={handleChange} />
+            <input id="email" name="email" type="email" required className={`input pl-10 ${touched.email && errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="you@example.com" value={formData.email} onChange={handleChange} onBlur={handleBlur} />
+            {touched.email && errors.email ? (<p className="text-sm text-red-600 mt-1">{errors.email}</p>) : null}
           </div>
         </div>
 
@@ -177,9 +202,10 @@ const Register = () => {
             <label htmlFor="whatsapp" className="label">WhatsApp Number <span className="text-red-500">*</span></label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaPhone /></span>
-              <input id="whatsapp" name="whatsapp" type="tel" required className="input pl-10" placeholder="+234 801 234 5678" value={formData.whatsapp} onChange={handleChange} />
+              <input id="whatsapp" name="whatsapp" type="tel" required className={`input pl-10 ${touched.whatsapp && errors.whatsapp ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="+234 801 234 5678" value={formData.whatsapp} onChange={handleChange} onBlur={handleBlur} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Include country code (e.g., +234 for Nigeria)</p>
+            {touched.whatsapp && errors.whatsapp ? (<p className="text-sm text-red-600 mt-1">{errors.whatsapp}</p>) : null}
           </div>
         )}
 
@@ -187,22 +213,24 @@ const Register = () => {
           <label htmlFor="password" className="label">Password</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaLock /></span>
-            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6} className="input pl-10 pr-10" placeholder="••••••••" value={formData.password} onChange={handleChange} />
+            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6} className={`input pl-10 pr-10 ${touched.password && errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.password} onChange={handleChange} onBlur={handleBlur} />
             <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Hide password' : 'Show password'}>
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
+          {touched.password && errors.password ? (<p className="text-sm text-red-600 mt-1">{errors.password}</p>) : null}
         </div>
 
         <div>
           <label htmlFor="confirmPassword" className="label">Confirm Password</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaLock /></span>
-            <input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required minLength={6} className="input pl-10 pr-10" placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} />
+            <input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required minLength={6} className={`input pl-10 pr-10 ${touched.confirmPassword && errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
             <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label={showConfirm ? 'Hide password' : 'Show password'}>
               {showConfirm ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
+          {touched.confirmPassword && errors.confirmPassword ? (<p className="text-sm text-red-600 mt-1">{errors.confirmPassword}</p>) : null}
         </div>
 
         {formData.role === 'seller' && (
@@ -231,3 +259,4 @@ const Register = () => {
 };
 
 export default Register;
+ 

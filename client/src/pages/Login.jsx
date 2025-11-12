@@ -15,23 +15,43 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({ email: '', password: '', general: '' });
+  const [touched, setTouched] = useState({ email: false, password: false });
 
   const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrors({ email: '', password: '', general: '' });
 
     const result = await login(formData);
     if (result.success) {
       const target = result.user?.role === 'seller' ? (from.startsWith('/dashboard') ? from : '/dashboard') : '/';
       navigate(target, { replace: true });
     }
-    // Email verification is optional - removed verification UI logic
+    // Inline error feedback on failure
+    if (!result.success) {
+      const msg = (result.error || '').toLowerCase();
+      const isCreds = /invalid email|password/i.test(result.error || '');
+      setErrors({
+        email: isCreds ? 'Invalid email or password' : '',
+        password: isCreds ? 'Invalid email or password' : '',
+        general: isCreds ? '' : (result.error || 'Login failed')
+      });
+      setTouched({ email: true, password: true });
+    }
     
     setLoading(false);
   };
@@ -44,6 +64,11 @@ const Login = () => {
       footer={<span>Don&apos;t have an account? <Link to="/register" className="font-semibold text-gray-900 dark:text-white hover:underline">Sign up</Link></span>}
     >
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        {errors.general ? (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+            {errors.general}
+          </div>
+        ) : null}
         <div>
           <label htmlFor="email" className="label">Email Address</label>
           <div className="relative">
@@ -55,11 +80,15 @@ const Login = () => {
               name="email"
               type="email"
               required
-              className="input pl-10"
+              className={`input pl-10 ${touched.email && errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
+              onBlur={handleBlur}
             />
+            {touched.email && errors.email ? (
+              <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+            ) : null}
           </div>
         </div>
 
@@ -74,10 +103,11 @@ const Login = () => {
               name="password"
               type={showPassword ? 'text' : 'password'}
               required
-              className="input pl-10 pr-10"
+              className={`input pl-10 pr-10 ${touched.password && errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
+              onBlur={handleBlur}
             />
             <button
               type="button"
@@ -88,6 +118,9 @@ const Login = () => {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
+          {touched.password && errors.password ? (
+            <p className="text-sm text-red-600 mt-1">{errors.password}</p>
+          ) : null}
           <div className="mt-2 text-right">
             <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
               Forgot your password?

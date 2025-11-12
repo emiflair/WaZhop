@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext } from 'react';
 import { authAPI } from '../utils/api';
-import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -57,7 +56,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(newUser));
         setUser(newUser);
         setIsAuthenticated(true);
-        toast.success('Account created successfully! Welcome to WaZhop!');
         return { success: true, user: newUser };
       }
 
@@ -67,16 +65,13 @@ export const AuthProvider = ({ children }) => {
         if (userData?.email) {
           localStorage.setItem('pendingVerifyEmail', userData.email.trim().toLowerCase());
         }
-        toast.success(response?.message || 'Account created. Check your email for a 6-digit code to verify.');
         return { success: true, pendingVerification: true };
       }
 
       // Fallback: treat as success without login
-      toast.success('Account created. Please verify your email.');
       return { success: true, pendingVerification: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
-      toast.error(message);
       return { success: false, error: message };
     }
   };
@@ -92,13 +87,11 @@ export const AuthProvider = ({ children }) => {
       setUser(loggedInUser);
       setIsAuthenticated(true);
 
-      toast.success('Welcome back!');
       return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
       // Email verification is not required for login - users can log in immediately
       // Verification is only for registration and password reset flows
-      toast.error(message);
       return { success: false, error: message };
     }
   };
@@ -109,7 +102,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
-    toast.success('Logged out successfully');
+    // No global toast; pages can render their own UI if needed
   };
 
   // Update user data
