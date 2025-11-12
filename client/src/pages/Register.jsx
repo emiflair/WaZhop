@@ -93,7 +93,7 @@ const Register = () => {
 
     const result = await register(payload);
 
-    // Auto-login after successful registration - no verification required
+    // Auto-login path (verification not required)
     if (result.success && result.user) {
       // Apply referral only for sellers
       if (result.user.role === 'seller') {
@@ -112,6 +112,16 @@ const Register = () => {
       }
 
       navigate(result.user.role === 'seller' ? '/dashboard' : '/');
+      setLoading(false);
+      return;
+    }
+
+    // Pending verification path
+    if (result?.pendingVerification) {
+      // Navigate user to verification screen
+      navigate('/verify-email');
+      setLoading(false);
+      return;
     }
     
     setLoading(false);

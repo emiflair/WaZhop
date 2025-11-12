@@ -9,6 +9,7 @@ const {
 } = require('../utils/helpers');
 const crypto = require('crypto');
 const { sendEmail, sendSMS } = require('../utils/notify');
+const PlatformSettings = require('../models/PlatformSettings');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -71,7 +72,46 @@ exports.register = asyncHandler(async (req, res) => {
   
   await user.save();
 
-  // Email verification is optional - auto-login user after registration
+  // Respect platform security setting for email verification
+  const settings = await PlatformSettings.getSettings();
+  const requireVerify = !!settings?.security?.requireEmailVerification;
+
+  if (requireVerify) {
+    // Generate a 6-digit code and send email, but do not auto-login
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+    await user.save();
+
+    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+    const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+    const html = `
+      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
+        <h2>Verify your email</h2>
+        <p>Enter this 6-digit code in the app to verify your email:</p>
+        <p style="font-size:22px;letter-spacing:4px;font-weight:700;margin:12px 0 18px">${token}</p>
+        <p>Or click below to verify automatically:</p>
+        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+      </div>
+    `;
+    try {
+      const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+      if (!resp?.ok) {
+        console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+      }
+    } catch (e) {
+      console.warn('Email verification send failed:', e.message);
+      console.log(`[dev] Email verification code for ${user.email}: ${token}`);
+    }
+
+    return res.status(201).json({
+      success: true,
+      pendingVerification: true,
+      message: 'Account created. Check your email for a 6-digit code to verify.'
+    });
+  }
+
+  // If verification not required, auto-login the user after registration
   sendTokenResponse(user, 201, res);
 });
 
