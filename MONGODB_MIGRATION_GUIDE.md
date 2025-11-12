@@ -54,14 +54,14 @@ This guide will help you migrate your WaZhop database from Docker MongoDB to Mon
 4. Driver: **Node.js**, Version: **5.5 or later**
 5. Copy the connection string - looks like:
    ```
-   mongodb+srv://wazhop_user:<password>@wazhop-cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   mongodb+srv://YOUR_USERNAME:<password>@YOUR_CLUSTER.xxxxx.mongodb.net/?retryWrites=true&w=majority
    ```
 6. Replace `<password>` with your actual password
 7. Add database name: `.../wazhop?retryWrites=true&w=majority`
 
 **Final format:**
 ```
-mongodb+srv://wazhop_user:YOUR_PASSWORD@wazhop-cluster.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority
+mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority
 ```
 
 ---
@@ -119,7 +119,7 @@ Replace `YOUR_ATLAS_CONNECTION_STRING` with your actual connection string:
 
 ```bash
 mongorestore \
-  --uri="mongodb+srv://wazhop_user:YOUR_PASSWORD@wazhop-cluster.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority" \
+  --uri="mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority" \
   --db=wazhop \
   ~/wazhop_mongodb_backup/wazhop
 ```
@@ -145,7 +145,7 @@ Edit your `.env` file (create if doesn't exist):
 
 ```bash
 # MongoDB Atlas Connection
-MONGODB_URI=mongodb+srv://wazhop_user:YOUR_PASSWORD@wazhop-cluster.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.xxxxx.mongodb.net/wazhop?retryWrites=true&w=majority
 
 # Other existing variables
 JWT_SECRET=your-jwt-secret
