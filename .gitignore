@@ -45,3 +45,4 @@ cloudinary-config.json
 .cache
 .temp
 *.log
+.vercel

@@ -167,7 +167,7 @@ const Home = () => {
                   >
                     <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4">
                       <LazyImage
-                        src={product.images?.[0]}
+                        src={product.images?.[0]?.url ?? product.images?.[0] ?? '/placeholder.png'}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />

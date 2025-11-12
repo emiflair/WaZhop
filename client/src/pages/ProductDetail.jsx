@@ -245,7 +245,11 @@ export default function ProductDetail() {
           <div className="container-custom py-4 flex items-center gap-3">
             <img src={shop?.logo?.url || shop?.profileImage?.url || '/placeholder.png'} alt="Shop logo" className="w-10 h-10 rounded-lg object-cover bg-gray-100" />
             <div className="flex-1">
-              <Link to={`/${shop?.slug || ''}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-600">{shop?.shopName || 'Shop'}</Link>
+              {shop?.slug ? (
+                <Link to={`/${shop.slug}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-600">{shop?.shopName || 'Shop'}</Link>
+              ) : (
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{shop?.shopName || 'Shop'}</span>
+              )}
               {shop?.location && <div className="text-xs text-gray-500">{shop.location}</div>}
             </div>
             <Link to="/" className="text-sm text-primary-600 hover:underline">← Back to Home</Link>
