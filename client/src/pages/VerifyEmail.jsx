@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import OtpInput from '../components/OtpInput'
+import api, { authAPI } from '../utils/api'
 
 export default function VerifyEmail() {
   const location = useLocation()
@@ -32,17 +33,13 @@ export default function VerifyEmail() {
   setState({ status: 'loading', message: 'Verifying your email…' })
     ;(async function verify() {
       try {
-        const res = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}&autoLogin=1`)
-        const data = await res.json()
-        if (res.ok && data?.success) {
-          // If backend returned token+user (autoLogin), persist and redirect accordingly
+        const data = await api.get('/auth/verify-email', { params: { token, autoLogin: 1 } })
+        if (data?.success) {
           if (data.token && data.user) {
             try {
               localStorage.setItem('token', data.token)
               localStorage.setItem('user', JSON.stringify(data.user))
-            } catch (e) {
-              // ignore storage failures (e.g., private mode)
-            }
+            } catch {}
             const dest = data.user.role === 'seller' ? '/dashboard' : '/'
             window.location.href = dest
             return
@@ -54,7 +51,7 @@ export default function VerifyEmail() {
           setState({ status: 'error', message: data?.message || 'Verification failed.' })
         }
       } catch (err) {
-        setState({ status: 'error', message: err.message || 'Network error during verification.' })
+        setState({ status: 'error', message: err.userMessage || err.message || 'Network error during verification.' })
       }
     })()
   }, [location.search, navigate])
@@ -75,16 +72,13 @@ export default function VerifyEmail() {
     setSubmitting(true)
     setState({ status: 'loading', message: 'Verifying your code…' })
     try {
-      const res = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(code.trim())}&autoLogin=1`)
-      const data = await res.json()
-      if (res.ok && data?.success) {
+      const data = await api.get('/auth/verify-email', { params: { token: code.trim(), autoLogin: 1 } })
+      if (data?.success) {
         if (data.token && data.user) {
           try {
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
-          } catch (e) {
-            // ignore storage failures (e.g., private mode)
-          }
+          } catch {}
           const dest = data.user.role === 'seller' ? '/dashboard' : '/'
           window.location.href = dest
           return
@@ -99,7 +93,7 @@ export default function VerifyEmail() {
         setState({ status: 'error', message: helpful })
       }
     } catch (err) {
-      setState({ status: 'error', message: err.message || 'Network error.' })
+      setState({ status: 'error', message: err.userMessage || err.message || 'Network error.' })
     } finally {
       setSubmitting(false)
     }
@@ -112,16 +106,11 @@ export default function VerifyEmail() {
         setState({ status: 'error', message: 'We could not find your email. Please register again.' })
         return
       }
-      const res = await fetch('/api/auth/request-email-verification-public', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: target })
-      })
-      await res.json()
+      await authAPI.requestEmailVerificationPublic(target)
       setCooldown(30)
       setState({ status: 'idle', message: 'If an account exists, a new code has been sent.' })
     } catch (err) {
-      setState({ status: 'error', message: 'Could not resend code. Try again.' })
+      setState({ status: 'error', message: err.userMessage || 'Could not resend code. Try again.' })
     }
   }
 
