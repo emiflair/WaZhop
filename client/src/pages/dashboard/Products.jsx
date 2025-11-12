@@ -50,6 +50,7 @@ const Products = () => {
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // Track existing images with IDs
   const [uploading, setUploading] = useState(false);
 
   // Categories are free-form; suggestions come from CATEGORY_SUGGESTIONS
@@ -111,15 +112,18 @@ const Products = () => {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + images.length > 5) {
-      toast.error('Maximum 5 images allowed per product');
+    
+    // Check total images (existing + new)
+    const totalImages = imagePreviews.length + files.length;
+    if (totalImages > 5) {
+      toast.error(`Maximum 5 images allowed. You have ${imagePreviews.length} image(s) already.`);
       return;
     }
 
-  // Only allow up to 5 in total
-  const remaining = 5 - images.length;
-  const toAdd = files.slice(0, Math.max(0, remaining));
-  setImages([...images, ...toAdd]);
+    // Only allow up to 5 in total
+    const remaining = 5 - imagePreviews.length;
+    const toAdd = files.slice(0, Math.max(0, remaining));
+    setImages([...images, ...toAdd]);
 
     // Create previews
     toAdd.forEach((file) => {
@@ -131,9 +135,30 @@ const Products = () => {
     });
   };
 
-  const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index));
-    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  const removeImage = async (index) => {
+    // Check if it's an existing image (from database) or a new one (just added)
+    if (editingProduct && index < existingImages.length) {
+      // It's an existing image - delete from backend immediately
+      const imageToDelete = existingImages[index];
+      try {
+        await productAPI.deleteImage(editingProduct._id, imageToDelete._id);
+        toast.success('Image deleted');
+        
+        // Update local state
+        setExistingImages(existingImages.filter((_, i) => i !== index));
+        setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+        
+        // Refresh products list
+        fetchProducts();
+      } catch (error) {
+        toast.error('Failed to delete image');
+      }
+    } else {
+      // It's a new image - just remove from preview
+      const newImageIndex = index - existingImages.length;
+      setImages(images.filter((_, i) => i !== newImageIndex));
+      setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+    }
   };
 
   const openPreview = (product) => {
@@ -206,6 +231,18 @@ const Products = () => {
       locationState: product.locationState || 'Lagos',
       locationArea: product.locationArea || ''
     });
+    
+    // Load existing images with IDs
+    if (product.images && product.images.length > 0) {
+      setExistingImages(product.images); // Store full image objects with IDs
+      const existingImageUrls = product.images.map(img => img.url);
+      setImagePreviews(existingImageUrls);
+    } else {
+      setExistingImages([]);
+      setImagePreviews([]);
+    }
+    setImages([]); // Clear new images (only show existing)
+    
     setShowModal(true);
   };
 
@@ -333,6 +370,7 @@ const Products = () => {
     });
     setImages([]);
     setImagePreviews([]);
+    setExistingImages([]);
     setEditingProduct(null);
   };
 
@@ -947,11 +985,11 @@ const Products = () => {
                       accept="image/*"
                       onChange={handleImageSelect}
                       className="hidden"
-                      disabled={images.length >= 5}
+                      disabled={imagePreviews.length >= 5}
                     />
                     <label
                       htmlFor="images"
-                      className={`cursor-pointer ${images.length >= 5 ? 'opacity-50' : ''}`}
+                      className={`cursor-pointer ${imagePreviews.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <FiUpload className="mx-auto text-gray-400 mb-2" size={28} />
                       <p className="text-xs sm:text-sm text-gray-600">

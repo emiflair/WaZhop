@@ -319,4 +319,76 @@ userSchema.methods.isPlanExpired = function() {
   return new Date() > this.planExpiry;
 };
 
+// Cascade delete: Remove user's shops, products, reviews, and orders when user is deleted
+userSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+  try {
+    const Shop = mongoose.model('Shop');
+    const Product = mongoose.model('Product');
+    const Review = mongoose.model('Review');
+    const Order = mongoose.model('Order');
+    
+    console.log(`🗑️  Cascade delete triggered for user: ${this.email}`);
+    
+    // Find all shops owned by this user
+    const userShops = await Shop.find({ owner: this._id });
+    const shopIds = userShops.map(shop => shop._id);
+    
+    if (shopIds.length > 0) {
+      // Delete all products in these shops
+      const deletedProducts = await Product.deleteMany({ shop: { $in: shopIds } });
+      console.log(`   ✅ Deleted ${deletedProducts.deletedCount} products`);
+      
+      // Delete all reviews for products in these shops
+      const deletedReviews = await Review.deleteMany({ shop: { $in: shopIds } });
+      console.log(`   ✅ Deleted ${deletedReviews.deletedCount} reviews`);
+      
+      // Delete all orders for these shops
+      const deletedOrders = await Order.deleteMany({ shop: { $in: shopIds } });
+      console.log(`   ✅ Deleted ${deletedOrders.deletedCount} orders`);
+      
+      // Delete all shops
+      const deletedShops = await Shop.deleteMany({ owner: this._id });
+      console.log(`   ✅ Deleted ${deletedShops.deletedCount} shops`);
+    }
+    
+    console.log(`   ✅ User ${this.email} and all associated data deleted successfully`);
+    next();
+  } catch (error) {
+    console.error('❌ Cascade delete error:', error);
+    next(error);
+  }
+});
+
+// Also handle findOneAndDelete and deleteMany
+userSchema.pre('deleteMany', async function(next) {
+  try {
+    const users = await this.model.find(this.getFilter());
+    
+    for (const user of users) {
+      const Shop = mongoose.model('Shop');
+      const Product = mongoose.model('Product');
+      const Review = mongoose.model('Review');
+      const Order = mongoose.model('Order');
+      
+      console.log(`🗑️  Cascade delete for user: ${user.email}`);
+      
+      const userShops = await Shop.find({ owner: user._id });
+      const shopIds = userShops.map(shop => shop._id);
+      
+      if (shopIds.length > 0) {
+        await Product.deleteMany({ shop: { $in: shopIds } });
+        await Review.deleteMany({ shop: { $in: shopIds } });
+        await Order.deleteMany({ shop: { $in: shopIds } });
+        await Shop.deleteMany({ owner: user._id });
+        console.log(`   ✅ Deleted all data for ${user.email}`);
+      }
+    }
+    
+    next();
+  } catch (error) {
+    console.error('❌ Cascade deleteMany error:', error);
+    next(error);
+  }
+});
+
 module.exports = mongoose.model('User', userSchema);

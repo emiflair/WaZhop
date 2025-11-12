@@ -1,4 +1,14 @@
 {
+  "name": "wazhop",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "docker compose up -d",
+    "stop": "docker compose down",
+    "restart": "docker compose restart",
+    "logs": "docker compose logs -f",
+    "urls": "./get-urls.sh",
+    "tunnel": "ssh -R 80:localhost:3000 localhost.run"
+  },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",

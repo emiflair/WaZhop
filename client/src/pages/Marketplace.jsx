@@ -166,15 +166,15 @@ export default function Marketplace() {
                 </button>
                 {CATEGORY_SUGGESTIONS.slice(0, 6).map(cat => (
                   <button
-                    key={cat.value}
-                    onClick={() => setCategory(cat.value)}
+                    key={cat}
+                    onClick={() => setCategory(cat)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      category === cat.value
+                      category === cat
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
-                    {cat.label}
+                    {cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                   </button>
                 ))}
               </div>
@@ -209,7 +209,7 @@ export default function Marketplace() {
                   <select value={category} onChange={(e) => setCategory(e.target.value)} className="input text-sm">
                     <option value="all">All Categories</option>
                     {CATEGORY_SUGGESTIONS.map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      <option key={cat} value={cat}>{cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>
                     ))}
                   </select>
                 </div>
@@ -308,9 +308,8 @@ export default function Marketplace() {
 }
 
 function ProductCard({ product, onOpen }) {
-  const image = product.images?.[0] || '/placeholder.png'
+  const image = product.images?.[0]?.url || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
-  const reviewCount = product.reviewStats?.count || 0
 
   return (
     <div
@@ -362,12 +361,6 @@ function ProductCard({ product, onOpen }) {
           <FiShoppingBag className="shrink-0" />
           <span className="truncate">{product.shop?.shopName || 'Shop'}</span>
         </div>
-
-        {reviewCount > 0 && (
-          <div className="text-xs text-gray-400 mt-1">
-            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-          </div>
-        )}
 
         {/* Make Offer Button */}
         <button

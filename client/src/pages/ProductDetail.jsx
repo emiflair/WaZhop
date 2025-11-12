@@ -378,7 +378,12 @@ export default function ProductDetail() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {relatedProducts.map((rp) => (
-                <Link key={rp._id} to={`/product/${rp._id}`} className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+                <Link 
+                  key={rp._id} 
+                  to={`/product/${rp._id}`}
+                  state={{ fromMarketplace: location.state?.fromMarketplace || true }}
+                  className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+                >
                   <div className="aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden">
                     <img src={rp.images?.[0]?.url ?? rp.images?.[0] ?? ''} alt={rp.name} className="w-full h-full object-cover" />
                   </div>

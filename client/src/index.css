@@ -92,7 +92,7 @@
 
   /* Responsive container with proper mobile padding */
   .container-custom {
-    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+    @apply container mx-auto px-2 sm:px-3 lg:px-4;
   }
 
   /* Mobile-first modal/sheet */
