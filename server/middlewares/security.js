@@ -1,11 +1,11 @@
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 
 // Request ID tracking for debugging
 exports.requestId = (req, res, next) => {
-  req.id = uuidv4();
+  req.id = crypto.randomUUID();
   res.setHeader('X-Request-ID', req.id);
   next();
 };
