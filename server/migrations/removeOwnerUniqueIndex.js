@@ -6,7 +6,7 @@ const removeOwnerUniqueIndex = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    const db = mongoose.connection.db;
+    const { db } = mongoose.connection;
     const collection = db.collection('shops');
 
     // Get existing indexes

@@ -27,9 +27,7 @@ exports.createRateLimiter = (options = {}) => {
     skipSuccessfulRequests,
     skipFailedRequests,
     // Key generator - use user ID if authenticated, otherwise IP
-    keyGenerator: (req) => {
-      return req.user?.id || req.ip;
-    },
+    keyGenerator: (req) => req.user?.id || req.ip,
     // Custom handler
     handler: (req, res) => {
       res.status(429).json({
@@ -95,15 +93,15 @@ exports.xssProtection = (req, res, next) => {
 
   const sanitizeObject = (obj) => {
     if (!obj || typeof obj !== 'object') return obj;
-    
-    Object.keys(obj).forEach(key => {
+
+    Object.keys(obj).forEach((key) => {
       if (typeof obj[key] === 'string') {
         obj[key] = sanitizeString(obj[key]);
       } else if (typeof obj[key] === 'object') {
         sanitizeObject(obj[key]);
       }
     });
-    
+
     return obj;
   };
 
@@ -118,14 +116,14 @@ exports.xssProtection = (req, res, next) => {
 exports.securityHeaders = (req, res, next) => {
   // Remove powered-by header
   res.removeHeader('X-Powered-By');
-  
+
   // Add security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  
+
   next();
 };
 
@@ -151,7 +149,7 @@ exports.corsOptions = {
     // Allow localhost and private IPs in development
     const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
     const privateIPPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-    
+
     if (process.env.NODE_ENV !== 'production' && (localhostPattern.test(origin) || privateIPPattern.test(origin))) {
       return callback(null, true);
     }
@@ -171,10 +169,10 @@ exports.helmetConfig = {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://trusted-cdn.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:", "https://res.cloudinary.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://trusted-cdn.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://res.cloudinary.com'],
       connectSrc: ["'self'", process.env.APP_BASE_URL].filter(Boolean),
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
@@ -182,7 +180,7 @@ exports.helmetConfig = {
     },
   },
   crossOriginEmbedderPolicy: false, // Allow embedding from Cloudinary
-  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   hsts: {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
@@ -193,12 +191,12 @@ exports.helmetConfig = {
 // IP detection and logging
 exports.trackIP = (req, res, next) => {
   // Get real IP behind proxies
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-              req.headers['x-real-ip'] || 
-              req.connection.remoteAddress || 
-              req.socket.remoteAddress ||
-              req.ip;
-  
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim()
+              || req.headers['x-real-ip']
+              || req.connection.remoteAddress
+              || req.socket.remoteAddress
+              || req.ip;
+
   req.clientIP = ip;
   next();
 };
@@ -211,13 +209,11 @@ exports.detectSuspiciousActivity = (req, res, next) => {
     /(<script|javascript:|onerror=|onload=)/i, // XSS attempts
   ];
 
-  const checkString = (str) => {
-    return suspiciousPatterns.some(pattern => pattern.test(str));
-  };
+  const checkString = (str) => suspiciousPatterns.some((pattern) => pattern.test(str));
 
   const checkObject = (obj) => {
     if (!obj || typeof obj !== 'object') return false;
-    
+
     for (const key in obj) {
       if (typeof obj[key] === 'string' && checkString(obj[key])) {
         return true;
@@ -230,7 +226,7 @@ exports.detectSuspiciousActivity = (req, res, next) => {
   };
 
   let suspicious = false;
-  
+
   if (req.body && checkObject(req.body)) suspicious = true;
   if (req.query && checkObject(req.query)) suspicious = true;
   if (req.params && checkObject(req.params)) suspicious = true;
@@ -247,31 +243,29 @@ exports.detectSuspiciousActivity = (req, res, next) => {
 };
 
 // Content-Type validation
-exports.validateContentType = (allowedTypes = ['application/json']) => {
-  return (req, res, next) => {
-    // Skip for GET requests
-    if (req.method === 'GET' || req.method === 'DELETE') {
-      return next();
-    }
+exports.validateContentType = (allowedTypes = ['application/json']) => (req, res, next) => {
+  // Skip for GET requests
+  if (req.method === 'GET' || req.method === 'DELETE') {
+    return next();
+  }
 
-    const contentType = req.headers['content-type'];
-    
-    if (!contentType) {
-      return res.status(400).json({
-        success: false,
-        message: 'Content-Type header is required'
-      });
-    }
+  const contentType = req.headers['content-type'];
 
-    const isAllowed = allowedTypes.some(type => contentType.includes(type));
-    
-    if (!isAllowed) {
-      return res.status(415).json({
-        success: false,
-        message: `Unsupported Content-Type. Allowed types: ${allowedTypes.join(', ')}`
-      });
-    }
+  if (!contentType) {
+    return res.status(400).json({
+      success: false,
+      message: 'Content-Type header is required'
+    });
+  }
 
-    next();
-  };
+  const isAllowed = allowedTypes.some((type) => contentType.includes(type));
+
+  if (!isAllowed) {
+    return res.status(415).json({
+      success: false,
+      message: `Unsupported Content-Type. Allowed types: ${allowedTypes.join(', ')}`
+    });
+  }
+
+  next();
 };

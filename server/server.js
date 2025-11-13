@@ -69,18 +69,18 @@ app.use('/api/', apiRateLimiter);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => {
-  console.log('✅ MongoDB Connected Successfully');
-  logger.info('MongoDB connected successfully');
-  
-  // Start subscription cron job after DB connection
-  startSubscriptionCron();
-})
-.catch((err) => {
-  console.error('❌ MongoDB Connection Error:', err.message);
-  logger.error('MongoDB connection failed', { error: err.message });
-  process.exit(1);
-});
+  .then(() => {
+    console.log('✅ MongoDB Connected Successfully');
+    logger.info('MongoDB connected successfully');
+
+    // Start subscription cron job after DB connection
+    startSubscriptionCron();
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB Connection Error:', err.message);
+    logger.error('MongoDB connection failed', { error: err.message });
+    process.exit(1);
+  });
 
 // Routes
 app.use('/api/health', healthRoutes);
@@ -98,8 +98,8 @@ app.use('/api/settings', settingsRoutes);
 
 // Legacy health check (keep for backwards compatibility)
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+  res.status(200).json({
+    status: 'ok',
     message: 'WhatsApp Shop Builder API is running',
     timestamp: new Date().toISOString()
   });
@@ -107,9 +107,9 @@ app.get('/api/health', (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: 'Route not found' 
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
   });
 });
 
@@ -154,11 +154,11 @@ const server = app.listen(PORT, () => {
 const gracefulShutdown = (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
   logger.info(`${signal} received. Shutting down gracefully...`);
-  
+
   server.close(() => {
     console.log('✅ HTTP server closed');
     logger.info('HTTP server closed');
-    
+
     mongoose.connection.close(false, () => {
       console.log('✅ MongoDB connection closed');
       logger.info('MongoDB connection closed');
@@ -188,7 +188,7 @@ process.on('uncaughtException', (error) => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 UNHANDLED REJECTION! Shutting down...');
-  logger.logError(new Error(String(reason)), { 
+  logger.logError(new Error(String(reason)), {
     type: 'unhandledRejection',
     promise: String(promise)
   });

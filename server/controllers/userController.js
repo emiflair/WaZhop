@@ -38,7 +38,9 @@ exports.getSubscriptionInfo = asyncHandler(async (req, res) => {
 // @route   POST /api/users/upgrade
 // @access  Private
 exports.upgradePlan = asyncHandler(async (req, res) => {
-  const { plan, duration, billingPeriod, couponCode } = req.body; // plan: 'pro' or 'premium', duration: number of months, billingPeriod: 'monthly' or 'yearly'
+  const {
+    plan, duration, billingPeriod, couponCode
+  } = req.body; // plan: 'pro' or 'premium', duration: number of months, billingPeriod: 'monthly' or 'yearly'
 
   if (!['pro', 'premium'].includes(plan)) {
     return res.status(400).json({
@@ -73,7 +75,7 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   // Calculate expiry date and amount
   const isYearly = billingPeriod === 'yearly';
   const months = isYearly ? 12 : (duration || 1);
-  let originalAmount = isYearly ? planPrices[plan].yearly : planPrices[plan].monthly * (duration || 1);
+  const originalAmount = isYearly ? planPrices[plan].yearly : planPrices[plan].monthly * (duration || 1);
   let finalAmount = originalAmount;
   let discountApplied = null;
   const expiryDate = calculatePlanExpiry(months);
@@ -82,7 +84,7 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   if (couponCode) {
     const Coupon = require('../models/Coupon');
     const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
-    
+
     if (!coupon) {
       return res.status(404).json({
         success: false,
@@ -109,7 +111,7 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
 
     // Check if user already used this coupon
     const alreadyUsed = coupon.usedBy.some(
-      usage => usage.user.toString() === req.user.id
+      (usage) => usage.user.toString() === req.user.id
     );
 
     if (alreadyUsed) {
@@ -149,7 +151,9 @@ exports.upgradePlan = asyncHandler(async (req, res) => {
   user.subscriptionStatus = 'active';
   await user.save();
 
-  console.log('✅ User plan upgraded:', { userId: user._id, email: user.email, plan, planExpiry: expiryDate });
+  console.log('✅ User plan upgraded:', {
+    userId: user._id, email: user.email, plan, planExpiry: expiryDate
+  });
 
   // Update all shops branding and watermark visibility
   if (plan === 'pro' || plan === 'premium') {
@@ -231,7 +235,7 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
 
   // Get all user shops
   const shops = await Shop.find({ owner: user._id });
-  
+
   // If user confirmed destructive downgrade to Free, perform cleanup automatically
   if (plan === 'free' && confirmLoss === true) {
     const { enforceFreePlanForUser } = require('../utils/planEnforcement');
@@ -376,11 +380,11 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
   // Calculate stats
   const stats = {
     total: users.length,
-    free: users.filter(u => u.plan === 'free').length,
-    pro: users.filter(u => u.plan === 'pro').length,
-    premium: users.filter(u => u.plan === 'premium').length,
-    verified: users.filter(u => u.isVerified).length,
-    unverified: users.filter(u => !u.isVerified).length
+    free: users.filter((u) => u.plan === 'free').length,
+    pro: users.filter((u) => u.plan === 'pro').length,
+    premium: users.filter((u) => u.plan === 'premium').length,
+    verified: users.filter((u) => u.isVerified).length,
+    unverified: users.filter((u) => !u.isVerified).length
   };
 
   res.status(200).json({
@@ -396,7 +400,9 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 // @access  Admin
 exports.updateUserSubscription = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const { plan, billingPeriod, subscriptionEndDate, isVerified } = req.body;
+  const {
+    plan, billingPeriod, subscriptionEndDate, isVerified
+  } = req.body;
 
   const user = await User.findById(userId);
 

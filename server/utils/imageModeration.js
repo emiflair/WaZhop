@@ -42,13 +42,13 @@ function checkImageUrl(url) {
 function analyzeCloudinaryModeration(imageData) {
   // Cloudinary provides moderation data in the response
   // moderation: [{ status: 'approved/rejected', kind: 'aws_rek/google/...', response: {} }]
-  
+
   if (!imageData || !imageData.moderation) {
     return { safe: true, confidence: 'unknown', categories: [] };
   }
 
   const moderationResults = imageData.moderation;
-  
+
   for (const result of moderationResults) {
     if (result.status === 'rejected') {
       return {
@@ -70,7 +70,9 @@ function analyzeCloudinaryModeration(imageData) {
  * @returns {object} - { valid, reason }
  */
 function validateImageFile(file) {
-  const { size, mimetype, width, height } = file;
+  const {
+    size, mimetype, width, height
+  } = file;
 
   // Check file size (max 10MB)
   const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -186,7 +188,7 @@ async function moderateImages(images) {
   }
 
   const failedImages = [];
-  
+
   for (let i = 0; i < images.length; i++) {
     const result = await moderateImage(images[i]);
     if (!result.allowed) {
@@ -218,7 +220,9 @@ async function moderateImages(images) {
  * @returns {Promise<object>} - { allowed, reason, severity, details }
  */
 async function moderateProduct(productData) {
-  const { name, description, tags, images } = productData;
+  const {
+    name, description, tags, images
+  } = productData;
 
   // 1. Moderate text content
   const textModeration = moderateContent({ name, description, tags });

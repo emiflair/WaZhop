@@ -1,4 +1,6 @@
-const { checkPasswordStrength, sanitizeHTML, detectXSS, detectSQLInjection } = require('../utils/security');
+const {
+  checkPasswordStrength, sanitizeHTML, detectXSS, detectSQLInjection
+} = require('../utils/security');
 
 describe('Security Utils', () => {
   describe('Password Strength Checker', () => {
@@ -71,7 +73,7 @@ describe('Security Utils', () => {
     });
 
     it('should detect UNION attacks', () => {
-      const malicious = "UNION SELECT * FROM users";
+      const malicious = 'UNION SELECT * FROM users';
       expect(detectSQLInjection(malicious)).toBe(true);
     });
 

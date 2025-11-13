@@ -16,7 +16,7 @@ const filter = {
   isProfane: (text) => {
     if (!text) return false;
     const lowerText = text.toLowerCase();
-    return PROFANITY_LIST.some(word => {
+    return PROFANITY_LIST.some((word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'i');
       return regex.test(lowerText);
     });
@@ -24,7 +24,7 @@ const filter = {
   clean: (text) => {
     if (!text) return text;
     let cleaned = text;
-    PROFANITY_LIST.forEach(word => {
+    PROFANITY_LIST.forEach((word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       cleaned = cleaned.replace(regex, '*'.repeat(word.length));
     });
@@ -221,9 +221,7 @@ function moderateContent(content) {
   const doc = nlp(fullText);
   const verbs = doc.verbs().out('array');
   const dangerousVerbs = ['kill', 'harm', 'hurt', 'destroy', 'attack', 'assault'];
-  const hasDangerousVerbs = verbs.some(verb => 
-    dangerousVerbs.some(dangerous => verb.toLowerCase().includes(dangerous))
-  );
+  const hasDangerousVerbs = verbs.some((verb) => dangerousVerbs.some((dangerous) => verb.toLowerCase().includes(dangerous)));
 
   if (hasDangerousVerbs) {
     return {
@@ -253,7 +251,7 @@ function moderateContent(content) {
  */
 function isSafeUrl(url) {
   if (!url) return true;
-  
+
   const lowerUrl = url.toLowerCase();
   const unsafePatterns = [
     'porn',
@@ -265,7 +263,7 @@ function isSafeUrl(url) {
     'scam'
   ];
 
-  return !unsafePatterns.some(pattern => lowerUrl.includes(pattern));
+  return !unsafePatterns.some((pattern) => lowerUrl.includes(pattern));
 }
 
 module.exports = {

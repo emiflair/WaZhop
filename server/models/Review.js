@@ -59,12 +59,12 @@ const reviewSchema = new mongoose.Schema({
 });
 
 // Calculate average rating for a product
-reviewSchema.statics.calculateAverageRating = async function(productId) {
+reviewSchema.statics.calculateAverageRating = async function (productId) {
   const result = await this.aggregate([
     {
-      $match: { 
+      $match: {
         product: productId,
-        isApproved: true 
+        isApproved: true
       }
     },
     {
@@ -90,18 +90,18 @@ reviewSchema.statics.calculateAverageRating = async function(productId) {
 };
 
 // Update average rating after save
-reviewSchema.post('save', function() {
+reviewSchema.post('save', function () {
   this.constructor.calculateAverageRating(this.product);
 });
 
 // Update average rating after remove
-reviewSchema.post('deleteOne', { document: true, query: false }, function() {
+reviewSchema.post('deleteOne', { document: true, query: false }, function () {
   this.constructor.calculateAverageRating(this.product);
 });
 
 // Compound index to prevent duplicate reviews from same email/product (optional)
-reviewSchema.index({ product: 1, customerEmail: 1 }, { 
-  unique: true, 
+reviewSchema.index({ product: 1, customerEmail: 1 }, {
+  unique: true,
   sparse: true,
   partialFilterExpression: { customerEmail: { $exists: true, $ne: '' } }
 });

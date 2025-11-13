@@ -164,7 +164,7 @@ describe('Auth Endpoints', () => {
           password: 'Test123!',
           role: 'buyer'
         });
-      
+
       token = res.body.data.token;
     });
 

@@ -245,21 +245,21 @@ shopSchema.virtual('products', {
 });
 
 // Generate unique slug
-shopSchema.statics.generateUniqueSlug = async function(baseSlug) {
-  let slug = baseSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+shopSchema.statics.generateUniqueSlug = async function (baseSlug) {
+  const slug = baseSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
   let counter = 1;
   let uniqueSlug = slug;
-  
+
   while (await this.findOne({ slug: uniqueSlug })) {
     uniqueSlug = `${slug}-${counter}`;
     counter++;
   }
-  
+
   return uniqueSlug;
 };
 
 // Increment view count
-shopSchema.methods.incrementViews = async function() {
+shopSchema.methods.incrementViews = async function () {
   this.views += 1;
   await this.save();
 };

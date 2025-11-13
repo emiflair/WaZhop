@@ -5,13 +5,13 @@
 
 // Country to currency mapping
 const COUNTRY_CURRENCY_MAP = {
-  'NG': 'NGN', // Nigeria - Naira
-  'GH': 'GHS', // Ghana - Cedi
-  'KE': 'KES', // Kenya - Shilling
-  'ZA': 'ZAR', // South Africa - Rand
-  'US': 'USD', // United States - Dollar
-  'GB': 'USD', // United Kingdom - Use USD
-  'CA': 'USD', // Canada - Use USD
+  NG: 'NGN', // Nigeria - Naira
+  GH: 'GHS', // Ghana - Cedi
+  KE: 'KES', // Kenya - Shilling
+  ZA: 'ZAR', // South Africa - Rand
+  US: 'USD', // United States - Dollar
+  GB: 'USD', // United Kingdom - Use USD
+  CA: 'USD', // Canada - Use USD
   // Add more as needed
 };
 
@@ -30,7 +30,7 @@ async function getCountryFromIP(ip) {
 
   try {
     const response = await fetch(`https://ipapi.co/${ip}/json/`);
-    
+
     if (!response.ok) {
       console.error('IP geolocation API error:', response.status);
       return null;
@@ -52,7 +52,7 @@ async function getCountryFromIP(ip) {
 async function getCurrencyFromIP(ip) {
   try {
     const countryCode = await getCountryFromIP(ip);
-    
+
     if (!countryCode) {
       return DEFAULT_CURRENCY;
     }
@@ -71,11 +71,11 @@ async function getCurrencyFromIP(ip) {
  */
 function getClientIP(req) {
   return (
-    req.headers['x-forwarded-for']?.split(',')[0].trim() ||
-    req.headers['x-real-ip'] ||
-    req.connection.remoteAddress ||
-    req.socket.remoteAddress ||
-    req.ip
+    req.headers['x-forwarded-for']?.split(',')[0].trim()
+    || req.headers['x-real-ip']
+    || req.connection.remoteAddress
+    || req.socket.remoteAddress
+    || req.ip
   );
 }
 

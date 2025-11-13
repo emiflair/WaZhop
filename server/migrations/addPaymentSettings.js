@@ -36,7 +36,7 @@ const addPaymentSettings = async () => {
       }
     );
 
-    console.log(`✅ Migration completed successfully`);
+    console.log('✅ Migration completed successfully');
     console.log(`📊 Updated ${result.modifiedCount} shops`);
     console.log(`📊 Matched ${result.matchedCount} shops`);
 

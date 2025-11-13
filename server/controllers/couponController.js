@@ -17,14 +17,14 @@ exports.createCoupon = async (req, res) => {
 
     // Validate discount value
     if (discountType === 'percentage' && (discountValue < 0 || discountValue > 100)) {
-      return res.status(400).json({ 
-        message: 'Percentage discount must be between 0 and 100' 
+      return res.status(400).json({
+        message: 'Percentage discount must be between 0 and 100'
       });
     }
 
     if (discountValue <= 0) {
-      return res.status(400).json({ 
-        message: 'Discount value must be greater than 0' 
+      return res.status(400).json({
+        message: 'Discount value must be greater than 0'
       });
     }
 
@@ -80,7 +80,7 @@ exports.getAllCoupons = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json({
-      coupons: coupons.map(coupon => ({
+      coupons: coupons.map((coupon) => ({
         id: coupon._id,
         code: coupon.code,
         discountType: coupon.discountType,
@@ -125,14 +125,14 @@ exports.validateCoupon = async (req, res) => {
 
     // Check if applicable to the plan
     if (!coupon.applicablePlans.includes(plan)) {
-      return res.status(400).json({ 
-        message: `This coupon is not applicable to ${plan} plan` 
+      return res.status(400).json({
+        message: `This coupon is not applicable to ${plan} plan`
       });
     }
 
     // Check if user already used this coupon
     const alreadyUsed = coupon.usedBy.some(
-      usage => usage.user.toString() === req.user.id
+      (usage) => usage.user.toString() === req.user.id
     );
 
     if (alreadyUsed) {
@@ -160,8 +160,8 @@ exports.applyCoupon = async (req, res) => {
     const { code, plan, originalAmount } = req.body;
 
     if (!code || !plan || !originalAmount) {
-      return res.status(400).json({ 
-        message: 'Coupon code, plan, and amount are required' 
+      return res.status(400).json({
+        message: 'Coupon code, plan, and amount are required'
       });
     }
 
@@ -179,14 +179,14 @@ exports.applyCoupon = async (req, res) => {
 
     // Check if applicable to the plan
     if (!coupon.applicablePlans.includes(plan)) {
-      return res.status(400).json({ 
-        message: `This coupon is not applicable to ${plan} plan` 
+      return res.status(400).json({
+        message: `This coupon is not applicable to ${plan} plan`
       });
     }
 
     // Check if user already used this coupon
     const alreadyUsed = coupon.usedBy.some(
-      usage => usage.user.toString() === req.user.id
+      (usage) => usage.user.toString() === req.user.id
     );
 
     if (alreadyUsed) {

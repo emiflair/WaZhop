@@ -159,7 +159,7 @@ const platformSettingsSchema = new mongoose.Schema({
 });
 
 // Ensure only one settings document exists
-platformSettingsSchema.statics.getSettings = async function() {
+platformSettingsSchema.statics.getSettings = async function () {
   let settings = await this.findOne().select('+paymentGateways.paystack.secretKey +paymentGateways.flutterwave.secretKey +emailConfig.brevo.apiKey +emailConfig.smtp.password +storageConfig.cloudinary.apiKey +storageConfig.cloudinary.apiSecret');
   if (!settings) {
     settings = await this.create({});
@@ -168,7 +168,7 @@ platformSettingsSchema.statics.getSettings = async function() {
 };
 
 // Method to safely get public settings (without secrets)
-platformSettingsSchema.methods.getPublicSettings = function() {
+platformSettingsSchema.methods.getPublicSettings = function () {
   return {
     siteName: this.siteName,
     siteDescription: this.siteDescription,

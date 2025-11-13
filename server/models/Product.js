@@ -204,14 +204,14 @@ productSchema.add({
 });
 
 // Get primary image
-productSchema.virtual('primaryImage').get(function() {
+productSchema.virtual('primaryImage').get(function () {
   if (!this.images || this.images.length === 0) return null;
-  const primary = this.images.find(img => img.isPrimary);
+  const primary = this.images.find((img) => img.isPrimary);
   return primary || this.images[0];
 });
 
 // Generate WhatsApp link
-productSchema.methods.getWhatsAppLink = function(whatsappNumber) {
+productSchema.methods.getWhatsAppLink = function (whatsappNumber) {
   const message = encodeURIComponent(
     `Hello! I'm interested in your product: ${this.name}\nPrice: ₦${this.price.toLocaleString()}`
   );
@@ -219,13 +219,13 @@ productSchema.methods.getWhatsAppLink = function(whatsappNumber) {
 };
 
 // Increment click count
-productSchema.methods.incrementClicks = async function() {
+productSchema.methods.incrementClicks = async function () {
   this.clicks += 1;
   await this.save();
 };
 
 // Increment view count
-productSchema.methods.incrementViews = async function() {
+productSchema.methods.incrementViews = async function () {
   this.views += 1;
   await this.save();
 };

@@ -18,7 +18,7 @@ const fixShopBranding = async () => {
     for (const user of users) {
       // Determine if branding should be shown based on plan
       const showBranding = user.plan === 'free';
-      
+
       // Update all shops for this user
       const result = await Shop.updateMany(
         { owner: user._id },
@@ -31,9 +31,9 @@ const fixShopBranding = async () => {
       }
     }
 
-    console.log(`\n✅ Migration completed successfully!`);
+    console.log('\n✅ Migration completed successfully!');
     console.log(`Total shops updated: ${updatedCount}`);
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Migration failed:', error);

@@ -1,15 +1,15 @@
 const { validationResult } = require('express-validator');
+const crypto = require('crypto');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
-const { 
-  sendTokenResponse, 
-  asyncHandler, 
+const {
+  sendTokenResponse,
+  asyncHandler,
   formatValidationErrors,
   generateSlug,
   formatWhatsAppNumber,
   normalizePhoneNumber
 } = require('../utils/helpers');
-const crypto = require('crypto');
 const { sendEmail, sendSMS } = require('../utils/notify');
 const PlatformSettings = require('../models/PlatformSettings');
 
@@ -26,7 +26,9 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
-  const { name, email, password, whatsapp, role: roleInput } = req.body;
+  const {
+    name, email, password, whatsapp, role: roleInput
+  } = req.body;
   const role = (roleInput === 'seller' ? 'seller' : 'buyer');
 
   // Normalize email (trim and lowercase)
@@ -42,7 +44,7 @@ exports.register = asyncHandler(async (req, res) => {
   }
 
   // Normalize/validate whatsapp for sellers and ensure uniqueness
-  let normalizedWhatsApp = undefined;
+  let normalizedWhatsApp;
   if (role === 'seller') {
     if (!whatsapp || !String(whatsapp).trim()) {
       return res.status(400).json({ success: false, message: 'WhatsApp number is required for sellers' });
@@ -84,7 +86,7 @@ exports.register = asyncHandler(async (req, res) => {
 
     user.shop = shop._id;
   }
-  
+
   await user.save();
 
   // Respect platform security setting for email verification
@@ -177,7 +179,7 @@ exports.login = asyncHandler(async (req, res) => {
 
   // Allow login regardless of email verification status
   // Email verification is optional, not required for login
-  
+
   // Send token response
   sendTokenResponse(user, 200, res);
 });
@@ -204,14 +206,12 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   };
 
   // Remove undefined fields
-  Object.keys(fieldsToUpdate).forEach(key => 
-    fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
-  );
+  Object.keys(fieldsToUpdate).forEach((key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]);
 
   // If updating whatsapp, normalize and check uniqueness
   if (fieldsToUpdate.whatsapp) {
     const normalized = normalizePhoneNumber(fieldsToUpdate.whatsapp);
-    const existingPhone = await User.findOne({ 
+    const existingPhone = await User.findOne({
       whatsapp: normalized,
       _id: { $ne: req.user.id }
     });

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const {
   register,
@@ -16,8 +17,8 @@ const {
   verifySmsCode
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/auth');
-const { 
-  validateRegister, 
+const {
+  validateRegister,
   validateLogin,
   validatePasswordReset
 } = require('../middlewares/validation');

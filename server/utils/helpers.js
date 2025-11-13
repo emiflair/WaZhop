@@ -1,11 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 // Generate JWT token
-exports.generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '30d'
-  });
-};
+exports.generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, {
+  expiresIn: process.env.JWT_EXPIRE || '30d'
+});
 
 // Send token response
 exports.sendTokenResponse = (user, statusCode, res) => {
@@ -34,12 +32,10 @@ exports.asyncHandler = (fn) => (req, res, next) => {
 };
 
 // Format validation errors
-exports.formatValidationErrors = (errors) => {
-  return errors.array().map(error => ({
-    field: error.param,
-    message: error.msg
-  }));
-};
+exports.formatValidationErrors = (errors) => errors.array().map((error) => ({
+  field: error.param,
+  message: error.msg
+}));
 
 // Calculate plan expiry date
 exports.calculatePlanExpiry = (months = 1) => {
@@ -49,14 +45,13 @@ exports.calculatePlanExpiry = (months = 1) => {
 };
 
 // Generate unique slug from string
-exports.generateSlug = (text) => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
-    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-};
+exports.generateSlug = (text) => text
+  .toLowerCase()
+  .trim()
+  .replace(/[^\w\s-]/g, '') // Remove special characters
+  .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+  .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+;
 
 // Format price in Naira
 exports.formatPrice = (price, currency = 'NGN') => {
@@ -81,18 +76,18 @@ exports.formatWhatsAppNumber = (phone) => {
   if (!phone) return null;
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, '');
-  
+
   // Add country code if not present
   if (cleaned.startsWith('0')) {
-    cleaned = '234' + cleaned.substring(1);
+    cleaned = `234${cleaned.substring(1)}`;
   } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
     // 10-digit number without country code
-    cleaned = '234' + cleaned;
+    cleaned = `234${cleaned}`;
   } else if (!cleaned.startsWith('234')) {
-    cleaned = '234' + cleaned;
+    cleaned = `234${cleaned}`;
   }
-  
-  return '+' + cleaned;
+
+  return `+${cleaned}`;
 };
 
 // Normalize phone number for uniqueness check (returns +234xxxxxxxxxx format)
@@ -100,16 +95,16 @@ exports.normalizePhoneNumber = (phone) => {
   if (!phone) return null;
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, '');
-  
+
   // Add country code if not present
   if (cleaned.startsWith('0')) {
-    cleaned = '234' + cleaned.substring(1);
+    cleaned = `234${cleaned.substring(1)}`;
   } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
     // If exactly 10 digits without country code, assume Nigerian
-    cleaned = '234' + cleaned;
+    cleaned = `234${cleaned}`;
   }
-  
-  return '+' + cleaned;
+
+  return `+${cleaned}`;
 };
 
 // Paginate results

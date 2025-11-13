@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const mongoose = require('mongoose');
 const os = require('os');
@@ -102,7 +103,7 @@ router.get('/detailed', async (req, res) => {
 
   // Determine overall status
   const unhealthyChecks = Object.values(healthcheck.checks).filter(
-    check => check.status === 'unhealthy'
+    (check) => check.status === 'unhealthy'
   );
 
   if (unhealthyChecks.length > 0) {
@@ -111,7 +112,7 @@ router.get('/detailed', async (req, res) => {
   }
 
   const warningChecks = Object.values(healthcheck.checks).filter(
-    check => check.status === 'warning'
+    (check) => check.status === 'warning'
   );
 
   if (warningChecks.length > 0) {
@@ -171,7 +172,7 @@ router.get('/live', (req, res) => {
  */
 router.get('/version', (req, res) => {
   const packageJson = require('../package.json');
-  
+
   res.status(200).json({
     name: packageJson.name,
     version: packageJson.version,

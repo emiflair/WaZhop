@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const {
   getReferralStats,
@@ -15,12 +16,12 @@ router.get('/debug/users', protect, async (req, res) => {
     const users = await User.find({})
       .select('email name plan referredBy referralCode referralStats createdAt')
       .populate('referredBy', 'name email referralCode');
-    
+
     const summary = {
       totalUsers: users.length,
-      usersWithReferralCode: users.filter(u => u.referralCode).length,
-      usersWithReferrer: users.filter(u => u.referredBy).length,
-      users: users.map(u => ({
+      usersWithReferralCode: users.filter((u) => u.referralCode).length,
+      usersWithReferrer: users.filter((u) => u.referredBy).length,
+      users: users.map((u) => ({
         email: u.email,
         name: u.name,
         plan: u.plan,
@@ -33,7 +34,7 @@ router.get('/debug/users', protect, async (req, res) => {
         stats: u.referralStats
       }))
     };
-    
+
     res.json(summary);
   } catch (error) {
     res.status(500).json({ error: error.message });

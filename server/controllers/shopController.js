@@ -1,31 +1,31 @@
+const streamifier = require('streamifier');
 const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { asyncHandler, generateSlug } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
-const streamifier = require('streamifier');
 const { FREE_THEME, PRO_THEMES } = require('../config/themePresets');
 
 // Helper function to check storage limits
 const checkStorageLimit = async (userId, newFileSize) => {
   const user = await User.findById(userId);
   const planLimits = user.getPlanLimits();
-  
+
   if (planLimits.storage === 0) {
     return { allowed: false, message: 'Storage uploads are not available on the free plan. Upgrade to Pro or Premium.' };
   }
-  
+
   const newTotal = user.storageUsed + newFileSize;
-  
+
   if (newTotal > planLimits.storage) {
     const usedGB = (user.storageUsed / (1024 * 1024 * 1024)).toFixed(2);
     const limitGB = (planLimits.storage / (1024 * 1024 * 1024)).toFixed(0);
-    return { 
-      allowed: false, 
-      message: `Storage limit exceeded. You have used ${usedGB}GB of ${limitGB}GB. Upgrade your plan for more storage.` 
+    return {
+      allowed: false,
+      message: `Storage limit exceeded. You have used ${usedGB}GB of ${limitGB}GB. Upgrade your plan for more storage.`
     };
   }
-  
+
   return { allowed: true, user, newTotal };
 };
 
@@ -37,26 +37,24 @@ const updateStorageUsage = async (userId, sizeDelta) => {
 };
 
 // Helper function to upload to Cloudinary from buffer
-const uploadFromBuffer = (buffer, folder) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: folder,
-        resource_type: 'image',
-        transformation: [
-          { width: 1000, height: 1000, crop: 'limit' },
-          { quality: 'auto' },
-          { fetch_format: 'auto' }
-        ]
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-};
+const uploadFromBuffer = (buffer, folder) => new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    {
+      folder: folder,
+      resource_type: 'image',
+      transformation: [
+        { width: 1000, height: 1000, crop: 'limit' },
+        { quality: 'auto' },
+        { fetch_format: 'auto' }
+      ]
+    },
+    (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    }
+  );
+  streamifier.createReadStream(buffer).pipe(stream);
+});
 
 // @desc    Get current user's shop
 // @route   GET /api/shops/my/shop
@@ -97,9 +95,9 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
   }
 
   // Get active products for this shop
-  const products = await Product.find({ 
-    shop: shop._id, 
-    isActive: true 
+  const products = await Product.find({
+    shop: shop._id,
+    isActive: true
   }).sort({ position: 1, createdAt: -1 });
 
   // Increment view count
@@ -119,7 +117,9 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
 // @access  Private
 exports.updateShop = asyncHandler(async (req, res) => {
   console.log('🔍 UPDATE SHOP - Full request body:', JSON.stringify(req.body, null, 2));
-  const { shopName, description, category, location, slug, socialLinks, theme, paymentSettings } = req.body;
+  const {
+    shopName, description, category, location, slug, socialLinks, theme, paymentSettings
+  } = req.body;
   const { shopId } = req.query;
   console.log('🔍 Extracted paymentSettings:', paymentSettings);
 
@@ -164,21 +164,21 @@ exports.updateShop = asyncHandler(async (req, res) => {
   if (category) shop.category = category;
   if (location !== undefined) shop.location = location;
   if (socialLinks) shop.socialLinks = { ...shop.socialLinks, ...socialLinks };
-  
+
   // Update payment settings (Premium only)
   if (paymentSettings) {
     console.log('📥 Received paymentSettings:', JSON.stringify(paymentSettings, null, 2));
-    
+
     // Get user plan from request
     const user = await User.findById(req.user.id);
-    
+
     if (paymentSettings.enabled && user.plan !== 'premium') {
       return res.status(403).json({
         success: false,
         message: 'Payment integration is only available for Premium plan users. Upgrade to Premium to accept direct payments.'
       });
     }
-    
+
     // Update payment settings - use explicit boolean check
     shop.paymentSettings = {
       enabled: paymentSettings.enabled === true,
@@ -194,22 +194,22 @@ exports.updateShop = asyncHandler(async (req, res) => {
       allowWhatsAppNegotiation: paymentSettings.allowWhatsAppNegotiation ?? true,
       currency: paymentSettings.currency || 'NGN'
     };
-    
+
     console.log('💾 Saving shop.paymentSettings:', JSON.stringify(shop.paymentSettings, null, 2));
   }
-  
+
   // Update theme mode if provided (Premium only)
   if (theme?.mode) {
     // Get user plan from request
     const user = await User.findById(req.user.id);
-    
+
     if (user.plan !== 'premium') {
       return res.status(403).json({
         success: false,
         message: 'Theme mode customization is only available for Premium plan users. Upgrade to Premium to control your shop\'s display mode.'
       });
     }
-    
+
     shop.theme.mode = theme.mode;
   }
 
@@ -226,7 +226,9 @@ exports.updateShop = asyncHandler(async (req, res) => {
 // @route   PUT /api/shops/my/theme?shopId=xxx
 // @access  Private
 exports.updateTheme = asyncHandler(async (req, res) => {
-  const { themeName, primaryColor, accentColor, backgroundColor, textColor, layout, font } = req.body;
+  const {
+    themeName, primaryColor, accentColor, backgroundColor, textColor, layout, font
+  } = req.body;
   const { shopId } = req.query;
 
   // Find shop - use shopId if provided, otherwise get first active shop
@@ -391,10 +393,10 @@ exports.uploadLogo = asyncHandler(async (req, res) => {
       // Get old image details before deleting
       const oldImage = await cloudinary.api.resource(shop.logo.publicId);
       oldImageSize = oldImage.bytes || 0;
-      
+
       // Delete old logo from Cloudinary
       await cloudinary.uploader.destroy(shop.logo.publicId);
-      
+
       // Subtract old image size from storage
       await updateStorageUsage(req.user.id, -oldImageSize);
     } catch (error) {
@@ -459,10 +461,10 @@ exports.uploadBanner = asyncHandler(async (req, res) => {
       // Get old image details before deleting
       const oldImage = await cloudinary.api.resource(shop.banner.publicId);
       oldImageSize = oldImage.bytes || 0;
-      
+
       // Delete old banner from Cloudinary
       await cloudinary.uploader.destroy(shop.banner.publicId);
-      
+
       // Subtract old image size from storage
       await updateStorageUsage(req.user.id, -oldImageSize);
     } catch (error) {
@@ -518,10 +520,10 @@ exports.deleteImage = asyncHandler(async (req, res) => {
       // Get image size before deleting
       const cloudinaryImage = await cloudinary.api.resource(shop[type].publicId);
       const imageSize = cloudinaryImage.bytes || 0;
-      
+
       // Delete from Cloudinary
       await cloudinary.uploader.destroy(shop[type].publicId);
-      
+
       // Reduce storage usage
       await updateStorageUsage(req.user.id, -imageSize);
     } catch (error) {
@@ -570,11 +572,11 @@ exports.getAvailableThemes = asyncHandler(async (req, res) => {
       plan: userPlan,
       themes,
       customizationAllowed,
-      message: userPlan === 'free' 
+      message: userPlan === 'free'
         ? 'Upgrade to Pro to access 5 professional themes, or Premium for unlimited customization'
         : userPlan === 'pro'
-        ? 'Upgrade to Premium for unlimited color customization'
-        : 'You have access to all features!'
+          ? 'Upgrade to Premium for unlimited color customization'
+          : 'You have access to all features!'
     }
   });
 });
@@ -586,8 +588,8 @@ exports.getMyShops = asyncHandler(async (req, res) => {
   const shops = await Shop.find({ owner: req.user.id }).sort({ createdAt: -1 });
 
   // Count active and inactive shops
-  const activeShops = shops.filter(shop => shop.isActive).length;
-  const inactiveShops = shops.filter(shop => !shop.isActive).length;
+  const activeShops = shops.filter((shop) => shop.isActive).length;
+  const inactiveShops = shops.filter((shop) => !shop.isActive).length;
 
   res.status(200).json({
     success: true,
@@ -605,7 +607,9 @@ exports.getMyShops = asyncHandler(async (req, res) => {
 // @route   POST /api/shops
 // @access  Private
 exports.createShop = asyncHandler(async (req, res) => {
-  const { shopName, description, category, location } = req.body;
+  const {
+    shopName, description, category, location
+  } = req.body;
 
   // Check how many shops user already has
   const existingShops = await Shop.countDocuments({ owner: req.user.id });
@@ -671,7 +675,7 @@ exports.deleteShop = asyncHandler(async (req, res) => {
 
   // Get all products for this shop to calculate storage
   const products = await Product.find({ shop: shop._id });
-  
+
   // Delete product images from Cloudinary and calculate storage
   for (const product of products) {
     for (const image of product.images) {
@@ -679,7 +683,7 @@ exports.deleteShop = asyncHandler(async (req, res) => {
         // Get image size before deleting
         const cloudinaryImage = await cloudinary.api.resource(image.publicId);
         totalFreedStorage += cloudinaryImage.bytes || 0;
-        
+
         // Delete from Cloudinary
         await cloudinary.uploader.destroy(image.publicId);
       } catch (error) {
@@ -767,11 +771,11 @@ exports.setCustomDomain = asyncHandler(async (req, res) => {
   }
 
   // Check if domain is already used by another shop
-  const existingDomain = await Shop.findOne({ 
+  const existingDomain = await Shop.findOne({
     customDomain: domain,
     _id: { $ne: shop._id }
   });
-  
+
   if (existingDomain) {
     return res.status(400).json({
       success: false,
@@ -829,7 +833,7 @@ exports.verifyCustomDomain = asyncHandler(async (req, res) => {
     // Check TXT record for verification token
     const txtRecords = await dns.resolveTxt(`_washop-verify.${shop.customDomain}`);
     const flatRecords = txtRecords.flat();
-    
+
     const verified = flatRecords.includes(shop.domainVerificationToken);
 
     if (verified) {
@@ -841,13 +845,12 @@ exports.verifyCustomDomain = asyncHandler(async (req, res) => {
         message: 'Domain verified successfully!',
         data: { verified: true }
       });
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: 'Verification failed. TXT record not found or incorrect.',
-        data: { verified: false }
-      });
     }
+    return res.status(400).json({
+      success: false,
+      message: 'Verification failed. TXT record not found or incorrect.',
+      data: { verified: false }
+    });
   } catch (error) {
     return res.status(400).json({
       success: false,
@@ -930,11 +933,11 @@ exports.setSubdomain = asyncHandler(async (req, res) => {
   }
 
   // Check if subdomain is already taken
-  const existingSubdomain = await Shop.findOne({ 
+  const existingSubdomain = await Shop.findOne({
     subdomain,
     _id: { $ne: shop._id }
   });
-  
+
   if (existingSubdomain) {
     return res.status(400).json({
       success: false,
@@ -954,4 +957,3 @@ exports.setSubdomain = asyncHandler(async (req, res) => {
     }
   });
 });
-

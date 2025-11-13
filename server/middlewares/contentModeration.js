@@ -12,13 +12,13 @@ const { moderateProduct } = require('../utils/imageModeration');
 const moderateProductContent = async (req, res, next) => {
   try {
     const { name, description, tags } = req.body;
-    
+
     // Get images from request (could be from body or files)
     let images = [];
-    
+
     // If images are being uploaded in this request
     if (req.files && req.files.length > 0) {
-      images = req.files.map(file => ({
+      images = req.files.map((file) => ({
         url: file.path,
         file: {
           size: file.size,
@@ -26,10 +26,10 @@ const moderateProductContent = async (req, res, next) => {
         }
       }));
     }
-    
+
     // If images are provided as URLs in body
     if (req.body.images && Array.isArray(req.body.images)) {
-      images = req.body.images.map(img => ({
+      images = req.body.images.map((img) => ({
         url: typeof img === 'string' ? img : img.url,
         publicId: typeof img === 'object' ? img.publicId : null
       }));
@@ -76,7 +76,7 @@ const moderateProductContent = async (req, res, next) => {
 const moderateText = async (req, res, next) => {
   try {
     const { moderateContent } = require('../utils/contentModeration');
-    
+
     // Collect text fields from body
     const textFields = {
       name: req.body.name || req.body.shopName || '',

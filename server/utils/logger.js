@@ -13,7 +13,9 @@ const logFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'HH:mm:ss' }),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+  winston.format.printf(({
+    timestamp, level, message, ...meta
+  }) => {
     let msg = `${timestamp} [${level}]: ${message}`;
     if (Object.keys(meta).length > 0) {
       msg += ` ${JSON.stringify(meta)}`;
@@ -70,6 +72,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Create logs directory if it doesn't exist
 const fs = require('fs');
+
 const logsDir = path.join(__dirname, '../logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
@@ -78,7 +81,7 @@ if (!fs.existsSync(logsDir)) {
 // Express middleware for logging requests
 logger.requestLogger = (req, res, next) => {
   const start = Date.now();
-  
+
   // Log request
   logger.info('Incoming request', {
     requestId: req.id,
@@ -93,7 +96,7 @@ logger.requestLogger = (req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
-    
+
     logger[logLevel]('Request completed', {
       requestId: req.id,
       method: req.method,

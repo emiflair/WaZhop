@@ -309,16 +309,12 @@ const getTemplatesForPlan = (plan) => {
   };
 
   const allowedPlans = planHierarchy[plan] || ['free'];
-  
-  return Object.values(shopTemplates).filter(template => 
-    allowedPlans.includes(template.planRequired)
-  );
+
+  return Object.values(shopTemplates).filter((template) => allowedPlans.includes(template.planRequired));
 };
 
 // Get template by ID
-const getTemplateById = (templateId) => {
-  return Object.values(shopTemplates).find(t => t.id === templateId);
-};
+const getTemplateById = (templateId) => Object.values(shopTemplates).find((t) => t.id === templateId);
 
 // Default template for new shops
 const getDefaultTemplate = () => shopTemplates.classicGradient;

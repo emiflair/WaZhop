@@ -24,7 +24,7 @@ exports.getPlatformStats = asyncHandler(async (req, res) => {
     Shop.countDocuments(),
     Product.countDocuments(),
     Order.countDocuments(),
-    User.countDocuments({ 
+    User.countDocuments({
       plan: { $in: ['pro', 'premium'] },
       planExpiry: { $gt: new Date() }
     }),
@@ -64,15 +64,17 @@ exports.getPlatformStats = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/users
 // @access  Admin only
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  const { role, plan, verified, page = 1, limit = 20, search } = req.query;
-  
+  const {
+    role, plan, verified, page = 1, limit = 20, search
+  } = req.query;
+
   const query = {};
-  
+
   if (role) query.role = role;
   if (plan) query.plan = plan;
   if (verified === 'true') query.emailVerified = true;
   if (verified === 'false') query.emailVerified = false;
-  
+
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: 'i' } },
@@ -104,7 +106,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 // @access  Admin only
 exports.updateUserRole = asyncHandler(async (req, res) => {
   const { role } = req.body;
-  
+
   if (!['buyer', 'seller', 'admin'].includes(role)) {
     return res.status(400).json({
       success: false,
@@ -113,7 +115,7 @@ exports.updateUserRole = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(req.params.id);
-  
+
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -141,7 +143,7 @@ exports.updateUserRole = asyncHandler(async (req, res) => {
 // @access  Admin only
 exports.toggleUserStatus = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
-  
+
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -169,7 +171,7 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
 // @access  Admin only
 exports.deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
-  
+
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -203,7 +205,7 @@ exports.deleteUser = asyncHandler(async (req, res) => {
 // @access  Admin only
 exports.updateUserPlan = asyncHandler(async (req, res) => {
   const { plan, duration } = req.body;
-  
+
   if (!['free', 'pro', 'premium'].includes(plan)) {
     return res.status(400).json({
       success: false,
@@ -212,7 +214,7 @@ exports.updateUserPlan = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(req.params.id);
-  
+
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -221,7 +223,7 @@ exports.updateUserPlan = asyncHandler(async (req, res) => {
   }
 
   user.plan = plan;
-  
+
   if (plan !== 'free' && duration) {
     const durationDays = parseInt(duration);
     user.planExpiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);

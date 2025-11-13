@@ -15,20 +15,20 @@ const startSubscriptionCron = () => {
   cron.schedule('0 2 * * *', async () => {
     console.log('[Cron] Running subscription expiry check...');
     const result = await checkExpiredSubscriptions();
-    
+
     if (result.success) {
       console.log(`[Cron] Subscription check completed. Processed ${result.processed} subscriptions.`);
     } else {
-      console.error(`[Cron] Subscription check failed:`, result.error);
+      console.error('[Cron] Subscription check failed:', result.error);
     }
   });
-  
+
   console.log('✅ Subscription cron job started (runs daily at 2:00 AM)');
-  
+
   // Optional: Run check immediately on startup (useful for development)
   if (process.env.NODE_ENV === 'development') {
     console.log('[Cron] Running initial subscription check (dev mode)...');
-    checkExpiredSubscriptions().then(result => {
+    checkExpiredSubscriptions().then((result) => {
       if (result.success) {
         console.log(`[Cron] Initial check completed. Processed ${result.processed} subscriptions.`);
       }

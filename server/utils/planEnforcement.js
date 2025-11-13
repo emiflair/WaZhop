@@ -64,7 +64,7 @@ async function enforceFreePlanForUser(userId, options = {}) {
 
     // For the primary shop: keep up to 10 most recent products; delete the rest
     const primaryProducts = await Product.find({ shop: primaryShop._id }).sort({ createdAt: -1 });
-    const productsToKeep = primaryProducts.slice(0, 10).map(p => p._id.toString());
+    const productsToKeep = primaryProducts.slice(0, 10).map((p) => p._id.toString());
     for (const product of primaryProducts) {
       if (!productsToKeep.includes(product._id.toString())) {
         if (product.images && product.images.length) {
@@ -113,7 +113,7 @@ async function enforceFreePlanForUser(userId, options = {}) {
     // Deactivate all other shops
     if (otherShops.length) {
       await Shop.updateMany(
-        { _id: { $in: otherShops.map(s => s._id) } },
+        { _id: { $in: otherShops.map((s) => s._id) } },
         { $set: { isActive: false, showBranding: true, showWatermark: true } }
       );
       stats.deactivatedShops = otherShops.length;

@@ -195,4 +195,3 @@ module.exports = {
   PRO_THEMES,
   PREMIUM_FEATURES
 };
-

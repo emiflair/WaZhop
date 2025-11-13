@@ -9,7 +9,7 @@ const User = require('../models/User');
 exports.setup2FA = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -82,10 +82,10 @@ exports.verify2FA = async (req, res) => {
     user.twoFactorSecret = user.twoFactorTempSecret;
     user.twoFactorEnabled = true;
     user.twoFactorTempSecret = undefined;
-    
+
     // Generate backup codes
     const backupCodes = generateBackupCodes();
-    user.twoFactorBackupCodes = backupCodes.map(code => ({
+    user.twoFactorBackupCodes = backupCodes.map((code) => ({
       code,
       used: false
     }));
@@ -173,7 +173,7 @@ exports.disable2FA = async (req, res) => {
  */
 exports.require2FA = async (req, res, next) => {
   try {
-    const user = req.user;
+    const { user } = req;
 
     // Skip if 2FA is not enabled
     if (!user.twoFactorEnabled) {
@@ -202,7 +202,7 @@ exports.require2FA = async (req, res, next) => {
     if (!verified) {
       // Try backup codes
       const backupCodeValid = await verifyBackupCode(user, token);
-      
+
       if (!backupCodeValid) {
         return res.status(401).json({
           success: false,
@@ -281,7 +281,7 @@ async function verifyBackupCode(user, code) {
   }
 
   const backupCode = user.twoFactorBackupCodes.find(
-    bc => bc.code === code && !bc.used
+    (bc) => bc.code === code && !bc.used
   );
 
   if (!backupCode) {

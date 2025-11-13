@@ -1,38 +1,36 @@
+const streamifier = require('streamifier');
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { asyncHandler, paginate, paginationMeta } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
-const streamifier = require('streamifier');
 
 // Helper function to upload to Cloudinary from buffer
-const uploadFromBuffer = (buffer, folder) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: folder,
-        resource_type: 'image',
-        transformation: [
-          { width: 1200, height: 1200, crop: 'limit' },
-          { quality: 'auto' },
-          { fetch_format: 'auto' }
-        ]
-      },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-};
+const uploadFromBuffer = (buffer, folder) => new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    {
+      folder: folder,
+      resource_type: 'image',
+      transformation: [
+        { width: 1200, height: 1200, crop: 'limit' },
+        { quality: 'auto' },
+        { fetch_format: 'auto' }
+      ]
+    },
+    (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    }
+  );
+  streamifier.createReadStream(buffer).pipe(stream);
+});
 
 // Helper function to check storage limit before upload
 const checkStorageLimit = async (userId, newFileSize) => {
   const user = await User.findById(userId);
   const limits = user.getPlanLimits();
-  
+
   // Free plan has no storage allowance
   if (limits.storage === 0) {
     return {
@@ -40,9 +38,9 @@ const checkStorageLimit = async (userId, newFileSize) => {
       message: 'Storage not available on Free plan. Upgrade to Pro or Premium for storage.'
     };
   }
-  
+
   const newTotal = user.storageUsed + newFileSize;
-  
+
   if (newTotal > limits.storage) {
     const usedGB = (user.storageUsed / (1024 * 1024 * 1024)).toFixed(2);
     const limitGB = (limits.storage / (1024 * 1024 * 1024)).toFixed(0);
@@ -51,7 +49,7 @@ const checkStorageLimit = async (userId, newFileSize) => {
       message: `Storage limit exceeded. Using ${usedGB}GB of ${limitGB}GB. Upgrade to get more storage.`
     };
   }
-  
+
   return {
     allowed: true,
     user,
@@ -108,7 +106,7 @@ exports.getMyProducts = asyncHandler(async (req, res) => {
     });
   }
 
-  const shopIds = shops.map(shop => shop._id);
+  const shopIds = shops.map((shop) => shop._id);
   const products = await Product.find({ shop: { $in: shopIds } })
     .populate('shop', 'shopName slug isActive')
     .sort({ position: 1, createdAt: -1 });
@@ -117,7 +115,7 @@ exports.getMyProducts = asyncHandler(async (req, res) => {
     success: true,
     count: products.length,
     data: products,
-    shops: shops.map(shop => ({
+    shops: shops.map((shop) => ({
       id: shop._id,
       name: shop.shopName,
       isActive: shop.isActive
@@ -167,7 +165,9 @@ exports.getProduct = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private
 exports.createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, comparePrice, category, tags, inStock, sku, shopId, locationState, locationArea } = req.body;
+  const {
+    name, description, price, comparePrice, category, tags, inStock, sku, shopId, locationState, locationArea
+  } = req.body;
 
   // Find the shop - use provided shopId or default to user's first active shop
   let shop;
@@ -194,10 +194,10 @@ exports.createProduct = asyncHandler(async (req, res) => {
 
   // Check plan limits for total products across all active shops
   const activeShops = await Shop.find({ owner: req.user.id, isActive: true });
-  const activeShopIds = activeShops.map(s => s._id);
+  const activeShopIds = activeShops.map((s) => s._id);
   const existingProductsCount = await Product.countDocuments({ shop: { $in: activeShopIds } });
   const planLimits = req.user.getPlanLimits();
-  
+
   if (existingProductsCount >= planLimits.products) {
     return res.status(403).json({
       success: false,
@@ -206,7 +206,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
   }
 
   // Upload images if provided
-  let images = [];
+  const images = [];
   if (req.files && req.files.length > 0) {
     // Check if Cloudinary is configured
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
@@ -246,7 +246,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
     price,
     comparePrice,
     category,
-    tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : [],
+    tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map((t) => t.trim())) : [],
     inStock: inStock !== undefined ? inStock : true,
     sku,
     images,
@@ -294,9 +294,9 @@ exports.updateProduct = asyncHandler(async (req, res) => {
 
   // Handle tags
   if (req.body.tags) {
-    req.body.tags = Array.isArray(req.body.tags) 
-      ? req.body.tags 
-      : req.body.tags.split(',').map(t => t.trim());
+    req.body.tags = Array.isArray(req.body.tags)
+      ? req.body.tags
+      : req.body.tags.split(',').map((t) => t.trim());
   }
 
   product = await Product.findByIdAndUpdate(
@@ -412,7 +412,7 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
 
   // Calculate total size of new files
   const totalNewSize = req.files.reduce((sum, file) => sum + file.size, 0);
-  
+
   // Check storage limit
   const storageCheck = await checkStorageLimit(req.user.id, totalNewSize);
   if (!storageCheck.allowed) {
@@ -470,7 +470,7 @@ exports.deleteProductImage = asyncHandler(async (req, res) => {
   }
 
   const imageIndex = product.images.findIndex(
-    img => img._id.toString() === req.params.imageId
+    (img) => img._id.toString() === req.params.imageId
   );
 
   if (imageIndex === -1) {
@@ -487,10 +487,10 @@ exports.deleteProductImage = asyncHandler(async (req, res) => {
   try {
     const cloudinaryImage = await cloudinary.api.resource(imageToDelete.publicId);
     imageSize = cloudinaryImage.bytes || 0;
-    
+
     // Delete from Cloudinary
     await cloudinary.uploader.destroy(imageToDelete.publicId);
-    
+
     // Reduce storage usage
     await updateStorageUsage(req.user.id, -imageSize);
   } catch (error) {
@@ -500,7 +500,7 @@ exports.deleteProductImage = asyncHandler(async (req, res) => {
   product.images.splice(imageIndex, 1);
 
   // If deleted image was primary, make first image primary
-  if (product.images.length > 0 && !product.images.some(img => img.isPrimary)) {
+  if (product.images.length > 0 && !product.images.some((img) => img.isPrimary)) {
     product.images[0].isPrimary = true;
   }
 
@@ -535,12 +535,10 @@ exports.reorderProducts = asyncHandler(async (req, res) => {
   }
 
   // Update position for each product
-  const updatePromises = productIds.map((id, index) => 
-    Product.findOneAndUpdate(
-      { _id: id, shop: shop._id },
-      { position: index }
-    )
-  );
+  const updatePromises = productIds.map((id, index) => Product.findOneAndUpdate(
+    { _id: id, shop: shop._id },
+    { position: index }
+  ));
 
   await Promise.all(updatePromises);
 
@@ -575,11 +573,13 @@ exports.trackProductClick = asyncHandler(async (req, res) => {
 // @route   GET /api/products/marketplace
 // @access  Public
 exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 24, category, search, minPrice, maxPrice, sort, state, area } = req.query;
+  const {
+    page = 1, limit = 24, category, search, minPrice, maxPrice, sort, state, area
+  } = req.query;
 
   // Build query for products from active shops only
   const activeShops = await Shop.find({ isActive: true }).select('_id');
-  const activeShopIds = activeShops.map(s => s._id);
+  const activeShopIds = activeShops.map((s) => s._id);
 
   const query = { shop: { $in: activeShopIds } };
 
@@ -626,7 +626,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
       shopLocQuery.location = { $regex: new RegExp(area, 'i') };
     }
     const shopsByLoc = await Shop.find(shopLocQuery).select('_id');
-    const matchedShopIds = shopsByLoc.map(s => s._id);
+    const matchedShopIds = shopsByLoc.map((s) => s._id);
     if (matchedShopIds.length) orConds.push({ shop: { $in: matchedShopIds } });
 
     if (orConds.length) {
@@ -654,10 +654,10 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
 
   // Calculate remaining boost hours and sort products
   const now = new Date();
-  const productsWithBoostHours = products.map(product => {
+  const productsWithBoostHours = products.map((product) => {
     let remainingBoostHours = 0;
     let isBoosted = false;
-    
+
     if (product.boost?.active && product.boost?.endAt) {
       const endTime = new Date(product.boost.endAt);
       if (endTime > now) {
@@ -666,7 +666,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
         isBoosted = true;
       }
     }
-    
+
     return {
       ...product,
       isBoosted,
@@ -683,7 +683,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     // Boosted products always come before non-boosted
     if (a.isBoosted && !b.isBoosted) return -1;
     if (!a.isBoosted && b.isBoosted) return 1;
-    
+
     // For non-boosted products, sort by views then createdAt
     if (b.views !== a.views) {
       return b.views - a.views;
@@ -729,14 +729,16 @@ const BOOST_RATE_PER_HOUR_NGN = 400; // e.g., ₦2000 for 5 hours
 // @route   PUT /api/products/:id/boost
 // @access  Private
 exports.boostProduct = asyncHandler(async (req, res) => {
-  const { hours, state, area, startAt } = req.body;
+  const {
+    hours, state, area, startAt
+  } = req.body;
 
   const durationHours = Math.max(1, parseInt(hours, 10) || 0);
   if (!durationHours) {
     return res.status(400).json({ success: false, message: 'Please provide boost hours' });
   }
 
-  let product = await Product.findById(req.params.id).populate('shop');
+  const product = await Product.findById(req.params.id).populate('shop');
   if (!product) {
     return res.status(404).json({ success: false, message: 'Product not found' });
   }

@@ -5,21 +5,19 @@ const User = require('../models/User');
 // @access  Private
 exports.getReferralStats = async (req, res) => {
   try {
-    let user = await User.findById(req.user.id).select('referralCode referralStats plan planExpiry');
-    
+    const user = await User.findById(req.user.id).select('referralCode referralStats plan planExpiry');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Generate referral code if user doesn't have one (for existing users)
     if (!user.referralCode) {
-      const generateCode = () => {
-        return Math.random().toString(36).substring(2, 10).toUpperCase();
-      };
-      
+      const generateCode = () => Math.random().toString(36).substring(2, 10).toUpperCase();
+
       let code = generateCode();
       let attempts = 0;
-      
+
       // Ensure uniqueness
       while (attempts < 5) {
         const existing = await User.findOne({ referralCode: code });
@@ -30,11 +28,11 @@ exports.getReferralStats = async (req, res) => {
         code = generateCode();
         attempts++;
       }
-      
+
       if (!user.referralCode) {
         user.referralCode = `${generateCode()}${Date.now().toString(36).slice(-4)}`;
       }
-      
+
       await user.save();
     }
 
@@ -59,10 +57,10 @@ exports.getReferralStats = async (req, res) => {
 
     // Build referral link with fallback
     // If CLIENT_URL has multiple URLs (comma-separated), use the first one
-    const clientUrl = process.env.CLIENT_URL 
+    const clientUrl = process.env.CLIENT_URL
       ? process.env.CLIENT_URL.split(',')[0].trim()
       : 'http://localhost:5173';
-    
+
     const responseData = {
       referralCode: user.referralCode,
       referralLink: `${clientUrl}/register?ref=${user.referralCode}`,
@@ -71,19 +69,19 @@ exports.getReferralStats = async (req, res) => {
       planExpiry: user.planExpiry,
       referredUsers
     };
-    
+
     console.log('📤 Sending referral data:', {
       referralCode: responseData.referralCode,
       referralLink: responseData.referralLink,
       stats: responseData.stats,
       currentPlan: responseData.currentPlan
     });
-    
+
     // Set cache control headers to prevent 304 responses
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    
+
     res.json(responseData);
   } catch (error) {
     console.error('Get referral stats error:', error);
@@ -107,7 +105,7 @@ exports.applyReferralCode = async (req, res) => {
 
     // Find referrer by code
     const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
-    
+
     if (!referrer) {
       console.log('❌ Invalid referral code:', referralCode);
       return res.status(404).json({ message: 'Invalid referral code' });
@@ -117,7 +115,7 @@ exports.applyReferralCode = async (req, res) => {
 
     // Find new user
     const newUser = await User.findById(newUserId);
-    
+
     if (!newUser) {
       console.log('❌ New user not found:', newUserId);
       return res.status(404).json({ message: 'User not found' });
@@ -141,7 +139,7 @@ exports.applyReferralCode = async (req, res) => {
     // User must upgrade to Pro/Premium first
     referrer.referralStats.totalReferrals += 1;
     referrer.referralStats.freeReferred += 1; // New user starts on free plan
-    
+
     // NOTE: Rewards will be given when referred user upgrades to Pro/Premium
     // See notifyReferrerOfUpgrade function
 
@@ -152,7 +150,7 @@ exports.applyReferralCode = async (req, res) => {
       freeReferred: referrer.referralStats.freeReferred
     });
 
-    res.json({ 
+    res.json({
       message: 'Referral applied successfully',
       referrer: {
         name: referrer.name,
@@ -179,9 +177,9 @@ exports.validateReferralCode = async (req, res) => {
       return res.status(404).json({ valid: false, message: 'Invalid referral code' });
     }
 
-    res.json({ 
-      valid: true, 
-      referrerName: referrer.name 
+    res.json({
+      valid: true,
+      referrerName: referrer.name
     });
   } catch (error) {
     console.error('Validate referral error:', error);
@@ -203,14 +201,14 @@ exports.claimRewards = async (req, res) => {
     const availableRewards = user.referralStats.rewardsEarned - user.referralStats.rewardsUsed;
 
     if (availableRewards < 30) {
-      return res.status(400).json({ 
-        message: 'Insufficient rewards. Need at least 30 days (5 referrals) to claim.' 
+      return res.status(400).json({
+        message: 'Insufficient rewards. Need at least 30 days (5 referrals) to claim.'
       });
     }
 
     // Apply reward - extend plan by 30 days
     const daysToAdd = Math.floor(availableRewards / 30) * 30;
-    
+
     if (user.plan === 'free') {
       // Upgrade to Pro
       user.plan = 'pro';
@@ -243,14 +241,14 @@ exports.claimRewards = async (req, res) => {
 exports.notifyReferrerOfUpgrade = async (upgradedUserId, newPlan) => {
   try {
     const user = await User.findById(upgradedUserId);
-    
+
     if (!user || !user.referredBy) {
       console.log('No referral to notify - user not referred or no referrer');
       return;
     }
 
     const referrer = await User.findById(user.referredBy);
-    
+
     if (!referrer) {
       console.log('Referrer not found');
       return;
@@ -263,19 +261,19 @@ exports.notifyReferrerOfUpgrade = async (upgradedUserId, newPlan) => {
     if (referrer.referralStats.freeReferred > 0) {
       referrer.referralStats.freeReferred -= 1;
     }
-    
+
     if (newPlan === 'pro') {
       referrer.referralStats.proReferred += 1;
       referrer.referralStats.rewardsEarned += 15; // 15 days for Pro upgrade
-      console.log(`✅ Referrer earned 15 days for Pro referral`);
+      console.log('✅ Referrer earned 15 days for Pro referral');
     } else if (newPlan === 'premium') {
       referrer.referralStats.premiumReferred += 1;
       referrer.referralStats.rewardsEarned += 30; // 30 days for Premium upgrade
-      console.log(`✅ Referrer earned 30 days for Premium referral`);
+      console.log('✅ Referrer earned 30 days for Premium referral');
     }
 
     await referrer.save();
-    console.log(`💾 Referrer stats updated:`, referrer.referralStats);
+    console.log('💾 Referrer stats updated:', referrer.referralStats);
   } catch (error) {
     console.error('Notify referrer error:', error);
   }

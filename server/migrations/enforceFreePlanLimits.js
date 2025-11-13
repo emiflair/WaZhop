@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
+const path = require('path');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
-const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 /**
@@ -54,7 +54,7 @@ const enforceFreePlanLimits = async () => {
       }
     }
 
-    console.log(`\n✅ Migration complete!`);
+    console.log('\n✅ Migration complete!');
     console.log(`   Users processed: ${updatedUsers}`);
     console.log(`   Shops deactivated: ${deactivatedShops}`);
 

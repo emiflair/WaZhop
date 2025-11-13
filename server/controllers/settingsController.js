@@ -9,11 +9,11 @@ exports.getSettings = asyncHandler(async (req, res) => {
 
   // Return settings with sensitive fields included for admin
   const settingsObj = settings.toObject();
-  
+
   // Mask sensitive keys (show only last 4 characters)
   const maskKey = (key) => {
     if (!key || key.length < 8) return '••••••••';
-    return '••••' + key.slice(-4);
+    return `••••${key.slice(-4)}`;
   };
 
   res.status(200).json({

@@ -41,13 +41,13 @@ exports.checkPasswordStrength = (password) => {
     /(.)\1{2,}/, // Repeated characters
   ];
 
-  if (commonPatterns.some(pattern => pattern.test(password))) {
+  if (commonPatterns.some((pattern) => pattern.test(password))) {
     score -= 2;
     feedback.push('Avoid common patterns');
   }
 
   const isStrong = score >= 5;
-  
+
   return {
     score: Math.max(0, Math.min(score, 7)), // 0-7
     feedback,
@@ -59,9 +59,7 @@ exports.checkPasswordStrength = (password) => {
 /**
  * Generate secure random token
  */
-exports.generateSecureToken = (length = 32) => {
-  return crypto.randomBytes(length).toString('hex');
-};
+exports.generateSecureToken = (length = 32) => crypto.randomBytes(length).toString('hex');
 
 /**
  * Generate numeric OTP
@@ -78,9 +76,7 @@ exports.generateOTP = (length = 6) => {
 /**
  * Hash sensitive data
  */
-exports.hashData = (data) => {
-  return crypto.createHash('sha256').update(data).digest('hex');
-};
+exports.hashData = (data) => crypto.createHash('sha256').update(data).digest('hex');
 
 /**
  * Encrypt data (AES-256-CBC)
@@ -89,11 +85,11 @@ exports.encrypt = (text) => {
   const algorithm = 'aes-256-cbc';
   const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key', 'salt', 32);
   const iv = crypto.randomBytes(16);
-  
+
   const cipher = crypto.createCipheriv(algorithm, key, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  
+
   return `${iv.toString('hex')}:${encrypted}`;
 };
 
@@ -103,14 +99,14 @@ exports.encrypt = (text) => {
 exports.decrypt = (encryptedData) => {
   const algorithm = 'aes-256-cbc';
   const key = crypto.scryptSync(process.env.ENCRYPTION_KEY || 'default-key', 'salt', 32);
-  
+
   const [ivHex, encrypted] = encryptedData.split(':');
   const iv = Buffer.from(ivHex, 'hex');
-  
+
   const decipher = crypto.createDecipheriv(algorithm, key, iv);
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
-  
+
   return decrypted;
 };
 
@@ -119,7 +115,7 @@ exports.decrypt = (encryptedData) => {
  */
 exports.sanitizeHTML = (dirty) => {
   if (typeof dirty !== 'string') return dirty;
-  
+
   return dirty
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -134,7 +130,7 @@ exports.sanitizeHTML = (dirty) => {
  */
 exports.sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
-  
+
   // Remove control characters
   return input.replace(/[\x00-\x1F\x7F]/g, '');
 };
@@ -144,15 +140,15 @@ exports.sanitizeInput = (input) => {
  */
 exports.sanitizeURL = (url) => {
   if (!url) return null;
-  
+
   try {
     const parsed = new URL(url);
-    
+
     // Only allow http and https
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return null;
     }
-    
+
     return parsed.toString();
   } catch (error) {
     return null;
@@ -162,9 +158,7 @@ exports.sanitizeURL = (url) => {
 /**
  * Generate CSRF token
  */
-exports.generateCSRFToken = () => {
-  return crypto.randomBytes(32).toString('base64');
-};
+exports.generateCSRFToken = () => crypto.randomBytes(32).toString('base64');
 
 /**
  * Verify CSRF token
@@ -200,7 +194,7 @@ exports.isDisposableEmail = (email) => {
     'temp-mail.org',
     'maildrop.cc'
   ];
-  
+
   const domain = email.split('@')[1]?.toLowerCase();
   return disposableDomains.includes(domain);
 };
@@ -210,14 +204,14 @@ exports.isDisposableEmail = (email) => {
  */
 exports.detectSQLInjection = (input) => {
   if (typeof input !== 'string') return false;
-  
+
   const sqlPatterns = [
     /(\bUNION\b|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bCREATE\b|\bALTER\b|\bEXEC\b)/i,
     /(--|;|\/\*|\*\/|'|"|`)/,
     /(\bOR\b|\bAND\b)\s+\d+\s*=\s*\d+/i
   ];
-  
-  return sqlPatterns.some(pattern => pattern.test(input));
+
+  return sqlPatterns.some((pattern) => pattern.test(input));
 };
 
 /**
@@ -225,7 +219,7 @@ exports.detectSQLInjection = (input) => {
  */
 exports.detectXSS = (input) => {
   if (typeof input !== 'string') return false;
-  
+
   const xssPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
     /javascript:/gi,
@@ -234,8 +228,8 @@ exports.detectXSS = (input) => {
     /<embed/gi,
     /<object/gi
   ];
-  
-  return xssPatterns.some(pattern => pattern.test(input));
+
+  return xssPatterns.some((pattern) => pattern.test(input));
 };
 
 /**
@@ -245,11 +239,11 @@ exports.secureCompare = (a, b) => {
   if (typeof a !== 'string' || typeof b !== 'string') {
     return false;
   }
-  
+
   if (a.length !== b.length) {
     return false;
   }
-  
+
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 };
 
@@ -267,10 +261,10 @@ exports.generateAPIKey = () => {
  */
 exports.maskSensitiveData = (data) => {
   if (!data) return data;
-  
+
   const mask = (str) => {
     if (!str || str.length < 4) return '****';
-    return str.slice(0, 2) + '****' + str.slice(-2);
+    return `${str.slice(0, 2)}****${str.slice(-2)}`;
   };
 
   if (typeof data === 'string') {
@@ -284,7 +278,7 @@ exports.maskSensitiveData = (data) => {
         masked[key] = mask(String(value));
       } else if (key === 'email') {
         const [local, domain] = String(value).split('@');
-        masked[key] = mask(local) + '@' + domain;
+        masked[key] = `${mask(local)}@${domain}`;
       } else {
         masked[key] = value;
       }
@@ -298,9 +292,7 @@ exports.maskSensitiveData = (data) => {
 /**
  * IP whitelist checker
  */
-exports.isIPWhitelisted = (ip, whitelist = []) => {
-  return whitelist.includes(ip);
-};
+exports.isIPWhitelisted = (ip, whitelist = []) => whitelist.includes(ip);
 
 /**
  * Generate fingerprint from request
@@ -312,6 +304,6 @@ exports.generateRequestFingerprint = (req) => {
     req.headers['accept-encoding'],
     req.clientIP || req.ip
   ].join('|');
-  
+
   return crypto.createHash('sha256').update(components).digest('hex');
 };

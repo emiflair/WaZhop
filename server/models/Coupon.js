@@ -72,27 +72,27 @@ const couponSchema = new mongoose.Schema({
 });
 
 // Check if coupon is valid
-couponSchema.methods.isValid = function() {
+couponSchema.methods.isValid = function () {
   if (!this.isActive) return { valid: false, message: 'Coupon is inactive' };
-  
+
   const now = new Date();
   if (this.validFrom && this.validFrom > now) {
     return { valid: false, message: 'Coupon is not yet valid' };
   }
-  
+
   if (this.validUntil && this.validUntil < now) {
     return { valid: false, message: 'Coupon has expired' };
   }
-  
+
   if (this.maxUses && this.usedCount >= this.maxUses) {
     return { valid: false, message: 'Coupon usage limit reached' };
   }
-  
+
   return { valid: true };
 };
 
 // Calculate discount
-couponSchema.methods.calculateDiscount = function(originalAmount) {
+couponSchema.methods.calculateDiscount = function (originalAmount) {
   if (this.discountType === 'percentage') {
     const discountAmount = (originalAmount * this.discountValue) / 100;
     return {
@@ -101,20 +101,19 @@ couponSchema.methods.calculateDiscount = function(originalAmount) {
       finalAmount: originalAmount - discountAmount,
       discountPercentage: this.discountValue
     };
-  } else {
-    // Fixed amount discount
-    const discountAmount = Math.min(this.discountValue, originalAmount);
-    return {
-      originalAmount,
-      discountAmount,
-      finalAmount: originalAmount - discountAmount,
-      discountPercentage: ((discountAmount / originalAmount) * 100).toFixed(2)
-    };
   }
+  // Fixed amount discount
+  const discountAmount = Math.min(this.discountValue, originalAmount);
+  return {
+    originalAmount,
+    discountAmount,
+    finalAmount: originalAmount - discountAmount,
+    discountPercentage: ((discountAmount / originalAmount) * 100).toFixed(2)
+  };
 };
 
 // Generate unique coupon code
-couponSchema.statics.generateCode = function(prefix = 'WAZHOP') {
+couponSchema.statics.generateCode = function (prefix = 'WAZHOP') {
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `${prefix}${random}`;
 };

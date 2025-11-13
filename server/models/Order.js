@@ -35,14 +35,14 @@ const orderSchema = new mongoose.Schema({
     unique: true,
     uppercase: true
   },
-  
+
   // Shop and Customer
   shop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shop',
     required: true
   },
-  
+
   customer: {
     // Can be registered user or guest
     user: {
@@ -62,10 +62,10 @@ const orderSchema = new mongoose.Schema({
       required: true
     }
   },
-  
+
   // Order Items
   items: [orderItemSchema],
-  
+
   // Pricing
   subtotal: {
     type: Number,
@@ -91,7 +91,7 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: 'NGN'
   },
-  
+
   // Shipping Information
   shippingAddress: {
     street: String,
@@ -101,14 +101,14 @@ const orderSchema = new mongoose.Schema({
     postalCode: String,
     fullAddress: String // Combined address for WhatsApp orders
   },
-  
+
   // Order Status
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
     default: 'pending'
   },
-  
+
   // Payment Information
   paymentMethod: {
     type: String,
@@ -122,24 +122,24 @@ const orderSchema = new mongoose.Schema({
   },
   paymentReference: String,
   paidAt: Date,
-  
+
   // Order Source
   orderSource: {
     type: String,
     enum: ['web', 'whatsapp', 'api'],
     default: 'web'
   },
-  
+
   // Notes
   customerNotes: String,
   sellerNotes: String,
-  
+
   // Timestamps for tracking
   confirmedAt: Date,
   shippedAt: Date,
   deliveredAt: Date,
   cancelledAt: Date,
-  
+
   // Notifications
   notificationsSent: {
     orderConfirmation: { type: Boolean, default: false },
@@ -151,14 +151,14 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Generate unique order number
-orderSchema.pre('validate', async function(next) {
+orderSchema.pre('validate', async function (next) {
   if (this.isNew && !this.orderNumber) {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     this.orderNumber = `WZ${year}${month}${random}`;
-    
+
     // Check if order number exists (very unlikely collision)
     const exists = await mongoose.model('Order').findOne({ orderNumber: this.orderNumber });
     if (exists) {

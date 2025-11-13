@@ -99,9 +99,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
   // Send confirmation email
   try {
-    const orderDetailsHtml = orderItems.map((item, idx) => 
-      `<li>${idx + 1}. ${item.productName} - Qty: ${item.quantity} - ${shop.paymentSettings?.currency || 'NGN'} ${item.total.toLocaleString()}</li>`
-    ).join('');
+    const orderDetailsHtml = orderItems.map((item, idx) => `<li>${idx + 1}. ${item.productName} - Qty: ${item.quantity} - ${shop.paymentSettings?.currency || 'NGN'} ${item.total.toLocaleString()}</li>`).join('');
 
     const html = `
       <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto">
@@ -185,7 +183,7 @@ exports.getOrderById = asyncHandler(async (req, res) => {
     const shop = await Shop.findById(order.shop._id);
     const isOwner = shop && shop.owner.toString() === req.user._id.toString();
     const isCustomer = order.customer.user && order.customer.user.toString() === req.user._id.toString();
-    
+
     if (!isOwner && !isCustomer && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
     }
@@ -199,7 +197,7 @@ exports.getOrderById = asyncHandler(async (req, res) => {
 // @access  Private (shop owner)
 exports.getShopOrders = asyncHandler(async (req, res) => {
   const shop = await Shop.findById(req.params.shopId);
-  
+
   if (!shop) {
     return res.status(404).json({ success: false, message: 'Shop not found' });
   }
@@ -211,7 +209,7 @@ exports.getShopOrders = asyncHandler(async (req, res) => {
 
   const { status, page = 1, limit = 20 } = req.query;
   const query = { shop: req.params.shopId };
-  
+
   if (status) {
     query.status = status;
   }
@@ -239,14 +237,14 @@ exports.getShopOrders = asyncHandler(async (req, res) => {
 // @access  Private (shop owner)
 exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
-  
+
   const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ success: false, message: 'Invalid status' });
   }
 
   const order = await Order.findById(req.params.id).populate('shop');
-  
+
   if (!order) {
     return res.status(404).json({ success: false, message: 'Order not found' });
   }
@@ -258,7 +256,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   order.status = status;
-  
+
   // Set timestamps
   if (status === 'confirmed' && !order.confirmedAt) {
     order.confirmedAt = new Date();
@@ -285,7 +283,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 // @access  Public (customer or shop owner)
 exports.cancelOrder = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
-  
+
   if (!order) {
     return res.status(404).json({ success: false, message: 'Order not found' });
   }
@@ -300,7 +298,7 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
 
   order.status = 'cancelled';
   order.cancelledAt = new Date();
-  
+
   // Restore inventory
   for (const item of order.items) {
     const product = await Product.findById(item.product);
@@ -324,7 +322,7 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
 // @access  Private (shop owner)
 exports.getOrderStats = asyncHandler(async (req, res) => {
   const shop = await Shop.findById(req.params.shopId);
-  
+
   if (!shop) {
     return res.status(404).json({ success: false, message: 'Shop not found' });
   }

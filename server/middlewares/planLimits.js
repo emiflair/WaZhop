@@ -5,7 +5,7 @@ const Shop = require('../models/Shop');
 exports.checkProductLimit = async (req, res, next) => {
   try {
     const shop = await Shop.findOne({ owner: req.user.id });
-    
+
     if (!shop) {
       return res.status(404).json({
         success: false,
@@ -42,7 +42,7 @@ exports.checkAnalyticsAccess = async (req, res, next) => {
     if (!planLimits.analytics) {
       return res.status(403).json({
         success: false,
-        message: `Analytics is only available on Pro and Premium plans. Please upgrade to access this feature.`
+        message: 'Analytics is only available on Pro and Premium plans. Please upgrade to access this feature.'
       });
     }
 
@@ -63,7 +63,7 @@ exports.checkCustomDomainAccess = async (req, res, next) => {
     if (!planLimits.customDomain) {
       return res.status(403).json({
         success: false,
-        message: `Custom domain is only available on Premium plan. Please upgrade to access this feature.`
+        message: 'Custom domain is only available on Premium plan. Please upgrade to access this feature.'
       });
     }
 
@@ -260,7 +260,7 @@ exports.checkInventoryAccess = async (req, res, next) => {
     if (!planLimits.inventoryManagement) {
       return res.status(403).json({
         success: false,
-        message: `Inventory Management is only available on Pro and Premium plans. Upgrade to track stock levels, get low stock alerts, and automate inventory.`,
+        message: 'Inventory Management is only available on Pro and Premium plans. Upgrade to track stock levels, get low stock alerts, and automate inventory.',
         upgrade: true,
         requiredPlan: 'pro'
       });

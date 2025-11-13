@@ -4,22 +4,20 @@ const { asyncHandler } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
 
 // Helper to upload a single image buffer to Cloudinary
-const uploadFromBuffer = (buffer, folder) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: 'image',
-        transformation: [{ quality: 'auto', fetch_format: 'auto' }]
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(buffer);
-  });
-};
+const uploadFromBuffer = (buffer, folder) => new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    {
+      folder,
+      resource_type: 'image',
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+    },
+    (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    }
+  );
+  stream.end(buffer);
+});
 
 // @desc    Get reviews for a product
 // @route   GET /api/reviews/product/:productId
@@ -28,9 +26,9 @@ exports.getProductReviews = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { page = 1, limit = 10, sort = '-createdAt' } = req.query;
 
-  const reviews = await Review.find({ 
+  const reviews = await Review.find({
     product: productId,
-    isApproved: true 
+    isApproved: true
   })
     // Do not expose customerEmail publicly
     .select('-customerEmail -__v')
@@ -39,9 +37,9 @@ exports.getProductReviews = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .exec();
 
-  const count = await Review.countDocuments({ 
+  const count = await Review.countDocuments({
     product: productId,
-    isApproved: true 
+    isApproved: true
   });
 
   res.status(200).json({
@@ -57,7 +55,9 @@ exports.getProductReviews = asyncHandler(async (req, res) => {
 // @route   POST /api/reviews
 // @access  Public
 exports.createReview = asyncHandler(async (req, res) => {
-  const { productId, customerName, customerEmail, rating, comment } = req.body;
+  const {
+    productId, customerName, customerEmail, rating, comment
+  } = req.body;
 
   // Check if product exists
   const product = await Product.findById(productId);
@@ -84,7 +84,7 @@ exports.createReview = asyncHandler(async (req, res) => {
   }
 
   // Optional image upload (single)
-  let image = undefined;
+  let image;
   try {
     if (req.file && req.file.buffer && cloudinary?.uploader) {
       const result = await uploadFromBuffer(req.file.buffer, 'wazhop/reviews');
@@ -187,9 +187,9 @@ exports.getMyShopReviews = asyncHandler(async (req, res) => {
 // @access  Private
 exports.approveReview = asyncHandler(async (req, res) => {
   const { isApproved } = req.body;
-  
+
   const review = await Review.findById(req.params.id).populate('shop');
-  
+
   if (!review) {
     return res.status(404).json({
       success: false,
@@ -220,7 +220,7 @@ exports.approveReview = asyncHandler(async (req, res) => {
 // @access  Private
 exports.deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id).populate('shop');
-  
+
   if (!review) {
     return res.status(404).json({
       success: false,
@@ -249,7 +249,7 @@ exports.deleteReview = asyncHandler(async (req, res) => {
 // @access  Public
 exports.markHelpful = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id);
-  
+
   if (!review) {
     return res.status(404).json({
       success: false,

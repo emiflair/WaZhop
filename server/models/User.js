@@ -196,11 +196,11 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -211,20 +211,18 @@ userSchema.pre('save', async function(next) {
 });
 
 // Generate referral code on first save
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.referralCode && !this.isNew) {
     return next();
   }
-  
+
   if (this.isNew && !this.referralCode) {
     // Generate unique 8-character code
-    const generateCode = () => {
-      return Math.random().toString(36).substring(2, 10).toUpperCase();
-    };
-    
+    const generateCode = () => Math.random().toString(36).substring(2, 10).toUpperCase();
+
     let code = generateCode();
     let attempts = 0;
-    
+
     // Ensure uniqueness
     while (attempts < 5) {
       const existing = await mongoose.model('User').findOne({ referralCode: code });
@@ -235,24 +233,24 @@ userSchema.pre('save', async function(next) {
       code = generateCode();
       attempts++;
     }
-    
+
     if (!this.referralCode) {
       this.referralCode = `${generateCode()}${Date.now().toString(36).slice(-4)}`;
     }
   }
-  
+
   next();
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Get plan limits
-userSchema.methods.getPlanLimits = function() {
+userSchema.methods.getPlanLimits = function () {
   const limits = {
-    free: { 
+    free: {
       products: 10,
       themes: 1,
       maxShops: 1,
@@ -274,7 +272,7 @@ userSchema.methods.getPlanLimits = function() {
         'Standard support'
       ]
     },
-    pro: { 
+    pro: {
       products: 100,
       themes: 10,
       maxShops: 2,
@@ -307,7 +305,7 @@ userSchema.methods.getPlanLimits = function() {
         'Email support'
       ]
     },
-    premium: { 
+    premium: {
       products: Infinity,
       themes: Infinity,
       maxShops: 3,
@@ -350,44 +348,44 @@ userSchema.methods.getPlanLimits = function() {
 };
 
 // Check if plan is expired
-userSchema.methods.isPlanExpired = function() {
+userSchema.methods.isPlanExpired = function () {
   if (this.plan === 'free') return false;
   if (!this.planExpiry) return false;
   return new Date() > this.planExpiry;
 };
 
 // Cascade delete: Remove user's shops, products, reviews, and orders when user is deleted
-userSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
   try {
     const Shop = mongoose.model('Shop');
     const Product = mongoose.model('Product');
     const Review = mongoose.model('Review');
     const Order = mongoose.model('Order');
-    
+
     console.log(`🗑️  Cascade delete triggered for user: ${this.email}`);
-    
+
     // Find all shops owned by this user
     const userShops = await Shop.find({ owner: this._id });
-    const shopIds = userShops.map(shop => shop._id);
-    
+    const shopIds = userShops.map((shop) => shop._id);
+
     if (shopIds.length > 0) {
       // Delete all products in these shops
       const deletedProducts = await Product.deleteMany({ shop: { $in: shopIds } });
       console.log(`   ✅ Deleted ${deletedProducts.deletedCount} products`);
-      
+
       // Delete all reviews for products in these shops
       const deletedReviews = await Review.deleteMany({ shop: { $in: shopIds } });
       console.log(`   ✅ Deleted ${deletedReviews.deletedCount} reviews`);
-      
+
       // Delete all orders for these shops
       const deletedOrders = await Order.deleteMany({ shop: { $in: shopIds } });
       console.log(`   ✅ Deleted ${deletedOrders.deletedCount} orders`);
-      
+
       // Delete all shops
       const deletedShops = await Shop.deleteMany({ owner: this._id });
       console.log(`   ✅ Deleted ${deletedShops.deletedCount} shops`);
     }
-    
+
     console.log(`   ✅ User ${this.email} and all associated data deleted successfully`);
     next();
   } catch (error) {
@@ -397,21 +395,21 @@ userSchema.pre('deleteOne', { document: true, query: false }, async function(nex
 });
 
 // Also handle findOneAndDelete and deleteMany
-userSchema.pre('deleteMany', async function(next) {
+userSchema.pre('deleteMany', async function (next) {
   try {
     const users = await this.model.find(this.getFilter());
-    
+
     for (const user of users) {
       const Shop = mongoose.model('Shop');
       const Product = mongoose.model('Product');
       const Review = mongoose.model('Review');
       const Order = mongoose.model('Order');
-      
+
       console.log(`🗑️  Cascade delete for user: ${user.email}`);
-      
+
       const userShops = await Shop.find({ owner: user._id });
-      const shopIds = userShops.map(shop => shop._id);
-      
+      const shopIds = userShops.map((shop) => shop._id);
+
       if (shopIds.length > 0) {
         await Product.deleteMany({ shop: { $in: shopIds } });
         await Review.deleteMany({ shop: { $in: shopIds } });
@@ -420,7 +418,7 @@ userSchema.pre('deleteMany', async function(next) {
         console.log(`   ✅ Deleted all data for ${user.email}`);
       }
     }
-    
+
     next();
   } catch (error) {
     console.error('❌ Cascade deleteMany error:', error);
@@ -436,4 +434,3 @@ userSchema.index(
 );
 
 module.exports = mongoose.model('User', userSchema);
-

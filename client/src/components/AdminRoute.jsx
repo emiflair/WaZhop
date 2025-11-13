@@ -27,7 +27,7 @@ const AdminRoute = ({ children }) => {
           <div className="text-red-600 dark:text-red-400 text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            You don't have permission to access the admin panel. This area is restricted to administrators only.
+            You don&apos;t have permission to access the admin panel. This area is restricted to administrators only.
           </p>
           <button
             onClick={() => window.history.back()}
