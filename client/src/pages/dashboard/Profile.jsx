@@ -244,17 +244,24 @@ const Profile = () => {
                 <FaWhatsapp className="inline mr-2 text-primary-600" />
                 WhatsApp Number *
               </label>
-              <input
-                type="tel"
-                name="whatsappNumber"
-                value={profileData.whatsappNumber}
-                onChange={handleProfileChange}
-                className="input"
-                placeholder="+234XXXXXXXXXX"
-                required
-              />
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium border-r border-gray-300 dark:border-gray-600 pr-3">
+                  <span className="text-xl">🇳🇬</span>
+                  <span>+234</span>
+                </span>
+                <input
+                  type="tel"
+                  name="whatsappNumber"
+                  value={profileData.whatsappNumber}
+                  onChange={handleProfileChange}
+                  className="input pl-28"
+                  placeholder="8012345678"
+                  required
+                  maxLength={10}
+                />
+              </div>
               <p className="text-sm text-gray-500 mt-1">
-                Customers will contact you on this number. Include country code.
+                Enter your 10-digit phone number (e.g., 8012345678)
               </p>
             </div>
 

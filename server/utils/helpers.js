@@ -76,22 +76,26 @@ exports.isValidNigerianPhone = (phone) => {
   return regex.test(phone.replace(/\s/g, ''));
 };
 
-// Format phone number for WhatsApp
+// Format phone number for WhatsApp (stores with +234 prefix)
 exports.formatWhatsAppNumber = (phone) => {
+  if (!phone) return null;
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, '');
   
   // Add country code if not present
   if (cleaned.startsWith('0')) {
     cleaned = '234' + cleaned.substring(1);
+  } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
+    // 10-digit number without country code
+    cleaned = '234' + cleaned;
   } else if (!cleaned.startsWith('234')) {
     cleaned = '234' + cleaned;
   }
   
-  return cleaned;
+  return '+' + cleaned;
 };
 
-// Normalize phone number for uniqueness check (strips all non-digits, ensures country code)
+// Normalize phone number for uniqueness check (returns +234xxxxxxxxxx format)
 exports.normalizePhoneNumber = (phone) => {
   if (!phone) return null;
   // Remove all non-digit characters
@@ -105,7 +109,7 @@ exports.normalizePhoneNumber = (phone) => {
     cleaned = '234' + cleaned;
   }
   
-  return cleaned;
+  return '+' + cleaned;
 };
 
 // Paginate results

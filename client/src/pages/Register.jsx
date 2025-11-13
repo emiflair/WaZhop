@@ -206,10 +206,13 @@ const Register = () => {
           <div>
             <label htmlFor="whatsapp" className="label">WhatsApp Number <span className="text-red-500">*</span></label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaPhone /></span>
-              <input id="whatsapp" name="whatsapp" type="tel" required className={`input pl-10 ${touched.whatsapp && errors.whatsapp ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="+234 801 234 5678" value={formData.whatsapp} onChange={handleChange} onBlur={handleBlur} />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium border-r border-gray-300 dark:border-gray-600 pr-3">
+                <span className="text-xl">🇳🇬</span>
+                <span>+234</span>
+              </span>
+              <input id="whatsapp" name="whatsapp" type="tel" required className={`input pl-28 ${touched.whatsapp && errors.whatsapp ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="8012345678" value={formData.whatsapp} onChange={handleChange} onBlur={handleBlur} maxLength={10} />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Include country code (e.g., +234 for Nigeria)</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter your 10-digit phone number (e.g., 8012345678)</p>
             {touched.whatsapp && errors.whatsapp ? (<p className="text-sm text-red-600 mt-1">{errors.whatsapp}</p>) : null}
           </div>
         )}
