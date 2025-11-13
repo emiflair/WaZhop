@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚦 Running pre-push checks (build verification) ..."
+
+# Build client app before allowing push
+echo "📦 Building client..."
+if ! (cd client && npm run build); then
+  echo "❌ Client build failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ Client build passed. Proceeding with push."
