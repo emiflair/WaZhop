@@ -95,6 +95,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/whatsapp', require('./routes/whatsapp'));
 
 // Legacy health check (keep for backwards compatibility)
 app.get('/api/health', (req, res) => {

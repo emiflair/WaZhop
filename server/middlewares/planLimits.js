@@ -33,6 +33,7 @@ exports.checkProductLimit = async (req, res, next) => {
     });
   }
 };
+// end
 
 // Middleware to check if user has access to analytics
 exports.checkAnalyticsAccess = async (req, res, next) => {
@@ -271,6 +272,28 @@ exports.checkInventoryAccess = async (req, res, next) => {
     res.status(500).json({
       success: false,
       message: 'Error checking inventory access'
+    });
+  }
+};
+
+// Middleware to check WhatsApp Business API access
+exports.checkPlanLimit = (feature) => async (req, res, next) => {
+  try {
+    // WhatsApp API is Premium only
+    if (feature === 'whatsappApi' && req.user.plan !== 'premium') {
+      return res.status(403).json({
+        success: false,
+        message: 'WhatsApp Business API is only available on Premium plan. Upgrade to automate customer messages, sync product catalogs, and boost sales through WhatsApp.',
+        upgrade: true,
+        requiredPlan: 'premium'
+      });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error checking plan limits'
     });
   }
 };
