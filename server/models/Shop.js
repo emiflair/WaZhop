@@ -145,6 +145,41 @@ const shopSchema = new mongoose.Schema({
       default: ['whatsapp']
     }
   },
+  // WhatsApp Business Number (for inquiry links)
+  whatsappNumber: {
+    type: String,
+    trim: true,
+    match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid international phone number']
+  },
+  // WhatsApp Business API Integration (Premium only)
+  whatsappBusiness: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    catalogId: {
+      type: String,
+      default: null
+    },
+    catalogSyncedAt: {
+      type: Date,
+      default: null
+    },
+    automatedMessages: {
+      orderConfirmation: {
+        type: Boolean,
+        default: true
+      },
+      orderStatusUpdate: {
+        type: Boolean,
+        default: true
+      },
+      abandonedCart: {
+        type: Boolean,
+        default: false
+      }
+    }
+  },
   isActive: {
     type: Boolean,
     default: true
