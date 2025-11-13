@@ -43,7 +43,7 @@ export default function VerifyEmail() {
               // Ignore storage errors (private mode)
             }
             const dest = data.user.role === 'seller' && (!data.user.plan || data.user.plan === 'free')
-              ? '/pricing?onboarding=1'
+              ? '/dashboard/subscription?onboarding=1'
               : (data.user.role === 'seller' ? '/dashboard' : '/')
             window.location.href = dest
             return
@@ -86,7 +86,7 @@ export default function VerifyEmail() {
             // Ignore storage errors (private mode)
           }
           const dest = data.user.role === 'seller' && (!data.user.plan || data.user.plan === 'free')
-            ? '/pricing?onboarding=1'
+            ? '/dashboard/subscription?onboarding=1'
             : (data.user.role === 'seller' ? '/dashboard' : '/')
           window.location.href = dest
           return

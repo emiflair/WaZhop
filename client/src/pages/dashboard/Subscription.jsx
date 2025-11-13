@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, productAPI, shopAPI } from '../../utils/api';
@@ -21,6 +22,7 @@ import { FiX } from 'react-icons/fi';
 
 const Subscription = () => {
   const { user, updateUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
   const [products, setProducts] = useState([]);
@@ -51,6 +53,22 @@ const Subscription = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Auto-open upgrade modal for onboarding sellers
+  useEffect(() => {
+    const onboarding = searchParams.get('onboarding');
+    if (onboarding === '1' && user?.role === 'seller' && (!user?.plan || user?.plan === 'free')) {
+      // Wait for plans to be defined, then select Pro plan
+      const timer = setTimeout(() => {
+        const proPlan = plans.find(p => p.id === 'pro');
+        if (proPlan) {
+          setSelectedPlan(proPlan);
+          setShowUpgradeModal(true);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, user]);
 
   const fetchData = async () => {
     try {
