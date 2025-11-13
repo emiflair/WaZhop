@@ -128,7 +128,7 @@ const Dashboard = () => {
                   onClick={() => openShopInBrowser(shop.slug)}
                   className="text-primary-100 hover:text-white active:text-primary-200 flex items-center gap-2 text-sm sm:text-base break-all sm:break-normal touch-manipulation text-left"
                 >
-                  <span className="truncate">wazhop.com/{shop.slug}</span>
+                  <span className="truncate">wazhop.ng/{shop.slug}</span>
                   <FiExternalLink className="flex-shrink-0" />
                 </button>
               </div>
@@ -183,7 +183,7 @@ const Dashboard = () => {
                     <button
                       onClick={() => openShopInBrowser(shopItem.slug)}
                       className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 active:text-blue-800 dark:active:text-blue-200 flex items-center gap-1 truncate flex-1 min-w-0 touch-manipulation min-h-[44px] text-left"
-                      title={`wazhop.com/${shopItem.slug}`}
+                      title={`wazhop.ng/${shopItem.slug}`}
                     >
                       <FiExternalLink size={12} className="flex-shrink-0" />
                       <span className="truncate">{shopItem.slug}</span>

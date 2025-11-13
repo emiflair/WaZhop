@@ -228,8 +228,8 @@ bugfix/fix-issue ────┘
 
 6. **Test on staging:**
    ```
-   https://staging-api.wazhop.com
-   https://staging.wazhop.com
+   https://staging-api.wazhop.ng
+   https://staging.wazhop.ng
    ```
 
 7. **Promote to production:**
@@ -532,7 +532,7 @@ vercel --prod
 Set in Vercel dashboard: **Settings → Environment Variables**
 
 ```
-VITE_API_URL=https://api.wazhop.com
+VITE_API_URL=https://api.wazhop.ng
 ```
 
 ### Deployment Checklist
@@ -697,7 +697,7 @@ npm update package-name
 
 3. Test health endpoint manually:
    ```bash
-   curl https://api.wazhop.com/api/health/detailed
+   curl https://api.wazhop.ng/api/health/detailed
    ```
 
 4. Check environment variables are set
@@ -732,9 +732,9 @@ Add to `.github/workflows/ci-cd.yml`:
 
 **Monitor these endpoints:**
 ```
-https://api.wazhop.com/api/health
-https://api.wazhop.com/api/health/ready
-https://wazhop.com
+https://api.wazhop.ng/api/health
+https://api.wazhop.ng/api/health/ready
+https://wazhop.ng
 ```
 
 ---

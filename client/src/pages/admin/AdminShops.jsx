@@ -112,7 +112,7 @@ export default function AdminShops() {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">{shop.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{shop.subdomain}.wazhop.com</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{shop.subdomain}.wazhop.ng</div>
                           </div>
                         </div>
                       </td>
@@ -135,7 +135,7 @@ export default function AdminShops() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <a
-                            href={`https://${shop.subdomain}.wazhop.com`}
+                            href={`https://${shop.subdomain}.wazhop.ng`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

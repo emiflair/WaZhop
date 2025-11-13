@@ -953,7 +953,7 @@ exports.setSubdomain = asyncHandler(async (req, res) => {
     message: 'Subdomain set successfully',
     data: {
       subdomain,
-      url: `https://${subdomain}.wazhop.com`
+      url: `https://${subdomain}.wazhop.ng`
     }
   });
 });

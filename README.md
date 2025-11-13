@@ -91,7 +91,7 @@ Notes:
 - ✅ Seller dashboard
 - ✅ Store customization (colors, logo, banner)
 - ✅ Product management (CRUD)
-- ✅ Public storefront (wazhop.com/:username)
+- ✅ Public storefront (wazhop.ng/:username)
 - ✅ WhatsApp integration for product negotiation
 - ✅ Payment integration (Flutterwave & Paystack) - Premium only
 - ✅ Shopping cart and checkout
@@ -122,4 +122,4 @@ MIT
 
 ## Contact
 
-For support or inquiries, visit [wazhop.com/contact](https://wazhop.com/contact)
+For support or inquiries, visit [wazhop.ng/contact](https://wazhop.ng/contact)

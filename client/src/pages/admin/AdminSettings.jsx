@@ -10,8 +10,8 @@ export default function AdminSettings() {
     // General Settings
     siteName: 'WaZhop',
     siteDescription: 'Build and manage your online shop with ease',
-    contactEmail: 'admin@wazhop.com',
-    supportEmail: 'support@wazhop.com',
+    contactEmail: 'admin@wazhop.ng',
+    supportEmail: 'support@wazhop.ng',
     
     // Payment Settings
     paystackEnabled: false,

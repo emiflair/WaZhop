@@ -778,7 +778,7 @@ const Storefront = () => {
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Powered by{' '}
               <a 
-                href="https://wazhop.com" 
+                href="https://wazhop.ng" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"

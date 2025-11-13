@@ -580,7 +580,7 @@ const ShopSettings = () => {
                   Shop URL/Slug *
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">wazhop.com/</span>
+                  <span className="text-gray-500">wazhop.ng/</span>
                   <input
                     type="text"
                     name="slug"
@@ -1255,7 +1255,7 @@ const ShopSettings = () => {
                       className="input flex-1 min-w-[200px]"
                       placeholder="myshop"
                     />
-                    <span className="text-gray-500 whitespace-nowrap">.wazhop.com</span>
+                    <span className="text-gray-500 whitespace-nowrap">.wazhop.ng</span>
                     <TouchButton
                       type="button"
                       onClick={handleSetSubdomain}
@@ -1271,12 +1271,12 @@ const ShopSettings = () => {
                     <p className="text-sm text-primary-600 mt-2">
                       ✓ Your shop is accessible at:{' '}
                       <a 
-                        href={`https://${shop.subdomain}.wazhop.com`}
+                        href={`https://${shop.subdomain}.wazhop.ng`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium underline"
                       >
-                        {shop.subdomain}.wazhop.com
+                        {shop.subdomain}.wazhop.ng
                       </a>
                     </p>
                   )}

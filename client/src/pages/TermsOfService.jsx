@@ -375,10 +375,10 @@ const TermsOfService = () => {
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 space-y-2 text-sm sm:text-base">
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> legal@wazhop.com
+                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> legal@wazhop.ng
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Support:</strong> support@wazhop.com
+                    <strong className="text-gray-900 dark:text-gray-100">Support:</strong> support@wazhop.ng
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaZhop, Lagos, Nigeria
