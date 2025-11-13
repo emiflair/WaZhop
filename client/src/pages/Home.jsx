@@ -166,7 +166,13 @@ const Home = () => {
                     state={{ fromMarketplace: true }}
                     className="group app-card hover:-translate-y-2 transform transition-all duration-300"
                   >
-                    <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4">
+                    <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4 relative">
+                      {product.isBoosted && (
+                        <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                          <FiStar className="w-3 h-3" />
+                          <span>Boosted</span>
+                        </div>
+                      )}
                       <LazyImage
                         src={product.images?.[0]?.url ?? product.images?.[0] ?? '/placeholder.png'}
                         alt={product.name}

@@ -326,12 +326,18 @@ function ProductCard({ product, onOpen }) {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
         />
+        {product.isBoosted && (
+          <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <FiStar className="w-3 h-3" />
+            <span>Boosted</span>
+          </div>
+        )}
         {product.comparePrice && product.comparePrice > product.price && (
           <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
             {Math.round((1 - product.price / product.comparePrice) * 100)}% OFF
           </div>
         )}
-        <div className="absolute top-2 left-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium">
+        <div className={`absolute ${product.isBoosted ? 'bottom-2' : 'top-2'} ${product.comparePrice && product.comparePrice > product.price ? 'left-2' : 'right-2'} bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium`}>
           <FiStar className="text-yellow-500" />
           <span className="text-gray-900 dark:text-gray-100">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
         </div>

@@ -641,7 +641,6 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   const total = await Product.countDocuments(query);
 
   // Fetch products with shop and owner details
-  const sortString = sort ? `${sort}` : '-boost.endAt,-views,-createdAt';
   const products = await Product.find(query)
     .populate({
       path: 'shop',
@@ -651,14 +650,53 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
         select: 'name whatsapp'
       }
     })
-    .sort(sortString)
-    .skip(skip)
-    .limit(pLimit)
     .lean();
+
+  // Calculate remaining boost hours and sort products
+  const now = new Date();
+  const productsWithBoostHours = products.map(product => {
+    let remainingBoostHours = 0;
+    let isBoosted = false;
+    
+    if (product.boost?.active && product.boost?.endAt) {
+      const endTime = new Date(product.boost.endAt);
+      if (endTime > now) {
+        // Calculate remaining hours (can be fractional)
+        remainingBoostHours = (endTime - now) / (1000 * 60 * 60);
+        isBoosted = true;
+      }
+    }
+    
+    return {
+      ...product,
+      isBoosted,
+      remainingBoostHours
+    };
+  });
+
+  // Sort: boosted products first (by remaining hours desc), then non-boosted products
+  productsWithBoostHours.sort((a, b) => {
+    // If both boosted, sort by remaining hours (higher first)
+    if (a.isBoosted && b.isBoosted) {
+      return b.remainingBoostHours - a.remainingBoostHours;
+    }
+    // Boosted products always come before non-boosted
+    if (a.isBoosted && !b.isBoosted) return -1;
+    if (!a.isBoosted && b.isBoosted) return 1;
+    
+    // For non-boosted products, sort by views then createdAt
+    if (b.views !== a.views) {
+      return b.views - a.views;
+    }
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  // Apply pagination after sorting
+  const paginatedProducts = productsWithBoostHours.slice(skip, skip + pLimit);
 
   // Enrich each product with review stats
   const enriched = await Promise.all(
-    products.map(async (product) => {
+    paginatedProducts.map(async (product) => {
       const reviewStats = await Review.aggregate([
         { $match: { product: product._id, isApproved: true } },
         {
