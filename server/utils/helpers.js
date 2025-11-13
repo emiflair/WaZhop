@@ -91,6 +91,23 @@ exports.formatWhatsAppNumber = (phone) => {
   return cleaned;
 };
 
+// Normalize phone number for uniqueness check (strips all non-digits, ensures country code)
+exports.normalizePhoneNumber = (phone) => {
+  if (!phone) return null;
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, '');
+  
+  // Add country code if not present
+  if (cleaned.startsWith('0')) {
+    cleaned = '234' + cleaned.substring(1);
+  } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
+    // If exactly 10 digits without country code, assume Nigerian
+    cleaned = '234' + cleaned;
+  }
+  
+  return cleaned;
+};
+
 // Paginate results
 exports.paginate = (page = 1, limit = 20) => {
   const skip = (parseInt(page) - 1) * parseInt(limit);

@@ -6,6 +6,7 @@ const {
   login,
   getMe,
   updateProfile,
+  upgradeToSeller,
   changePassword,
   requestEmailVerification,
   requestEmailVerificationPublic,
@@ -45,6 +46,7 @@ router.post('/reset-password', resetPassword);
 // Protected routes
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.put('/upgrade-to-seller', protect, upgradeToSeller);
 router.put('/change-password', protect, changePassword);
 router.post('/request-email-verification', protect, requestEmailVerification);
 router.post('/request-sms-code', protect, requestSmsCode);

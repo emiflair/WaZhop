@@ -6,7 +6,8 @@ const {
   asyncHandler, 
   formatValidationErrors,
   generateSlug,
-  formatWhatsAppNumber 
+  formatWhatsAppNumber,
+  normalizePhoneNumber
 } = require('../utils/helpers');
 const crypto = require('crypto');
 const { sendEmail, sendSMS } = require('../utils/notify');
@@ -207,6 +208,19 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
   );
 
+  // If updating whatsapp, normalize and check uniqueness
+  if (fieldsToUpdate.whatsapp) {
+    const normalized = normalizePhoneNumber(fieldsToUpdate.whatsapp);
+    const existingPhone = await User.findOne({ 
+      whatsapp: normalized,
+      _id: { $ne: req.user.id }
+    });
+    if (existingPhone) {
+      return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });
+    }
+    fieldsToUpdate.whatsapp = normalized;
+  }
+
   const user = await User.findByIdAndUpdate(
     req.user.id,
     fieldsToUpdate,
@@ -220,6 +234,76 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     success: true,
     data: user,
     message: 'Profile updated successfully'
+  });
+});
+
+// @desc    Upgrade buyer to seller
+// @route   PUT /api/auth/upgrade-to-seller
+// @access  Private
+exports.upgradeToSeller = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).populate('shop');
+
+  if (user.role === 'seller') {
+    return res.status(400).json({ success: false, message: 'You are already a seller' });
+  }
+
+  const { whatsapp, referralCode } = req.body;
+
+  if (!whatsapp || !String(whatsapp).trim()) {
+    return res.status(400).json({ success: false, message: 'WhatsApp number is required' });
+  }
+
+  // Normalize and check uniqueness
+  const normalized = normalizePhoneNumber(String(whatsapp));
+  const existingPhone = await User.findOne({ whatsapp: normalized });
+  if (existingPhone) {
+    return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });
+  }
+
+  // Update user
+  user.role = 'seller';
+  user.whatsapp = normalized;
+  await user.save();
+
+  // Create default shop
+  const baseSlug = generateSlug(user.name);
+  const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+  const shop = await Shop.create({
+    owner: user._id,
+    shopName: `${user.name}'s Shop`,
+    slug: uniqueSlug,
+    description: 'Welcome to my shop!',
+    theme: {
+      primaryColor: '#000000',
+      accentColor: '#FFD700',
+      layout: 'grid',
+      font: 'inter'
+    }
+  });
+
+  user.shop = shop._id;
+  await user.save();
+
+  // Handle referral if provided
+  if (referralCode && referralCode.trim()) {
+    try {
+      const referrer = await User.findOne({ referralCode: referralCode.trim().toUpperCase() });
+      if (referrer && referrer._id.toString() !== user._id.toString()) {
+        user.referredBy = referrer._id;
+        await user.save();
+      }
+    } catch (err) {
+      console.warn('Failed to apply referral code during upgrade:', err);
+    }
+  }
+
+  const updatedUser = await User.findById(user._id).populate('shop');
+
+  res.status(200).json({
+    success: true,
+    user: updatedUser,
+    message: 'Successfully upgraded to seller account'
   });
 });
 
