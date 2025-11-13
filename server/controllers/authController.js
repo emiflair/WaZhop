@@ -5,7 +5,8 @@ const {
   sendTokenResponse, 
   asyncHandler, 
   formatValidationErrors,
-  generateSlug 
+  generateSlug,
+  formatWhatsAppNumber 
 } = require('../utils/helpers');
 const crypto = require('crypto');
 const { sendEmail, sendSMS } = require('../utils/notify');
@@ -39,12 +40,25 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 
+  // Normalize/validate whatsapp for sellers and ensure uniqueness
+  let normalizedWhatsApp = undefined;
+  if (role === 'seller') {
+    if (!whatsapp || !String(whatsapp).trim()) {
+      return res.status(400).json({ success: false, message: 'WhatsApp number is required for sellers' });
+    }
+    normalizedWhatsApp = formatWhatsAppNumber(String(whatsapp));
+    const existingPhone = await User.findOne({ whatsapp: normalizedWhatsApp });
+    if (existingPhone) {
+      return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });
+    }
+  }
+
   // Create user
   const user = await User.create({
     name,
     email: normalizedEmail,
     password,
-    whatsapp: role === 'seller' ? whatsapp : undefined,
+    whatsapp: role === 'seller' ? normalizedWhatsApp : undefined,
     role,
     plan: 'free'
   });

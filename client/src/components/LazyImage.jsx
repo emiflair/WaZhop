@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { optimizeImageUrl } from '../utils/image';
 
 const LazyImage = ({ 
   src, 
   alt, 
-  placeholder = '/placeholder.png',
+  placeholder = '/placeholder.svg',
   className = '',
   width,
   height,
+  sizes,
+  optimize = true,
+  transform, // { w, h, fit }
+  fetchPriority,
   onLoad,
   onError
 }) => {
@@ -31,7 +36,8 @@ const LazyImage = ({
                 !didCancel &&
                 (entry.intersectionRatio > 0 || entry.isIntersecting)
               ) {
-                setImageSrc(src);
+                const finalSrc = optimize ? optimizeImageUrl(src, transform || { w: width, h: height }) : src;
+                setImageSrc(finalSrc);
                 observer.unobserve(currentImg);
               }
             });
@@ -44,7 +50,8 @@ const LazyImage = ({
         observer.observe(currentImg);
       } else {
         // Fallback for browsers without Intersection Observer
-        setImageSrc(src);
+        const finalSrc = optimize ? optimizeImageUrl(src, transform || { w: width, h: height }) : src;
+        setImageSrc(finalSrc);
       }
     }
 
@@ -63,6 +70,7 @@ const LazyImage = ({
 
   const handleError = (e) => {
     setIsError(true);
+    setImageSrc(placeholder); // Fall back to placeholder on error
     if (onError) onError(e);
   };
 
@@ -71,13 +79,15 @@ const LazyImage = ({
       ref={imgRef}
       src={imageSrc}
       alt={alt}
-      className={`${className} ${!isLoaded ? 'opacity-50' : 'opacity-100'} transition-opacity duration-300`}
+      className={`${className} ${!isLoaded && !isError ? 'opacity-50' : 'opacity-100'} transition-opacity duration-300`}
       width={width}
       height={height}
+      sizes={sizes}
       onLoad={handleLoad}
       onError={handleError}
       loading="lazy"
-      style={isError ? { display: 'none' } : {}}
+      decoding="async"
+      fetchPriority={fetchPriority}
     />
   );
 };
@@ -89,6 +99,10 @@ LazyImage.propTypes = {
   className: PropTypes.string,
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  sizes: PropTypes.string,
+  optimize: PropTypes.bool,
+  transform: PropTypes.object,
+  fetchPriority: PropTypes.oneOf(['high', 'low', 'auto']),
   onLoad: PropTypes.func,
   onError: PropTypes.func,
 };

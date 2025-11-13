@@ -391,4 +391,12 @@ userSchema.pre('deleteMany', async function(next) {
   }
 });
 
+// Enforce unique phone for users who provided whatsapp (sparse/partial)
+// Note: existing duplicates will cause index creation to fail; handle via migration if needed.
+userSchema.index(
+  { whatsapp: 1 },
+  { unique: true, sparse: true, partialFilterExpression: { whatsapp: { $type: 'string' } } }
+);
+
 module.exports = mongoose.model('User', userSchema);
+

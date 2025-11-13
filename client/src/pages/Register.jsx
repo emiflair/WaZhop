@@ -123,8 +123,13 @@ const Register = () => {
             console.error('Failed to apply referral:', error);
           }
         }
+        // Sellers: send to pricing to choose plan during onboarding
+        navigate('/pricing?onboarding=1');
+        setLoading(false);
+        return;
       }
-      navigate(result.user.role === 'seller' ? '/dashboard' : '/');
+      // Buyers: go home
+      navigate('/');
       setLoading(false);
       return;
     }

@@ -171,6 +171,10 @@ const Home = () => {
                         src={product.images?.[0]?.url ?? product.images?.[0] ?? '/placeholder.png'}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        width={600}
+                        height={600}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                        transform={{ w: 600, h: 600, fit: 'fill' }}
                       />
                     </div>
                     <div className="space-y-3">
