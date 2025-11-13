@@ -168,7 +168,7 @@ CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
 # Admin Account
-ADMIN_EMAIL=admin@wazhop.com
+ADMIN_EMAIL=admin@wazhop.ng
 ADMIN_PASSWORD=Admin123!
 ```
 

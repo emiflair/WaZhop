@@ -20,7 +20,7 @@ const Contact = () => {
                 <FiMail className="text-blue-600" size={24} />
               </div>
               <h3 className="font-semibold mb-2">Email</h3>
-              <p className="text-gray-600">support@wazhop.com</p>
+              <p className="text-gray-600">support@wazhop.ng</p>
               <p className="text-xs text-gray-500 mt-1">We typically reply within 24 hours (Mon–Fri)</p>
             </div>
 

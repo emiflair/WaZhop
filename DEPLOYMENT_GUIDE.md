@@ -41,7 +41,7 @@ BREVO_SMS_SENDER=WaZhop
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-ADMIN_EMAIL=admin@wazhop.com
+ADMIN_EMAIL=admin@wazhop.ng
 ADMIN_PASSWORD=Admin123!
 ```
 

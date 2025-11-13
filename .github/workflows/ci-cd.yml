@@ -220,7 +220,7 @@ jobs:
 
       - name: Build
         env:
-          VITE_API_URL: https://api.wazhop.com/api
+          VITE_API_URL: https://api.wazhop.ng/api
         run: |
           cd client
           npm run build
@@ -249,7 +249,7 @@ jobs:
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     environment:
       name: staging
-      url: https://staging.wazhop.com
+      url: https://staging.wazhop.ng
     
     steps:
       - name: Checkout code
@@ -271,8 +271,8 @@ jobs:
           echo "⏳ Waiting for deployments to be ready..."
           sleep 30
           echo "🔍 Testing staging endpoints..."
-          curl -f https://staging-api.wazhop.com/api/health || echo "⚠️  Backend not ready yet"
-          curl -f https://staging.wazhop.com || echo "⚠️  Frontend not ready yet"
+          curl -f https://staging-api.wazhop.ng/api/health || echo "⚠️  Backend not ready yet"
+          curl -f https://staging.wazhop.ng || echo "⚠️  Frontend not ready yet"
 
       - name: Notify deployment
         if: always()
@@ -288,7 +288,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: production
-      url: https://wazhop.com
+      url: https://wazhop.ng
     
     steps:
       - name: Checkout code
@@ -315,14 +315,14 @@ jobs:
       - name: Run smoke tests
         run: |
           sleep 45 # Wait for deployment
-          curl -f https://api.wazhop.com/api/health || exit 1
-          curl -f https://wazhop.com || exit 1
+          curl -f https://api.wazhop.ng/api/health || exit 1
+          curl -f https://wazhop.ng || exit 1
           echo "Production health checks passed ✅"
 
       - name: Run post-deployment tests
         run: |
           # Test critical endpoints
-          curl -f https://api.wazhop.com/api/health || exit 1
+          curl -f https://api.wazhop.ng/api/health || exit 1
           echo "Critical endpoints are healthy ✅"
 
       - name: Notify deployment success

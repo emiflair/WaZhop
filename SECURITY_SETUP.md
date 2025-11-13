@@ -423,7 +423,7 @@ chmod 755 server/logs
 - Test with curl examples above
 
 **Report Security Issues:**
-- Email: security@wazhop.com
+- Email: security@wazhop.ng
 - Do NOT open public GitHub issues
 
 ---

@@ -6,4 +6,4 @@ Disallow: /demo/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://wazhop.com/sitemap.xml
+Sitemap: https://wazhop.ng/sitemap.xml

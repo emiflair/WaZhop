@@ -61,7 +61,7 @@ const Pricing = () => {
         'Inventory management system',
         'Low stock alerts',
         'Automated stock tracking',
-        'Custom subdomain (yourshop.wazhop.com)',
+        'Custom subdomain (yourshop.wazhop.ng)',
         'No WaZhop branding',
         'Advanced analytics',
         'Priority support',

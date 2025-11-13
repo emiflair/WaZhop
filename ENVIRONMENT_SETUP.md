@@ -104,7 +104,7 @@ Get from [Paystack Dashboard](https://dashboard.paystack.com) → Settings → A
 ### Admin Credentials
 
 ```env
-ADMIN_EMAIL=admin@wazhop.com
+ADMIN_EMAIL=admin@wazhop.ng
 ADMIN_PASSWORD=ChangeThisStrongPassword123!
 ```
 
@@ -141,7 +141,7 @@ npm run dev
 NODE_ENV=staging
 PORT=5000
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/wazhop-staging
-APP_BASE_URL=https://staging.wazhop.com
+APP_BASE_URL=https://staging.wazhop.ng
 DEBUG=false
 LOG_LEVEL=info
 RATE_LIMIT_MAX=200
@@ -159,7 +159,7 @@ git push origin develop
 NODE_ENV=production
 PORT=5000
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/wazhop
-APP_BASE_URL=https://wazhop.com
+APP_BASE_URL=https://wazhop.ng
 DEBUG=false
 LOG_LEVEL=warn
 RATE_LIMIT_MAX=100
@@ -283,9 +283,9 @@ node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({test:1}, proce
 APP_BASE_URL=http://localhost:5173
 
 # Production
-APP_BASE_URL=https://wazhop.com
+APP_BASE_URL=https://wazhop.ng
 
-# ❌ Wrong: https://wazhop.com/
+# ❌ Wrong: https://wazhop.ng/
 ```
 
 ### Cloudinary Upload Fails

@@ -12,11 +12,11 @@ const platformSettingsSchema = new mongoose.Schema({
   },
   contactEmail: {
     type: String,
-    default: 'admin@wazhop.com'
+    default: 'admin@wazhop.ng'
   },
   supportEmail: {
     type: String,
-    default: 'support@wazhop.com'
+    default: 'support@wazhop.ng'
   },
 
   // Payment Gateway Settings

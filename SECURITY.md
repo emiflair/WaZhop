@@ -382,7 +382,7 @@ NODE_ENV=production
 APP_BASE_URL=https://your-frontend.vercel.app
 
 # Admin Credentials
-ADMIN_EMAIL=admin@wazhop.com
+ADMIN_EMAIL=admin@wazhop.ng
 ADMIN_PASSWORD=StrongAdminPassword123!
 ```
 
@@ -522,7 +522,7 @@ Before going to production:
 ## 📞 Security Contacts
 
 **Report Security Issues:**
-- Email: security@wazhop.com
+- Email: security@wazhop.ng
 - Do NOT open public GitHub issues for security bugs
 
 **Bug Bounty:**
