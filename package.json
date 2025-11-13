@@ -6,11 +6,23 @@
     "stop": "docker compose down",
     "restart": "docker compose restart",
     "logs": "docker compose logs -f",
-    "tunnel": "ssh -R 80:localhost:3000 localhost.run"
+    "tunnel": "ssh -R 80:localhost:3000 localhost.run",
+    "prepare": "husky"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16"
+  },
+  "lint-staged": {
+    "server/**/*.js": [
+      "cd server && npm run lint:fix",
+      "cd server && npm test -- --bail --findRelatedTests --passWithNoTests"
+    ],
+    "client/**/*.{js,jsx}": [
+      "cd client && npm run lint"
+    ]
   }
 }

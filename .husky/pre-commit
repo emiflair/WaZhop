@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged
+npx lint-staged
+
+# Check for console.logs in staged files (warning only)
+if git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx)$' | xargs grep -n "console\.log" 2>/dev/null; then
+  echo "⚠️  Warning: console.log statements found. Consider removing them before committing."
+fi
+
+# Check for TODO/FIXME comments
+if git diff --cached --name-only --diff-filter=ACM | xargs grep -n "TODO\|FIXME" 2>/dev/null; then
+  echo "📝 Note: TODO/FIXME comments found in staged files."
+fi
+
+echo "✅ Pre-commit checks passed!"
+

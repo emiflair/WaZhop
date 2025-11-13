@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const {
   register,
   login,
@@ -17,31 +16,26 @@ const {
   verifySmsCode
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/auth');
+const { 
+  validateRegister, 
+  validateLogin,
+  validatePasswordReset
+} = require('../middlewares/validation');
+const { authRateLimiter, strictRateLimiter } = require('../middlewares/security');
+const {
+  setup2FA,
+  verify2FA,
+  disable2FA,
+  get2FAStatus
+} = require('../middlewares/twoFactor');
 
-// Validation rules
-const registerValidation = [
-  body('name').trim().notEmpty().withMessage('Name is required'),
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').optional().isIn(['buyer', 'seller']).withMessage('Invalid role'),
-  // whatsapp required only if role=seller
-  body('whatsapp')
-    .if(body('role').equals('seller'))
-    .notEmpty().withMessage('WhatsApp number is required for sellers')
-];
-
-const loginValidation = [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
-];
-
-// Public routes
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
+// Public routes with rate limiting
+router.post('/register', authRateLimiter, validateRegister, register);
+router.post('/login', authRateLimiter, validateLogin, login);
 router.get('/verify-email', verifyEmail);
-router.post('/request-email-verification-public', requestEmailVerificationPublic);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/request-email-verification-public', authRateLimiter, requestEmailVerificationPublic);
+router.post('/forgot-password', strictRateLimiter, forgotPassword);
+router.post('/reset-password', strictRateLimiter, validatePasswordReset, resetPassword);
 
 // Protected routes
 router.get('/me', protect, getMe);
@@ -51,5 +45,11 @@ router.put('/change-password', protect, changePassword);
 router.post('/request-email-verification', protect, requestEmailVerification);
 router.post('/request-sms-code', protect, requestSmsCode);
 router.post('/verify-sms', protect, verifySmsCode);
+
+// 2FA routes (protected)
+router.post('/2fa/setup', protect, setup2FA);
+router.post('/2fa/verify', protect, verify2FA);
+router.post('/2fa/disable', protect, disable2FA);
+router.get('/2fa/status', protect, get2FAStatus);
 
 module.exports = router;
