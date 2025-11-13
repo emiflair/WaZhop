@@ -316,10 +316,32 @@ jobs:
 
       - name: Run smoke tests
         run: |
-          sleep 45 # Wait for deployment
-          curl -f https://api.wazhop.ng/api/health || exit 1
-          curl -f https://wazhop.ng || exit 1
-          echo "Production health checks passed ✅"
+          set -e
+          ATTEMPTS=20
+          WAIT=10
+          API_URL="https://api.wazhop.ng/api/health"
+          WEB_URL="https://wazhop.ng"
+
+          echo "⏳ Waiting for production to be ready... (up to $((ATTEMPTS*WAIT/2))s)"
+          for i in $(seq 1 $ATTEMPTS); do
+            API_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL" || true)
+            WEB_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_URL" || true)
+
+            echo "Attempt $i/$ATTEMPTS -> api=$API_CODE web=$WEB_CODE"
+
+            if [ "$API_CODE" = "200" ] && [ "$WEB_CODE" = "200" ]; then
+              echo "Production health checks passed ✅"
+              exit 0
+            fi;
+
+            sleep "$WAIT"
+            if [ $WAIT -lt 60 ]; then WAIT=$((WAIT+10)); fi
+          done
+
+          echo "❌ Production still not ready after retries. Showing headers for debugging..."
+          echo "--- API HEADERS ---" && curl -i "$API_URL" || true
+          echo "--- WEB HEADERS ---" && curl -I "$WEB_URL" || true
+          exit 1
 
       - name: Run post-deployment tests
         run: |
