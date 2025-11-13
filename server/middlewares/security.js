@@ -128,29 +128,57 @@ exports.securityHeaders = (req, res, next) => {
 };
 
 // CORS configuration helper
+const buildAllowedOrigins = () => {
+  const envList = [
+    process.env.APP_BASE_URL,
+    process.env.CLIENT_URL,
+    process.env.FRONTEND_URL,
+    process.env.WEB_APP_URL,
+    process.env.NEXT_PUBLIC_SITE_URL
+  ].filter(Boolean);
+
+  // Vercel provides VERCEL_URL without protocol (e.g. myapp.vercel.app)
+  if (process.env.VERCEL_URL) {
+    envList.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  // Allow comma-separated list in CORS_ALLOWED_ORIGINS
+  if (process.env.CORS_ALLOWED_ORIGINS) {
+    envList.push(
+      ...process.env.CORS_ALLOWED_ORIGINS
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+  }
+
+  // Always include common local dev ports
+  const localList = ['http://localhost:3000', 'http://localhost:5173'];
+
+  // De-duplicate
+  return Array.from(new Set([...localList, ...envList]));
+};
+
 exports.corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      process.env.APP_BASE_URL,
-    ].filter(Boolean);
+    const allowedOrigins = buildAllowedOrigins();
 
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) {
-      return callback(null, true);
-    }
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
 
-    // Check whitelist
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    // Exact match against configured origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
 
     // Allow localhost and private IPs in development
     const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
     const privateIPPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-
     if (process.env.NODE_ENV !== 'production' && (localhostPattern.test(origin) || privateIPPattern.test(origin))) {
+      return callback(null, true);
+    }
+
+    // Optionally allow Vercel preview URLs in non-production
+    const vercelPreviewPattern = /^https?:\/\/.*\.vercel\.app$/;
+    if (process.env.NODE_ENV !== 'production' && vercelPreviewPattern.test(origin)) {
       return callback(null, true);
     }
 
@@ -161,7 +189,7 @@ exports.corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-ID']
 };
 
 // Helmet CSP configuration
@@ -173,7 +201,7 @@ exports.helmetConfig = {
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://res.cloudinary.com'],
-      connectSrc: ["'self'", process.env.APP_BASE_URL].filter(Boolean),
+      connectSrc: ["'self'", ...buildAllowedOrigins()].filter(Boolean),
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
@@ -201,41 +229,60 @@ exports.trackIP = (req, res, next) => {
   next();
 };
 
-// Suspicious activity detection
+// Suspicious activity detection (refined to reduce false positives)
 exports.detectSuspiciousActivity = (req, res, next) => {
+  // Skip detection for simple health checks
+  if (req.path.startsWith('/api/health')) return next();
+
   const suspiciousPatterns = [
-    /(\.\.|\/etc\/|\/bin\/|\/usr\/)/i, // Path traversal
-    /(union|select|insert|update|delete|drop|create|alter|exec|script)/i, // SQL injection attempts
-    /(<script|javascript:|onerror=|onload=)/i, // XSS attempts
+    // Path traversal and sensitive paths
+    /(\.\.|\/etc\/|\/bin\/|\/usr\/)/i,
+    // SQLi-style payloads (require realistic combinations to avoid false positives)
+    /\bunion\s+select\b/i,
+    /\bselect\s+.+\s+from\b/i,
+    /\binsert\s+into\b/i,
+    /\bupdate\s+\w+\s+set\b/i,
+    /\bdelete\s+from\b/i,
+    /\bdrop\s+(table|database)\b/i,
+    /\bcreate\s+(table|database)\b/i,
+    /\balter\s+table\b/i,
+    /\bexec(\s|\()\b/i,
+    /(--|;--)\s*$/i,
+    // XSS attempts
+    /<script\b/i,
+    /javascript:/i,
+    /on(error|load)\s*=/i,
   ];
 
-  const checkString = (str) => suspiciousPatterns.some((pattern) => pattern.test(str));
+  const checkString = (str) => {
+    if (typeof str !== 'string') return false;
+    return suspiciousPatterns.some((pattern) => pattern.test(str));
+  };
 
   const checkObject = (obj) => {
     if (!obj || typeof obj !== 'object') return false;
-
     for (const key in obj) {
-      if (typeof obj[key] === 'string' && checkString(obj[key])) {
-        return true;
-      }
-      if (typeof obj[key] === 'object' && checkObject(obj[key])) {
-        return true;
-      }
+      const val = obj[key];
+      if (typeof val === 'string' && checkString(val)) return true;
+      if (val && typeof val === 'object' && checkObject(val)) return true;
     }
     return false;
   };
 
   let suspicious = false;
 
-  if (req.body && checkObject(req.body)) suspicious = true;
+  // Only check body for write methods; check query/params always
+  const method = req.method.toUpperCase();
+  if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && checkObject(req.body)) suspicious = true;
   if (req.query && checkObject(req.query)) suspicious = true;
   if (req.params && checkObject(req.params)) suspicious = true;
 
   if (suspicious) {
-    console.error(`🚨 Suspicious activity detected from ${req.clientIP} - Request ID: ${req.id}`);
+    console.error(`🚨 Suspicious activity detected from ${req.clientIP} - Request ID: ${req.id} - Path: ${req.path}`);
     return res.status(403).json({
       success: false,
-      message: 'Suspicious activity detected. Request blocked.'
+      message: 'Suspicious activity detected. Request blocked.',
+      requestId: req.id
     });
   }
 
