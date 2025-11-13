@@ -54,22 +54,6 @@ const Subscription = () => {
     fetchData();
   }, []);
 
-  // Auto-open upgrade modal for onboarding sellers
-  useEffect(() => {
-    const onboarding = searchParams.get('onboarding');
-    if (onboarding === '1' && user?.role === 'seller' && (!user?.plan || user?.plan === 'free')) {
-      // Wait for plans to be defined, then select Pro plan
-      const timer = setTimeout(() => {
-        const proPlan = plans.find(p => p.id === 'pro');
-        if (proPlan) {
-          setSelectedPlan(proPlan);
-          setShowUpgradeModal(true);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams, user]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -254,6 +238,14 @@ const Subscription = () => {
       toast.error('You are already on this plan');
       return;
     }
+    
+    // For onboarding users selecting Free plan, redirect to dashboard
+    const isOnboarding = searchParams.get('onboarding') === '1';
+    if (isOnboarding && plan.id === 'free') {
+      window.location.href = '/dashboard';
+      return;
+    }
+    
     setSelectedPlan(plan);
     // If moving to Free from a higher plan, require destructive downgrade confirmation
     const isDowngradeToFree = plan.id === 'free' && getPlanLevel(user?.plan) > getPlanLevel('free');
@@ -428,11 +420,18 @@ const Subscription = () => {
     <DashboardLayout>
       <div className="max-w-6xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Subscription Management</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your plan and billing</p>
+          <h1 className="text-3xl font-bold">
+            {searchParams.get('onboarding') === '1' ? 'Choose Your Plan' : 'Subscription Management'}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            {searchParams.get('onboarding') === '1' 
+              ? 'Select a plan to start selling. You can upgrade or downgrade anytime.' 
+              : 'Manage your plan and billing'}
+          </p>
         </div>
 
-        {/* Current Plan Overview */}
+        {/* Current Plan Overview - Hide for onboarding users */}
+        {searchParams.get('onboarding') !== '1' && (
         <div className="card mb-6 border-2 border-primary-200 dark:border-primary-700 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/30 dark:to-accent-900/30">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
@@ -688,6 +687,7 @@ const Subscription = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Plan Comparison */}
         <div className="mb-6">
