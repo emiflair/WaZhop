@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { FiCheckCircle, FiPackage, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { FiCheckCircle, FiPackage, FiMail, FiMapPin } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 

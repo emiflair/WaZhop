@@ -25,7 +25,7 @@ module.exports = {
     'max-len': ['warn', { code: 120, ignoreComments: true }],
     'comma-dangle': ['error', 'only-multiline'],
     // Relax strict Airbnb rules for existing codebase
-    'radix': 'warn',
+    radix: 'warn',
     'no-empty': 'warn',
     'no-restricted-syntax': 'off',
     'no-await-in-loop': 'warn',
