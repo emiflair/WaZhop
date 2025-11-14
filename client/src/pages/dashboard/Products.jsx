@@ -34,6 +34,9 @@ const Products = () => {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [boostModal, setBoostModal] = useState({ open: false, product: null });
   const [boostForm, setBoostForm] = useState({ hours: 5, state: 'Lagos', area: '' });
+  const [quickAddMode, setQuickAddMode] = useState(false);
+  const [bulkUploadMode, setBulkUploadMode] = useState(false);
+  const [bulkProducts, setBulkProducts] = useState([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -170,6 +173,34 @@ const Products = () => {
     setUploading(true);
 
     try {
+      // Handle Quick Add mode - minimal required fields
+      if (quickAddMode) {
+        if (!formData.name || !formData.price || images.length === 0) {
+          toast.error('Quick Add requires: Name, Price, and 1 Image');
+          setUploading(false);
+          return;
+        }
+        
+        const quickProduct = {
+          name: formData.name,
+          description: formData.description || formData.name, // Default description to name
+          price: parseFloat(formData.price),
+          category: 'other',
+          tags: [],
+          inStock: true,
+          locationState: user?.shopDetails?.locationState || 'Lagos',
+          locationArea: user?.shopDetails?.locationArea || ''
+        };
+        
+        await productAPI.createProduct(quickProduct, images);
+        toast.success('Product added quickly!');
+        resetForm();
+        setShowModal(false);
+        fetchProducts();
+        setUploading(false);
+        return;
+      }
+
       const productData = {
         ...formData,
         price: parseFloat(formData.price),
@@ -217,8 +248,77 @@ const Products = () => {
     }
   };
 
+  const handleBulkImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Create a product entry for each image
+    const newBulkProducts = files.map((file, index) => ({
+      id: `bulk-${Date.now()}-${index}`,
+      name: '',
+      price: '',
+      image: file,
+      imagePreview: URL.createObjectURL(file)
+    }));
+
+    setBulkProducts([...bulkProducts, ...newBulkProducts]);
+    toast.success(`${files.length} image(s) added. Fill in details below.`);
+  };
+
+  const updateBulkProduct = (id, field, value) => {
+    setBulkProducts(bulkProducts.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const removeBulkProduct = (id) => {
+    setBulkProducts(bulkProducts.filter(p => p.id !== id));
+  };
+
+  const handleBulkSubmit = async () => {
+    setUploading(true);
+    
+    try {
+      const validProducts = bulkProducts.filter(p => p.name && p.price && p.image);
+      
+      if (validProducts.length === 0) {
+        toast.error('Please fill Name and Price for at least one product');
+        setUploading(false);
+        return;
+      }
+
+      const promises = validProducts.map(async (bulkProduct) => {
+        const productData = {
+          name: bulkProduct.name,
+          description: bulkProduct.description || bulkProduct.name,
+          price: parseFloat(bulkProduct.price),
+          category: 'other',
+          tags: [],
+          inStock: true,
+          locationState: user?.shopDetails?.locationState || 'Lagos',
+          locationArea: user?.shopDetails?.locationArea || ''
+        };
+        
+        return productAPI.createProduct(productData, [bulkProduct.image]);
+      });
+
+      await Promise.all(promises);
+      toast.success(`${validProducts.length} product(s) created successfully!`);
+      
+      setBulkProducts([]);
+      setBulkUploadMode(false);
+      setShowModal(false);
+      fetchProducts();
+    } catch (error) {
+      toast.error('Some products failed to create. Please try again.');
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setQuickAddMode(false);
+    setBulkUploadMode(false);
     setFormData({
       name: product.name,
       description: product.description,
@@ -243,6 +343,32 @@ const Products = () => {
     }
     setImages([]); // Clear new images (only show existing)
     
+    setShowModal(true);
+  };
+
+  const handleDuplicate = (product) => {
+    setEditingProduct(null); // Not editing, creating new
+    setQuickAddMode(false);
+    setBulkUploadMode(false);
+    setFormData({
+      name: `${product.name} (Copy)`,
+      description: product.description,
+      price: product.price.toString(),
+      comparePrice: product.comparePrice?.toString() || '',
+      category: product.category,
+      tags: product.tags?.join(', ') || '',
+      inStock: product.inStock,
+      sku: product.sku ? `${product.sku}-copy` : '',
+      locationState: product.locationState || 'Lagos',
+      locationArea: product.locationArea || ''
+    });
+    
+    // Don't copy images - seller needs to add new ones
+    setExistingImages([]);
+    setImagePreviews([]);
+    setImages([]);
+    
+    toast.success('Product duplicated! Add images and save.');
     setShowModal(true);
   };
 
@@ -372,6 +498,9 @@ const Products = () => {
     setImagePreviews([]);
     setExistingImages([]);
     setEditingProduct(null);
+    setQuickAddMode(false);
+    setBulkUploadMode(false);
+    setBulkProducts([]);
   };
 
   const getPlanLimits = () => {
@@ -421,7 +550,7 @@ const Products = () => {
               )}
             </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto flex-wrap">
             {products.length >= getPlanLimits() && user?.plan !== 'premium' && (
               <TouchButton
                 onClick={() => navigate('/dashboard/subscription')}
@@ -435,6 +564,33 @@ const Products = () => {
             <TouchButton
               onClick={() => {
                 resetForm();
+                setQuickAddMode(true);
+                setShowModal(true);
+              }}
+              disabled={products.length >= getPlanLimits()}
+              variant="secondary"
+              size="md"
+              className="flex-1 sm:flex-none"
+            >
+              <FiPlus className="mr-2" /> Quick Add
+            </TouchButton>
+            <TouchButton
+              onClick={() => {
+                setBulkUploadMode(true);
+                setBulkProducts([]);
+                setShowModal(true);
+              }}
+              disabled={products.length >= getPlanLimits()}
+              variant="secondary"
+              size="md"
+              className="flex-1 sm:flex-none"
+            >
+              <FiUpload className="mr-2" /> Bulk Upload
+            </TouchButton>
+            <TouchButton
+              onClick={() => {
+                resetForm();
+                setQuickAddMode(false);
                 setShowModal(true);
               }}
               disabled={products.length >= getPlanLimits()}
@@ -618,7 +774,7 @@ const Products = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2 ml-20">
+                  <div className="flex items-center justify-end gap-2 ml-20 flex-wrap">
                     <TouchButton
                       onClick={() => openBoost(product)}
                       variant="purple"
@@ -626,6 +782,14 @@ const Products = () => {
                       title="Boost"
                     >
                       Boost
+                    </TouchButton>
+                    <TouchButton
+                      onClick={() => handleDuplicate(product)}
+                      variant="secondary"
+                      size="sm"
+                      title="Duplicate"
+                    >
+                      <FiPlus size={16} />
                     </TouchButton>
                     <TouchButton
                       onClick={() => handleEdit(product)}
@@ -782,6 +946,14 @@ const Products = () => {
                             <FiEdit2 size={18} />
                           </TouchButton>
                           <TouchButton
+                            onClick={() => handleDuplicate(product)}
+                            variant="secondary"
+                            size="sm"
+                            title="Duplicate"
+                          >
+                            <FiPlus size={18} />
+                          </TouchButton>
+                          <TouchButton
                             onClick={() => setDeleteConfirm(product)}
                             variant="danger"
                             size="sm"
@@ -805,7 +977,13 @@ const Products = () => {
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
                 <h2 className="text-xl sm:text-2xl font-bold">
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  {bulkUploadMode
+                    ? 'Bulk Upload Products'
+                    : quickAddMode
+                    ? 'Quick Add Product'
+                    : editingProduct
+                    ? 'Edit Product'
+                    : 'Add New Product'}
                 </h2>
                 <TouchButton
                   onClick={() => {
@@ -819,7 +997,218 @@ const Products = () => {
                 </TouchButton>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+              {bulkUploadMode ? (
+                // Bulk Upload Mode
+                <div className="p-4 sm:p-6 space-y-4">
+                  {bulkProducts.length === 0 ? (
+                    <div>
+                      <label className="label text-sm sm:text-base">Upload Multiple Product Images</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <input
+                          type="file"
+                          id="bulk-images"
+                          multiple
+                          accept="image/*"
+                          onChange={handleBulkImageUpload}
+                          className="hidden"
+                        />
+                        <label htmlFor="bulk-images" className="cursor-pointer">
+                          <FiUpload className="mx-auto text-gray-400 mb-2" size={32} />
+                          <p className="text-sm text-gray-600 mb-1">Click to upload multiple images</p>
+                          <p className="text-xs text-gray-500">Each image will create a product. Add names and prices after upload.</p>
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600">
+                        Review and fill in product details for each image. Products with name and price will be created.
+                      </p>
+                      <div className="max-h-96 overflow-y-auto border rounded-lg">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Image</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Name *</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Price (₦) *</th>
+                              <th className="px-3 py-2 text-center text-xs font-medium">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bulkProducts.map((product) => (
+                              <tr key={product.id} className="border-t">
+                                <td className="px-3 py-2">
+                                  <img
+                                    src={product.imagePreview}
+                                    alt="Preview"
+                                    className="w-12 h-12 object-cover rounded"
+                                  />
+                                </td>
+                                <td className="px-3 py-2">
+                                  <input
+                                    type="text"
+                                    value={product.name}
+                                    onChange={(e) => updateBulkProduct(product.id, 'name', e.target.value)}
+                                    className="input text-sm w-full"
+                                    placeholder="Product name"
+                                  />
+                                </td>
+                                <td className="px-3 py-2">
+                                  <input
+                                    type="number"
+                                    value={product.price}
+                                    onChange={(e) => updateBulkProduct(product.id, 'price', e.target.value)}
+                                    className="input text-sm w-full"
+                                    placeholder="0"
+                                    min="0"
+                                    step="0.01"
+                                  />
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  <TouchButton
+                                    type="button"
+                                    onClick={() => removeBulkProduct(product.id)}
+                                    variant="danger"
+                                    size="sm"
+                                  >
+                                    <FiX size={16} />
+                                  </TouchButton>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <TouchButton
+                          type="button"
+                          onClick={() => {
+                            setShowModal(false);
+                            resetForm();
+                          }}
+                          variant="secondary"
+                          size="md"
+                          className="flex-1"
+                        >
+                          Cancel
+                        </TouchButton>
+                        <TouchButton
+                          type="button"
+                          onClick={handleBulkSubmit}
+                          disabled={uploading || bulkProducts.every(p => !p.name || !p.price)}
+                          loading={uploading}
+                          variant="primary"
+                          size="md"
+                          className="flex-1"
+                        >
+                          Create All Products
+                        </TouchButton>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : quickAddMode ? (
+                // Quick Add Mode - Minimal form
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Quickly add a product with just the essentials. Other details can be edited later.
+                  </p>
+
+                  {/* Product Name */}
+                  <div>
+                    <label className="label text-sm sm:text-base">Product Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="input text-sm sm:text-base"
+                      placeholder="e.g., Ladies Handbag"
+                    />
+                  </div>
+
+                  {/* Price */}
+                  <div>
+                    <label className="label text-sm sm:text-base">Price (₦) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="input text-sm sm:text-base"
+                      placeholder="10000"
+                    />
+                  </div>
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="label text-sm sm:text-base">Product Image *</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <input
+                        type="file"
+                        id="quick-image"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        disabled={imagePreviews.length >= 1}
+                      />
+                      <label htmlFor="quick-image" className="cursor-pointer">
+                        <FiUpload className="mx-auto text-gray-400 mb-2" size={28} />
+                        <p className="text-xs sm:text-sm text-gray-600">Click to upload image</p>
+                      </label>
+                    </div>
+
+                    {imagePreviews.length > 0 && (
+                      <div className="mt-3 relative inline-block">
+                        <img
+                          src={imagePreviews[0]}
+                          alt="Preview"
+                          className="w-24 h-24 object-cover rounded-lg"
+                        />
+                        <TouchButton
+                          type="button"
+                          onClick={() => removeImage(0)}
+                          variant="danger"
+                          size="sm"
+                          className="absolute -top-2 -right-2"
+                        >
+                          <FiX size={14} />
+                        </TouchButton>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <TouchButton
+                      type="button"
+                      onClick={() => {
+                        setShowModal(false);
+                        resetForm();
+                      }}
+                      variant="secondary"
+                      size="md"
+                      className="flex-1 text-sm sm:text-base"
+                    >
+                      Cancel
+                    </TouchButton>
+                    <TouchButton
+                      type="submit"
+                      disabled={uploading}
+                      loading={uploading}
+                      variant="primary"
+                      size="md"
+                      className="flex-1 text-sm sm:text-base"
+                    >
+                      Quick Add
+                    </TouchButton>
+                  </div>
+                </form>
+              ) : (
+                // Full form for regular add/edit
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
                 {/* Product Name */}
                 <div>
                   <label className="label text-sm sm:text-base">Product Name *</label>
@@ -1050,6 +1439,7 @@ const Products = () => {
                   </TouchButton>
                 </div>
               </form>
+              )}
             </div>
           </div>
         )}
