@@ -588,12 +588,24 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     query.category = category.toLowerCase();
   }
 
-  // Search by product name, description, tags (not by sellers)
-  if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
-      { tags: { $elemMatch: { $regex: search, $options: 'i' } } }
+  // Advanced search with weighted scoring
+  // Split search into keywords for better matching
+  const searchKeywords = search ? search.trim().toLowerCase().split(/\s+/).filter(k => k.length > 0) : [];
+  
+  if (searchKeywords.length > 0) {
+    // Build flexible search conditions
+    const searchConditions = searchKeywords.map(keyword => ({
+      $or: [
+        { name: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } },
+        { tags: { $elemMatch: { $regex: keyword, $options: 'i' } } },
+        { category: { $regex: keyword, $options: 'i' } }
+      ]
+    }));
+    
+    // Products must match at least one keyword
+    query.$or = searchConditions.length === 1 ? searchConditions[0].$or : [
+      { $and: searchConditions }
     ];
   }
 
@@ -652,7 +664,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     })
     .lean();
 
-  // Calculate remaining boost hours and sort products
+  // Calculate remaining boost hours, relevance score, and sort products
   const now = new Date();
   const productsWithBoostHours = products.map((product) => {
     let remainingBoostHours = 0;
@@ -667,14 +679,53 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
       }
     }
 
+    // Calculate relevance score for search results (0-100)
+    let relevanceScore = 0;
+    if (searchKeywords.length > 0) {
+      const nameLower = (product.name || '').toLowerCase();
+      const descLower = (product.description || '').toLowerCase();
+      const tagsLower = (product.tags || []).map(t => t.toLowerCase());
+      const categoryLower = (product.category || '').toLowerCase();
+      
+      searchKeywords.forEach(keyword => {
+        // Exact match in name: 30 points
+        if (nameLower === keyword) relevanceScore += 30;
+        // Name starts with keyword: 20 points
+        else if (nameLower.startsWith(keyword)) relevanceScore += 20;
+        // Name contains keyword: 10 points
+        else if (nameLower.includes(keyword)) relevanceScore += 10;
+        
+        // Category exact match: 15 points
+        if (categoryLower === keyword) relevanceScore += 15;
+        else if (categoryLower.includes(keyword)) relevanceScore += 8;
+        
+        // Tags match: 12 points per tag
+        if (tagsLower.some(tag => tag === keyword)) relevanceScore += 12;
+        else if (tagsLower.some(tag => tag.includes(keyword))) relevanceScore += 6;
+        
+        // Description contains: 5 points
+        if (descLower.includes(keyword)) relevanceScore += 5;
+      });
+      
+      // Bonus for matching all keywords
+      if (searchKeywords.length > 1) {
+        const allMatch = searchKeywords.every(k => 
+          nameLower.includes(k) || descLower.includes(k) || 
+          tagsLower.some(t => t.includes(k)) || categoryLower.includes(k)
+        );
+        if (allMatch) relevanceScore += 15;
+      }
+    }
+
     return {
       ...product,
       isBoosted,
-      remainingBoostHours
+      remainingBoostHours,
+      relevanceScore
     };
   });
 
-  // Sort: boosted products first (by remaining hours desc), then non-boosted products
+  // Sort: boosted products first, then by relevance score (if searching), then popularity
   productsWithBoostHours.sort((a, b) => {
     // If both boosted, sort by remaining hours (higher first)
     if (a.isBoosted && b.isBoosted) {
@@ -684,9 +735,18 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     if (a.isBoosted && !b.isBoosted) return -1;
     if (!a.isBoosted && b.isBoosted) return 1;
 
-    // For non-boosted products, sort by views then createdAt
-    if (b.views !== a.views) {
-      return b.views - a.views;
+    // For non-boosted products with search query, prioritize relevance
+    if (searchKeywords.length > 0) {
+      const scoreDiff = b.relevanceScore - a.relevanceScore;
+      if (scoreDiff !== 0) return scoreDiff;
+    }
+
+    // Fallback: sort by engagement (views + clicks) then recency
+    const aEngagement = (a.views || 0) + (a.clicks || 0) * 2; // Clicks weighted 2x
+    const bEngagement = (b.views || 0) + (b.clicks || 0) * 2;
+    
+    if (bEngagement !== aEngagement) {
+      return bEngagement - aEngagement;
     }
     return new Date(b.createdAt) - new Date(a.createdAt);
   });

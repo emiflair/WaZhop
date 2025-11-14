@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap } from 'react-icons/fi'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS } from '../utils/categories'
 import Navbar from '../components/Navbar'
@@ -24,6 +24,11 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [ngState, setNgState] = useState('')
   const [area, setArea] = useState('')
+  const [popularSearches] = useState(['Fashion', 'Electronics', 'Home Decor', 'Beauty', 'Phones'])
+  const [recentSearches, setRecentSearches] = useState(() => {
+    const saved = localStorage.getItem('recentSearches')
+    return saved ? JSON.parse(saved) : []
+  })
   const navigate = useNavigate()
 
   const fetchProducts = useCallback(async (reset = false) => {
@@ -72,7 +77,18 @@ export default function Marketplace() {
 
   const handleSearch = (e) => {
     e.preventDefault()
+    if (search.trim()) {
+      // Add to recent searches
+      const updated = [search, ...recentSearches.filter(s => s !== search)].slice(0, 5)
+      setRecentSearches(updated)
+      localStorage.setItem('recentSearches', JSON.stringify(updated))
+    }
     fetchProducts(true)
+  }
+
+  const quickSearch = (term) => {
+    setSearch(term)
+    setTimeout(() => fetchProducts(true), 100)
   }
 
   const clearFilters = () => {
@@ -137,6 +153,40 @@ export default function Marketplace() {
               <input className="input py-2 text-sm" type="text" value={area} placeholder="Area (e.g., Victoria Island)" onChange={(e)=>setArea(e.target.value)} />
               <button onClick={()=>fetchProducts(true)} className="btn btn-outline text-sm">Apply</button>
             </div>
+
+            {/* Popular & Recent Searches */}
+            {!search && (
+              <div className="mt-6 max-w-2xl mx-auto">
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {recentSearches.length > 0 && (
+                    <>
+                      <span className="text-xs text-primary-200 font-medium">Recent:</span>
+                      {recentSearches.map((term, i) => (
+                        <button
+                          key={i}
+                          onClick={() => quickSearch(term)}
+                          className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded-full transition-colors"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                      <span className="text-primary-200">•</span>
+                    </>
+                  )}
+                  <span className="text-xs text-primary-200 font-medium">Trending:</span>
+                  {popularSearches.map((term, i) => (
+                    <button
+                      key={i}
+                      onClick={() => quickSearch(term)}
+                      className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded-full transition-colors flex items-center gap-1"
+                    >
+                      <FiTrendingUp className="w-3 h-3" />
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -262,8 +312,10 @@ export default function Marketplace() {
         <div className="flex-1 py-8">
           <div className="container-custom">
             {loading && page === 1 ? (
-              <div className="flex justify-center py-20">
-                <LoadingSpinner />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                {Array(10).fill(0).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-20">
@@ -310,11 +362,18 @@ export default function Marketplace() {
 function ProductCard({ product, onOpen }) {
   const image = product.images?.[0]?.url || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
+  const [isHovered, setIsHovered] = useState(false)
+  
+  // Trending logic: high views/clicks in last 24h
+  const isTrending = product.views > 50 || product.clicks > 20
+  const isHot = product.clicks > 50 // Very popular
 
   return (
     <div
       onClick={() => onOpen()}
-      className="group bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-xl dark:hover:shadow-gray-900 transition-all duration-300 border border-gray-100 dark:border-gray-700"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border border-gray-100 dark:border-gray-700"
     >
       {/* Image */}
       <div 
@@ -326,31 +385,92 @@ function ProductCard({ product, onOpen }) {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
         />
+        
+        {/* Multiple Images Indicator */}
+        {product.images?.length > 1 && (
+          <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+            +{product.images.length - 1} photos
+          </div>
+        )}
+
+        {/* Boosted Badge */}
         {product.isBoosted && (
-          <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <FiStar className="w-3 h-3" />
+          <div className="absolute top-2 left-2 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
+            <FiZap className="w-3 h-3" />
             <span>Boosted</span>
           </div>
         )}
+
+        {/* Trending/Hot Badge */}
+        {!product.isBoosted && isHot && (
+          <div className="absolute top-2 left-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <FiZap className="w-3 h-3" />
+            <span>Hot</span>
+          </div>
+        )}
+        {!product.isBoosted && !isHot && isTrending && (
+          <div className="absolute top-2 left-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <FiTrendingUp className="w-3 h-3" />
+            <span>Trending</span>
+          </div>
+        )}
+
+        {/* Discount Badge */}
         {product.comparePrice && product.comparePrice > product.price && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <div className="absolute top-2 right-2 bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
             {Math.round((1 - product.price / product.comparePrice) * 100)}% OFF
           </div>
         )}
-        <div className={`absolute ${product.isBoosted ? 'bottom-2' : 'top-2'} ${product.comparePrice && product.comparePrice > product.price ? 'left-2' : 'right-2'} bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium`}>
-          <FiStar className="text-yellow-500" />
-          <span className="text-gray-900 dark:text-gray-100">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
+
+        {/* Rating Badge */}
+        <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium shadow-lg">
+          <FiStar className="text-yellow-500 w-3 h-3" />
+          <span className="text-gray-900 dark:text-gray-100 font-semibold">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
+          {product.reviewStats?.count > 0 && (
+            <span className="text-gray-500 dark:text-gray-400">({product.reviewStats.count})</span>
+          )}
         </div>
+
+        {/* Hover Quick Actions */}
+        <div className={`absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              toast.success('Added to favorites!')
+            }}
+            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-full hover:bg-primary-500 hover:text-white transition-colors shadow-lg"
+          >
+            <FiHeart className="w-5 h-5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpen()
+            }}
+            className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors shadow-lg font-semibold text-sm"
+          >
+            Quick View
+          </button>
+        </div>
+
+        {/* Live Activity Indicator */}
+        {product.views > 10 && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 shadow-lg">
+            <FiEye className="w-3 h-3 text-primary-500" />
+            <span className="font-medium">{product.views}</span>
+            <span className="text-gray-500">viewing</span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="p-3 sm:p-4">
-        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.5rem]">
           {product.name}
         </h3>
 
         <div className="flex items-center justify-between mb-2">
-          <div>
+          <div className="flex-1">
             <div className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400">
               ₦{product.price?.toLocaleString()}
             </div>
@@ -360,12 +480,26 @@ function ProductCard({ product, onOpen }) {
               </div>
             )}
           </div>
+          {product.inStock ? (
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
+              In Stock
+            </span>
+          ) : (
+            <span className="text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+              Out of Stock
+            </span>
+          )}
         </div>
 
         {/* Shop Info */}
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
-          <FiShoppingBag className="shrink-0" />
-          <span className="truncate">{product.shop?.shopName || 'Shop'}</span>
+          <FiShoppingBag className="shrink-0 w-3.5 h-3.5" />
+          <span className="truncate font-medium">{product.shop?.shopName || 'Shop'}</span>
+          {product.shop?.isVerified && (
+            <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          )}
         </div>
 
         {/* Make Offer Button */}
@@ -374,10 +508,26 @@ function ProductCard({ product, onOpen }) {
             e.stopPropagation();
             onOpen();
           }}
-          className="mt-3 w-full btn btn-primary text-sm py-2"
+          className="mt-3 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
         >
           Make Offer
         </button>
+      </div>
+    </div>
+  )
+}
+
+// Skeleton Loading Component
+function SkeletonCard() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 animate-pulse">
+      <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
+      <div className="p-3 sm:p-4 space-y-3">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full" />
       </div>
     </div>
   )
