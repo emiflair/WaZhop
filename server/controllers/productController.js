@@ -130,7 +130,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id)
     .populate({
       path: 'shop',
-      select: 'shopName slug owner isActive',
+      select: 'shopName slug owner isActive isVerified',
       populate: {
         path: 'owner',
         select: 'whatsapp'

@@ -50,6 +50,9 @@ export default function ProductDetail() {
             // fallback to shop from product
             setShop(prod.shop);
           }
+        } else if (prod?.shop) {
+          // No slug but shop exists, use it directly
+          setShop(prod.shop);
         }
       } catch (e) {
         setError(e.userMessage || 'Failed to load product');
