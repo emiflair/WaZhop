@@ -179,7 +179,7 @@ const Pricing = () => {
         <div className="container-custom">
           <div className="text-center mb-8 sm:mb-10 md:mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100 px-4">
-              {isBuyer ? 'Become a Seller' : 'Simple, Transparent Pricing'}
+              {isBuyer ? 'Become a Seller' : 'Become A Verified Seller In Minutes'}
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 px-4">
               {isBuyer ? 'These are seller plans. Upgrade to start selling on WaZhop.' : "Choose the plan that's right for your business"}
