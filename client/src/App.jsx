@@ -149,7 +149,8 @@ function AppRoutes() {
                 <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
                 {/* Protected Dashboard Routes */}
-                <Route path="/dashboard" element={<ProtectedRoute sellerOnly><Dashboard /></ProtectedRoute>} />
+                {/* Allow buyers to access /dashboard so the upgrade modal can show */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/dashboard/profile" element={<ProtectedRoute sellerOnly><Profile /></ProtectedRoute>} />
                 <Route path="/dashboard/shops" element={<ProtectedRoute sellerOnly><ManageShops /></ProtectedRoute>} />
                 <Route path="/dashboard/shop" element={<ProtectedRoute sellerOnly><ShopSettings /></ProtectedRoute>} />

@@ -189,6 +189,11 @@ export const userAPI = {
     couponCode 
   }),
   downgradePlan: (plan, extra = {}) => api.post('/users/downgrade', { plan, ...extra }),
+  switchToSeller: (whatsappNumber, plan) => api.post('/users/switch-to-seller', { whatsappNumber, plan }),
+  setup2FA: () => api.post('/auth/2fa/setup'),
+  verify2FA: (token) => api.post('/auth/2fa/verify', { token }),
+  disable2FA: (password, token) => api.post('/auth/2fa/disable', { password, token }),
+  get2FAStatus: () => api.get('/auth/2fa/status'),
 };
 
 // Review endpoints

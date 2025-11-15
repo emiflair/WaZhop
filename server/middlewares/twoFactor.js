@@ -8,6 +8,7 @@ const User = require('../models/User');
  */
 exports.setup2FA = async (req, res) => {
   try {
+    console.log('[2FA] setup request by user:', req.user?.id, req.user?.email);
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -40,7 +41,7 @@ exports.setup2FA = async (req, res) => {
       message: 'Scan this QR code with your authenticator app'
     });
   } catch (error) {
-    console.error('2FA setup error:', error);
+    console.error('2FA setup error:', error?.message || error);
     res.status(500).json({
       success: false,
       message: 'Error setting up 2FA'
@@ -54,7 +55,8 @@ exports.setup2FA = async (req, res) => {
 exports.verify2FA = async (req, res) => {
   try {
     const { token } = req.body;
-    const user = await User.findById(req.user.id);
+    // Need temp secret for verification; field is select:false by default
+    const user = await User.findById(req.user.id).select('+twoFactorTempSecret');
 
     if (!user || !user.twoFactorTempSecret) {
       return res.status(400).json({
@@ -114,7 +116,7 @@ exports.verify2FA = async (req, res) => {
 exports.disable2FA = async (req, res) => {
   try {
     const { password, token } = req.body;
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await User.findById(req.user.id).select('+password +twoFactorSecret');
 
     if (!user) {
       return res.status(404).json({

@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: wazhop
-    # ports:
-    #   - "27017:27017"  # Commented out to avoid conflict with local MongoDB
+    ports:
+      - "27017:27017"  # Expose MongoDB to host for local dev
     volumes:
       - mongodb_data:/data/db
     networks:

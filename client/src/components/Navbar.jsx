@@ -117,9 +117,16 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                {/* Seller/Admin: show Dashboard */}
                 {(user?.role === 'seller' || user?.role === 'admin') && (
                   <Link to="/dashboard" className="btn btn-primary">
                     Dashboard
+                  </Link>
+                )}
+                {/* Buyer: show Be a Seller */}
+                {user?.role === 'buyer' && (
+                  <Link to="/dashboard?upgrade=seller" className="btn btn-primary">
+                    Be a Seller
                   </Link>
                 )}
                 <button 
@@ -243,6 +250,15 @@ const Navbar = () => {
                         className="block min-h-[52px] px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-lg font-medium transition"
                       >
                         Dashboard
+                      </Link>
+                    )}
+                    {user?.role === 'buyer' && (
+                      <Link
+                        to="/dashboard?upgrade=seller"
+                        onClick={() => setIsOpen(false)}
+                        className="block min-h-[52px] px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-lg font-medium transition"
+                      >
+                        Be a Seller
                       </Link>
                     )}
                     <button

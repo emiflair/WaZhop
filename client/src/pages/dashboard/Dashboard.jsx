@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { shopAPI, productAPI } from '../../utils/api';
 import { FiShoppingBag, FiEye, FiMousePointer, FiExternalLink } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
 import DashboardLayout from '../../components/DashboardLayout';
 import InstallPWA from '../../components/InstallPWA';
+import BuyerToSellerUpgrade from '../../components/BuyerToSellerUpgrade';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [shop, setShop] = useState(null);
   const [shops, setShops] = useState([]);
   const [showInstallPrompt, setShowInstallPrompt] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [stats, setStats] = useState({
     totalProducts: 0,
     activeProducts: 0,
@@ -28,6 +31,13 @@ const Dashboard = () => {
     if (dismissed) {
       setShowInstallPrompt(false);
     }
+    // Open upgrade modal when requested via query param
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get('upgrade') === 'seller') {
+        setShowUpgradeModal(true);
+      }
+    } catch {}
   }, []);
 
   const fetchDashboardData = async () => {
@@ -116,6 +126,26 @@ const Dashboard = () => {
         {/* PWA Install Prompt */}
         {showInstallPrompt && (
           <InstallPWA onClose={handleDismissInstallPrompt} />
+        )}
+
+        {/* Buyer to Seller Upgrade Prompt */}
+        {user?.role === 'buyer' && (
+          <div className="card bg-gradient-to-r from-green-600 to-emerald-700 text-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-2">Start Selling on WaZhop!</h3>
+                <p className="text-green-100 text-sm">
+                  Upgrade to a seller account and start your own shop today. It only takes a minute!
+                </p>
+              </div>
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="btn bg-white text-green-700 hover:bg-green-50 active:bg-green-100 w-full sm:w-auto touch-manipulation"
+              >
+                Become a Seller
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Shop Link - Mobile Optimized */}
@@ -297,6 +327,11 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Buyer to Seller Upgrade Modal */}
+      {showUpgradeModal && (
+        <BuyerToSellerUpgrade onClose={() => setShowUpgradeModal(false)} />
+      )}
     </DashboardLayout>
   );
 };

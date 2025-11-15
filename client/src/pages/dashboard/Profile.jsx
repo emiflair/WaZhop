@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../utils/api';
+import { authAPI, userAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaWhatsapp, FaLock, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaWhatsapp, FaLock, FaExclamationTriangle, FaCheckCircle, FaShieldAlt, FaQrcode, FaKey } from 'react-icons/fa';
 import { TouchButton } from '../../components/mobile';
 
 const Profile = () => {
@@ -33,6 +33,16 @@ const Profile = () => {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [deactivateConfirm, setDeactivateConfirm] = useState('');
 
+  // 2FA state
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [qrCode, setQrCode] = useState('');
+  const [secret, setSecret] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableToken, setDisableToken] = useState('');
+
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -42,6 +52,19 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  // Fetch 2FA status on mount
+  useEffect(() => {
+    const fetch2FAStatus = async () => {
+      try {
+        const response = await userAPI.get2FAStatus();
+        setTwoFAEnabled(response.data.enabled);
+      } catch (error) {
+        console.error('Error fetching 2FA status:', error);
+      }
+    };
+    fetch2FAStatus();
+  }, []);
 
   // Validate password strength
   useEffect(() => {
@@ -161,6 +184,78 @@ const Profile = () => {
     }
   };
 
+  // 2FA Functions
+  const handleSetup2FA = async () => {
+    try {
+      setLoading(true);
+      // API interceptor returns the { qrCode, secret, manualEntry } object directly
+      const data = await userAPI.setup2FA();
+      setQrCode(data.qrCode);
+      setSecret(data.secret);
+      setShow2FASetup(true);
+      toast.success('Scan the QR code with Google Authenticator');
+    } catch (error) {
+      console.error('Error setting up 2FA:', error);
+      toast.error(error.response?.data?.message || 'Failed to setup 2FA');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+    
+    if (!verificationToken || verificationToken.length !== 6) {
+      toast.error('Please enter a valid 6-digit code');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await userAPI.verify2FA(verificationToken);
+      setTwoFAEnabled(true);
+      setShow2FASetup(false);
+      setVerificationToken('');
+      setQrCode('');
+      setSecret('');
+      toast.success('Two-factor authentication enabled successfully');
+    } catch (error) {
+      console.error('Error verifying 2FA:', error);
+      toast.error(error.response?.data?.message || 'Invalid verification code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisable2FA = async (e) => {
+    e.preventDefault();
+
+    if (!disablePassword) {
+      toast.error('Please enter your password');
+      return;
+    }
+
+    if (!disableToken || disableToken.length !== 6) {
+      toast.error('Please enter a valid 6-digit code');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await userAPI.disable2FA(disablePassword, disableToken);
+      setTwoFAEnabled(false);
+      setShow2FADisable(false);
+      setDisablePassword('');
+      setDisableToken('');
+      toast.success('Two-factor authentication disabled successfully');
+    } catch (error) {
+      console.error('Error disabling 2FA:', error);
+      toast.error(error.response?.data?.message || 'Failed to disable 2FA');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getPasswordStrengthColor = () => {
     switch (passwordStrength) {
       case 'weak':
@@ -185,6 +280,92 @@ const Profile = () => {
       default:
         return 'w-0';
     }
+  };
+
+  // Segmented OTP input for 2FA verification
+  const OTPInputs = ({ value, onChange, disabled, onComplete }) => {
+    const inputsRef = useRef([]);
+    const digits = Array.from({ length: 6 }, (_, i) => (value && value[i]) || '');
+
+    const focusInput = (idx) => {
+      if (idx >= 0 && idx < 6) {
+        inputsRef.current[idx]?.focus();
+        inputsRef.current[idx]?.select?.();
+      }
+    };
+
+    const handleChange = (i, e) => {
+      const v = e.target.value.replace(/\D/g, '').slice(0, 1);
+      const next = [...digits];
+      next[i] = v;
+      const newVal = next.join('');
+      onChange(newVal);
+      if (v && i < 5) focusInput(i + 1);
+      if (newVal.length === 6 && typeof onComplete === 'function') onComplete(newVal);
+    };
+
+    const handleKeyDown = (i, e) => {
+      if (e.key === 'Backspace') {
+        if (digits[i]) {
+          // Clear current digit
+          const next = [...digits];
+          next[i] = '';
+          onChange(next.join(''));
+          return;
+        }
+        if (i > 0) {
+          focusInput(i - 1);
+          const next = [...digits];
+          next[i - 1] = '';
+          onChange(next.join(''));
+        }
+      } else if (e.key === 'ArrowLeft') {
+        focusInput(i - 1);
+      } else if (e.key === 'ArrowRight') {
+        focusInput(i + 1);
+      }
+    };
+
+    const handlePaste = (i, e) => {
+      const clip = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      const nums = String(clip).replace(/\D/g, '').slice(0, 6);
+      if (!nums) return;
+      e.preventDefault();
+      const next = [...digits];
+      let idx = i;
+      for (let c = 0; c < nums.length && idx < 6; c++, idx++) {
+        next[idx] = nums[c];
+      }
+      const newVal = next.join('');
+      onChange(newVal);
+      if (idx < 6) focusInput(idx);
+      else inputsRef.current[5]?.blur?.();
+      if (newVal.length === 6 && typeof onComplete === 'function') onComplete(newVal);
+    };
+
+    return (
+      <div className="grid grid-cols-6 gap-2 w-full max-w-[320px] md:max-w-none">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <input
+            key={i}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={1}
+            value={digits[i]}
+            onChange={(e) => handleChange(i, e)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            onPaste={(e) => handlePaste(i, e)}
+            ref={(el) => (inputsRef.current[i] = el)}
+            autoComplete="one-time-code"
+            className="w-full h-11 md:h-12 text-lg md:text-xl lg:text-2xl font-mono text-center border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            disabled={disabled}
+            autoFocus={i === 0}
+            aria-label={`Digit ${i + 1}`}
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -422,6 +603,64 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Two-Factor Authentication */}
+        <div className="card mb-6">
+          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+            <FaShieldAlt className="text-primary-600" />
+            Two-Factor Authentication
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Add an extra layer of security to your account with Google Authenticator
+          </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <FaShieldAlt className="text-blue-600 text-xl mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-1">What is 2FA?</h3>
+                <p className="text-sm text-blue-800">
+                  Two-factor authentication requires both your password and a time-based code from Google Authenticator app to sign in. This significantly increases your account security.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+            <div>
+              <p className="font-semibold text-gray-900">Status</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {twoFAEnabled ? (
+                  <span className="inline-flex items-center gap-1 text-primary-600">
+                    <FaCheckCircle /> Enabled
+                  </span>
+                ) : (
+                  <span className="text-gray-500">Disabled</span>
+                )}
+              </p>
+            </div>
+            {!twoFAEnabled ? (
+              <TouchButton
+                onClick={handleSetup2FA}
+                variant="primary"
+                size="md"
+                disabled={loading}
+                loading={loading}
+              >
+                Enable 2FA
+              </TouchButton>
+            ) : (
+              <TouchButton
+                onClick={() => setShow2FADisable(true)}
+                variant="secondary"
+                size="md"
+                disabled={loading}
+              >
+                Disable 2FA
+              </TouchButton>
+            )}
+          </div>
+        </div>
+
         {/* Danger Zone */}
         <div className="card border-2 border-red-200 bg-red-50">
           <h2 className="text-xl font-semibold mb-1 flex items-center gap-2 text-red-700">
@@ -446,6 +685,198 @@ const Profile = () => {
             </TouchButton>
           </div>
         </div>
+
+        {/* 2FA Setup Modal */}
+        {show2FASetup && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full md:p-2 max-h-[90vh] overflow-hidden border border-gray-200">
+              <div className="flex items-center gap-3 mb-2 px-6 pt-6">
+                <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                  <FaQrcode className="text-primary-600 text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Enable 2FA</h3>
+                  <p className="text-sm text-gray-500">Scan QR code to continue</p>
+                </div>
+              </div>
+
+              <div className="px-6 pb-6 overflow-y-auto overflow-x-hidden">
+                <p className="text-gray-700 mb-4 font-semibold">Step 1: Install Google Authenticator</p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Download and install Google Authenticator on your phone:
+                </p>
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <a
+                    href="https://apps.apple.com/app/google-authenticator/id388497605"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-white bg-black px-3 py-1.5 rounded-lg hover:opacity-90"
+                  >
+                    iOS App Store
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700"
+                  >
+                    Google Play Store
+                  </a>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6 items-start">
+                  <div>
+                    <p className="text-gray-700 mb-2 font-semibold">Step 2: Scan QR Code</p>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Open Google Authenticator and scan this QR code:
+                    </p>
+                    {qrCode && (
+                      <div className="bg-white p-4 rounded-xl border border-gray-200 mb-3 flex justify-center shadow-sm">
+                        <img src={qrCode} alt="2FA QR Code" className="w-56 h-56 md:w-64 md:h-64" />
+                      </div>
+                    )}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2">
+                      <p className="text-xs text-gray-600 mb-2">Can't scan? Enter this code manually:</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm font-mono text-gray-900 break-all flex-1">{secret}</code>
+                        <button
+                          type="button"
+                          onClick={() => { navigator.clipboard.writeText(secret || ''); toast.success('Secret copied'); }}
+                          className="px-3 py-1.5 text-xs rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleVerify2FA} className="md:pt-2">
+                    <p className="text-gray-700 mb-2 font-semibold">Step 3: Verify</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <FaKey className="inline mr-2 text-gray-400" /> Enter the 6-digit code from Google Authenticator:
+                    </label>
+
+                    <OTPInputs value={verificationToken} onChange={(v) => setVerificationToken(v.replace(/\D/g, '').slice(0, 6))} disabled={loading} />
+                    <p className="text-xs text-gray-500 mt-2">The code changes every 30 seconds</p>
+
+                    <div className="flex gap-3 mt-6">
+                      <TouchButton
+                        type="button"
+                        onClick={() => {
+                          setShow2FASetup(false);
+                          setVerificationToken('');
+                          setQrCode('');
+                          setSecret('');
+                        }}
+                        variant="secondary"
+                        size="md"
+                        className="flex-1"
+                        disabled={loading}
+                      >
+                        Cancel
+                      </TouchButton>
+                      <TouchButton
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        className="flex-1"
+                        disabled={loading || verificationToken.length !== 6}
+                        loading={loading}
+                      >
+                        Verify & Enable
+                      </TouchButton>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2FA Disable Modal */}
+        {show2FADisable && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <FaShieldAlt className="text-red-600 text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Disable 2FA</h3>
+                  <p className="text-sm text-gray-500">Verify your identity</p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Warning:</strong> Disabling 2FA will make your account less secure.
+                  </p>
+                </div>
+
+                <form onSubmit={handleDisable2FA} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaLock className="inline mr-2 text-gray-400" />
+                      Enter your password:
+                    </label>
+                    <input
+                      type="password"
+                      value={disablePassword}
+                      onChange={(e) => setDisablePassword(e.target.value)}
+                      className="input"
+                      placeholder="Your password"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaKey className="inline mr-2 text-gray-400" />
+                      Enter the 6-digit code from Google Authenticator:
+                    </label>
+                    <input
+                      type="text"
+                      value={disableToken}
+                      onChange={(e) => setDisableToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="input text-center text-2xl tracking-widest font-mono"
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <TouchButton
+                      type="button"
+                      onClick={() => {
+                        setShow2FADisable(false);
+                        setDisablePassword('');
+                        setDisableToken('');
+                      }}
+                      variant="secondary"
+                      size="md"
+                      className="flex-1"
+                      disabled={loading}
+                    >
+                      Cancel
+                    </TouchButton>
+                    <TouchButton
+                      type="submit"
+                      variant="danger"
+                      size="md"
+                      className="flex-1"
+                      disabled={loading || !disablePassword || disableToken.length !== 6}
+                      loading={loading}
+                    >
+                      Disable 2FA
+                    </TouchButton>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Deactivation Modal */}
         {showDeactivateModal && (

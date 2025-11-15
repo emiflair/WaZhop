@@ -475,3 +475,73 @@ exports.updateUserSubscription = asyncHandler(async (req, res) => {
     }
   });
 });
+
+// @desc    Switch buyer to seller
+// @route   POST /api/users/switch-to-seller
+// @access  Private (Buyer only)
+exports.switchToSeller = asyncHandler(async (req, res) => {
+  const { whatsappNumber, plan } = req.body;
+
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Check if already a seller
+  if (user.role === 'seller') {
+    return res.status(400).json({
+      success: false,
+      message: 'You are already a seller'
+    });
+  }
+
+  // Validate WhatsApp number
+  if (!whatsappNumber || !/^\+?[1-9]\d{1,14}$/.test(whatsappNumber)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid WhatsApp number with country code'
+    });
+  }
+
+  // Validate plan
+  if (!['free', 'pro', 'premium'].includes(plan)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid plan. Choose "free", "pro", or "premium"'
+    });
+  }
+
+  // Update user to seller
+  user.role = 'seller';
+  user.whatsapp = whatsappNumber;
+  user.plan = plan;
+  
+  // Set plan expiry for paid plans
+  if (plan === 'pro' || plan === 'premium') {
+    user.planExpiry = calculatePlanExpiry(1); // 1 month
+    user.subscriptionStatus = 'active';
+    user.lastBillingDate = new Date();
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      whatsapp: user.whatsapp,
+      plan: user.plan,
+      planExpiry: user.planExpiry,
+      emailVerified: user.emailVerified,
+      phoneVerified: user.phoneVerified
+    },
+    message: `Successfully switched to seller with ${plan} plan!`
+  });
+});
