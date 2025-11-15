@@ -6,7 +6,8 @@ const {
   downgradePlan,
   getSubscriptionInfo,
   getAllUsers,
-  updateUserSubscription
+  updateUserSubscription,
+  switchToSeller
 } = require('../controllers/userController');
 const { protect, isAdmin } = require('../middlewares/auth');
 
@@ -14,6 +15,7 @@ const { protect, isAdmin } = require('../middlewares/auth');
 router.get('/subscription', protect, getSubscriptionInfo);
 router.post('/upgrade', protect, upgradePlan);
 router.post('/downgrade', protect, downgradePlan);
+router.post('/switch-to-seller', protect, switchToSeller);
 
 // Admin routes
 router.get('/admin/all', getAllUsers);

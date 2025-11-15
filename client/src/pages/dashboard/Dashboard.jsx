@@ -6,12 +6,14 @@ import { FiShoppingBag, FiEye, FiMousePointer, FiExternalLink } from 'react-icon
 import { FaStore } from 'react-icons/fa';
 import DashboardLayout from '../../components/DashboardLayout';
 import InstallPWA from '../../components/InstallPWA';
+import BuyerToSellerUpgrade from '../../components/BuyerToSellerUpgrade';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [shop, setShop] = useState(null);
   const [shops, setShops] = useState([]);
   const [showInstallPrompt, setShowInstallPrompt] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [stats, setStats] = useState({
     totalProducts: 0,
     activeProducts: 0,
@@ -116,6 +118,31 @@ const Dashboard = () => {
         {/* PWA Install Prompt */}
         {showInstallPrompt && (
           <InstallPWA onClose={handleDismissInstallPrompt} />
+        )}
+
+        {/* Buyer to Seller Upgrade Button */}
+        {user?.role === 'buyer' && (
+          <div className="card bg-gradient-to-r from-green-600 to-emerald-700 text-white">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">Start Selling on WaZhop! 🚀</h3>
+                <p className="text-green-100 text-sm sm:text-base">
+                  Create your own shop and start selling products to customers across Nigeria
+                </p>
+              </div>
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="btn bg-white text-green-700 hover:bg-green-50 active:bg-green-100 w-full sm:w-auto text-sm sm:text-base font-semibold touch-manipulation"
+              >
+                Become a Seller
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Buyer to Seller Upgrade Modal */}
+        {showUpgradeModal && (
+          <BuyerToSellerUpgrade onClose={() => setShowUpgradeModal(false)} />
         )}
 
         {/* Shop Link - Mobile Optimized */}

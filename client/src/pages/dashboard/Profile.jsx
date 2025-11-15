@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../utils/api';
+import { authAPI, userAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaWhatsapp, FaLock, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaWhatsapp, FaLock, FaExclamationTriangle, FaCheckCircle, FaShieldAlt, FaQrcode, FaCopy } from 'react-icons/fa';
 import { TouchButton } from '../../components/mobile';
 
 const Profile = () => {
@@ -33,6 +33,17 @@ const Profile = () => {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [deactivateConfirm, setDeactivateConfirm] = useState('');
 
+  // 2FA state
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
+  const [secret, setSecret] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -41,7 +52,18 @@ const Profile = () => {
         whatsappNumber: user.whatsappNumber || ''
       });
     }
+    // Check 2FA status
+    check2FAStatus();
   }, [user]);
+
+  const check2FAStatus = async () => {
+    try {
+      const response = await userAPI.get2FAStatus();
+      setTwoFactorEnabled(response.enabled || false);
+    } catch (error) {
+      console.error('Error checking 2FA status:', error);
+    }
+  };
 
   // Validate password strength
   useEffect(() => {
@@ -131,6 +153,67 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const setup2FA = async () => {
+    try {
+      setLoading(true);
+      const response = await userAPI.setup2FA();
+      setQrCode(response.qrCode);
+      setSecret(response.secret);
+      setShow2FASetup(true);
+      toast.success('Scan the QR code with your authenticator app');
+    } catch (error) {
+      console.error('Error setting up 2FA:', error);
+      toast.error(error.response?.data?.message || 'Failed to setup 2FA');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify2FA = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const response = await userAPI.verify2FA(verificationCode);
+      setBackupCodes(response.backupCodes || []);
+      setTwoFactorEnabled(true);
+      toast.success('2FA enabled successfully! Save your backup codes.');
+      setVerificationCode('');
+    } catch (error) {
+      console.error('Error verifying 2FA:', error);
+      toast.error(error.response?.data?.message || 'Invalid verification code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const disable2FA = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await userAPI.disable2FA(disablePassword, disableCode);
+      setTwoFactorEnabled(false);
+      setShow2FADisable(false);
+      setDisablePassword('');
+      setDisableCode('');
+      toast.success('2FA disabled successfully');
+    } catch (error) {
+      console.error('Error disabling 2FA:', error);
+      toast.error(error.response?.data?.message || 'Failed to disable 2FA');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copySecret = () => {
+    navigator.clipboard.writeText(secret);
+    toast.success('Secret key copied!');
+  };
+
+  const copyBackupCode = (code) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Backup code copied!');
   };
 
   const handleDeactivateAccount = async () => {
@@ -419,6 +502,230 @@ const Profile = () => {
                 </TouchButton>
               </div>
             </form>
+          )}
+        </div>
+
+        {/* Two-Factor Authentication (Google Authenticator) */}
+        <div className="card mb-6">
+          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+            <FaShieldAlt className="text-primary-600" />
+            Two-Factor Authentication
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Add an extra layer of security using Google Authenticator
+          </p>
+
+          {!twoFactorEnabled ? (
+            <>
+              {!show2FASetup ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-blue-800 mb-3">
+                    Protect your account with Two-Factor Authentication using Google Authenticator or any compatible app.
+                  </p>
+                  <TouchButton
+                    onClick={setup2FA}
+                    variant="primary"
+                    size="md"
+                    disabled={loading}
+                  >
+                    <FaQrcode className="inline mr-2" />
+                    Enable 2FA
+                  </TouchButton>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {!backupCodes.length ? (
+                    <>
+                      <div className="bg-white border rounded-lg p-4">
+                        <h3 className="font-semibold mb-3">Step 1: Scan QR Code</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Scan this QR code with your Google Authenticator app
+                        </p>
+                        {qrCode && (
+                          <div className="flex justify-center mb-4">
+                            <img src={qrCode} alt="2FA QR Code" className="w-64 h-64 border rounded-lg" />
+                          </div>
+                        )}
+                        
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 mb-2">Or enter this secret key manually:</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <code className="text-sm font-mono break-all">{secret}</code>
+                            <button
+                              onClick={copySecret}
+                              className="btn-secondary p-2"
+                              title="Copy secret"
+                            >
+                              <FaCopy />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <form onSubmit={verify2FA} className="bg-white border rounded-lg p-4">
+                        <h3 className="font-semibold mb-3">Step 2: Verify Code</h3>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Enter the 6-digit code from your app
+                        </label>
+                        <input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          className="input mb-3"
+                          placeholder="000000"
+                          maxLength={6}
+                          required
+                        />
+                        <div className="flex gap-3">
+                          <TouchButton
+                            type="button"
+                            onClick={() => {
+                              setShow2FASetup(false);
+                              setQrCode(null);
+                              setSecret('');
+                              setVerificationCode('');
+                            }}
+                            variant="secondary"
+                            size="md"
+                          >
+                            Cancel
+                          </TouchButton>
+                          <TouchButton
+                            type="submit"
+                            variant="primary"
+                            size="md"
+                            disabled={loading || verificationCode.length !== 6}
+                            loading={loading}
+                          >
+                            Verify & Enable
+                          </TouchButton>
+                        </div>
+                      </form>
+                    </>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                        <FaExclamationTriangle />
+                        Save Your Backup Codes
+                      </h3>
+                      <p className="text-sm text-yellow-800 mb-4">
+                        Store these codes in a safe place. You can use them to access your account if you lose your device.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        {backupCodes.map((code, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-2 rounded flex items-center justify-between"
+                          >
+                            <code className="text-sm font-mono">{code}</code>
+                            <button
+                              onClick={() => copyBackupCode(code)}
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              <FaCopy size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <TouchButton
+                        onClick={() => {
+                          setShow2FASetup(false);
+                          setBackupCodes([]);
+                          setQrCode(null);
+                          setSecret('');
+                        }}
+                        variant="primary"
+                        size="md"
+                      >
+                        I've Saved My Backup Codes
+                      </TouchButton>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FaCheckCircle className="text-green-600 text-2xl" />
+                  <div>
+                    <p className="font-semibold text-green-900">2FA is Enabled</p>
+                    <p className="text-sm text-green-700">Your account is protected with Google Authenticator</p>
+                  </div>
+                </div>
+              </div>
+
+              {!show2FADisable ? (
+                <TouchButton
+                  onClick={() => setShow2FADisable(true)}
+                  variant="danger"
+                  size="md"
+                >
+                  Disable 2FA
+                </TouchButton>
+              ) : (
+                <form onSubmit={disable2FA} className="bg-white border rounded-lg p-4 space-y-4">
+                  <div className="bg-red-50 p-3 rounded-lg">
+                    <p className="text-sm text-red-800">
+                      To disable 2FA, enter your password and current 2FA code
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={disablePassword}
+                      onChange={(e) => setDisablePassword(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      2FA Code *
+                    </label>
+                    <input
+                      type="text"
+                      value={disableCode}
+                      onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="input"
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <TouchButton
+                      type="button"
+                      onClick={() => {
+                        setShow2FADisable(false);
+                        setDisablePassword('');
+                        setDisableCode('');
+                      }}
+                      variant="secondary"
+                      size="md"
+                    >
+                      Cancel
+                    </TouchButton>
+                    <TouchButton
+                      type="submit"
+                      variant="danger"
+                      size="md"
+                      disabled={loading || disableCode.length !== 6}
+                      loading={loading}
+                    >
+                      Disable 2FA
+                    </TouchButton>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </div>
 
