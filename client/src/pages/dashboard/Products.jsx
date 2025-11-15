@@ -83,7 +83,10 @@ const Products = () => {
       setProducts(productsData);
       setFilteredProducts(productsData);
     } catch (error) {
-      toast.error('Failed to load products');
+      // Don't show error toast if shop doesn't exist (buyer account)
+      if (error.response?.status !== 404) {
+        toast.error('Failed to load products');
+      }
       console.error(error);
     } finally {
       setLoading(false);

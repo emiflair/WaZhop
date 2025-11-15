@@ -54,9 +54,12 @@ const Reviews = () => {
         setHasNext(Array.isArray(data) && data.length === limit);
       }
     } catch (err) {
-      const message = err.userMessage || err.message || 'Failed to load reviews';
-      toast.error(message);
       console.error(err);
+      // Don't show error toast if shop doesn't exist (buyer account)
+      if (err.response?.status !== 404) {
+        const message = err.userMessage || err.message || 'Failed to load reviews';
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

@@ -66,7 +66,10 @@ const Subscription = () => {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load subscription data');
+      // Don't show error toast if shop doesn't exist (buyer account)
+      if (error.response?.status !== 404) {
+        toast.error('Failed to load subscription data');
+      }
     } finally {
       setLoading(false);
     }

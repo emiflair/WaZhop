@@ -138,7 +138,10 @@ const ShopSettings = () => {
 
     } catch (error) {
       console.error('Error fetching shop:', error);
-      toast.error('Failed to load shop settings');
+      // Don't show error toast if shop doesn't exist (buyer account)
+      if (error.response?.status !== 404) {
+        toast.error('Failed to load shop settings');
+      }
     } finally {
       setLoading(false);
     }

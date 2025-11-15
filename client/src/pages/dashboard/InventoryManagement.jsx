@@ -22,7 +22,10 @@ const InventoryManagement = () => {
       setProducts(productsData || []);
     } catch (error) {
       console.error('Error fetching inventory:', error);
-      toast.error('Failed to load inventory');
+      // Don't show error toast if shop doesn't exist (buyer account)
+      if (error.response?.status !== 404) {
+        toast.error('Failed to load inventory');
+      }
     } finally {
       setLoading(false);
     }
