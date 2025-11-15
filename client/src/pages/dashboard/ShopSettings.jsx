@@ -866,6 +866,7 @@ const ShopSettings = () => {
                   <div className="text-center">
                     <FaLock className="w-12 h-12 text-purple-500 mx-auto mb-3" />
                     <p className="text-lg font-bold text-purple-700 dark:text-purple-400 mb-2">Premium Feature</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Control customer view mode (light/dark/auto)</p>
                     <button
                       onClick={() => navigate('/dashboard/subscription')}
                       className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all"
@@ -1282,6 +1283,10 @@ const ShopSettings = () => {
                   )}
                   <p className="text-sm text-gray-500 mt-2">
                     Only lowercase letters, numbers, and hyphens allowed
+                  </p>
+                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 flex items-start gap-1">
+                    <span>⚠️</span>
+                    <span>Subdomain requires DNS configuration on the server to work. Contact support if the link doesn't resolve.</span>
                   </p>
                 </div>
               </div>
