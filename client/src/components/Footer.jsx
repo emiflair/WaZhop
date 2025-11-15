@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiTwitter, FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
+import { FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
 import logo from '../assets/brand/wazhop-icon.svg';
 
 const Footer = () => {
@@ -50,16 +50,13 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Connect</h3>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <FiTwitter size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
+              <a href="https://www.facebook.com/share/1CD2GNxUEw/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
                 <FiFacebook size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
+              <a href="https://www.instagram.com/wazhop.ng?igsh=Z2Nqd2w3eTF0bHdo&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
                 <FiInstagram size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
+              <a href="mailto:support@wazhop.ng" className="text-gray-400 hover:text-white transition">
                 <FiMail size={20} />
               </a>
             </div>
