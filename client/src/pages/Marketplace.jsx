@@ -118,13 +118,13 @@ export default function Marketplace() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
 
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700 text-white py-12 sm:py-16 md:py-20">
+        {/* Hero Section (compact on mobile) */}
+        <div className="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700 text-white py-6 sm:py-10 md:py-14">
           <div className="container-custom text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-3 sm:mb-4">
               Discover <span className="text-primary-200">Amazing</span> Products
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-primary-100 max-w-3xl mx-auto mb-8">
+            <p className="text-sm sm:text-lg md:text-xl text-primary-100 max-w-3xl mx-auto mb-6 sm:mb-8">
               Shop from thousands of verified sellers. Best deals. Trusted reviews. Instant WhatsApp checkout.
             </p>
 
@@ -157,7 +157,7 @@ export default function Marketplace() {
               </button>
             </form>
             {/* Location refinement */}
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto">
+            <div className="mt-2 sm:mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto">
               <select value={ngState} onChange={(e)=>setNgState(e.target.value)} className="input py-2 text-sm">
                 <option value="">All States</option>
                 {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
@@ -168,9 +168,9 @@ export default function Marketplace() {
               <button onClick={()=>fetchProducts(true)} className="btn btn-outline text-sm">Apply</button>
             </div>
 
-            {/* Popular & Recent Searches */}
+            {/* Popular & Recent Searches (hidden on mobile for compact hero) */}
             {!search && (
-              <div className="mt-6 max-w-2xl mx-auto">
+              <div className="hidden sm:flex mt-4 sm:mt-6 max-w-2xl mx-auto">
                 <div className="flex flex-wrap gap-2 justify-center">
                   {recentSearches.length > 0 && (
                     <>
