@@ -103,16 +103,40 @@ exports.register = asyncHandler(async (req, res) => {
     const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
     const verifyUrl = `${appUrl}/verify-email?token=${token}`;
     const html = `
-      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-        <h2>Verify your email</h2>
-        <p>Enter this 6-digit code in the app to verify your email:</p>
-        <p style="font-size:22px;letter-spacing:4px;font-weight:700;margin:12px 0 18px">${token}</p>
-        <p>Or click below to verify automatically:</p>
-        <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+      <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
+        <div style="text-align:center;margin-bottom:30px">
+          <h1 style="color:#F97316;margin:0">WaZhop</h1>
+        </div>
+        
+        <h2 style="color:#1f2937;margin-bottom:20px">Verify Your WaZhop Account</h2>
+        
+        <p style="color:#4b5563;margin-bottom:16px">Hi <strong>${user.name}</strong>,</p>
+        
+        <p style="color:#4b5563;margin-bottom:16px">Welcome to <strong>WaZhop</strong> — your trusted platform for buying and selling goods with ease and security.</p>
+        
+        <p style="color:#4b5563;margin-bottom:16px">To complete your registration and activate your account, please use the verification code below:</p>
+        
+        <div style="background:#f3f4f6;padding:20px;border-radius:8px;text-align:center;margin:24px 0">
+          <p style="color:#6b7280;font-size:14px;margin:0 0 8px">Your Verification Code:</p>
+          <p style="font-size:32px;letter-spacing:8px;font-weight:700;margin:0;color:#F97316">${token}</p>
+        </div>
+        
+        <p style="color:#4b5563;margin-bottom:16px">This code will expire in <strong>10 minutes</strong>, so please verify your account as soon as possible.</p>
+        
+        <div style="text-align:center;margin:30px 0">
+          <a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Verify Email</a>
+        </div>
+        
+        <p style="color:#6b7280;font-size:14px;margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb">If you didn't create a WaZhop account, please ignore this message.</p>
+        
+        <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+          <p style="color:#4b5563;margin-bottom:8px">Thank you for joining the WaZhop community.<br/>We're excited to have you buy, sell, and grow with us!</p>
+          <p style="color:#4b5563;margin:16px 0 0">Warm regards,<br/><strong>The WaZhop Team</strong><br/><a href="mailto:support@wazhop.ng" style="color:#F97316;text-decoration:none">support@wazhop.ng</a></p>
+        </div>
       </div>
     `;
     try {
-      const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+      const resp = await sendEmail({ to: user.email, subject: 'Verify Your WaZhop Account', html });
       if (!resp?.ok) {
         console.log(`[dev] Email verification code for ${user.email}: ${token}`);
       }
@@ -355,14 +379,40 @@ exports.requestEmailVerification = asyncHandler(async (req, res) => {
   const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
   const verifyUrl = `${appUrl}/verify-email?token=${token}`;
   const html = `
-    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-      <h2>Verify your email</h2>
-      <p>Click below to verify your email for WaZhop.</p>
-      <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
+      <div style="text-align:center;margin-bottom:30px">
+        <h1 style="color:#F97316;margin:0">WaZhop</h1>
+      </div>
+      
+      <h2 style="color:#1f2937;margin-bottom:20px">Verify Your WaZhop Account</h2>
+      
+      <p style="color:#4b5563;margin-bottom:16px">Hi <strong>${user.name}</strong>,</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">Welcome to <strong>WaZhop</strong> — your trusted platform for buying and selling goods with ease and security.</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">To complete your registration and activate your account, please use the verification code below:</p>
+      
+      <div style="background:#f3f4f6;padding:20px;border-radius:8px;text-align:center;margin:24px 0">
+        <p style="color:#6b7280;font-size:14px;margin:0 0 8px">Your Verification Code:</p>
+        <p style="font-size:32px;letter-spacing:8px;font-weight:700;margin:0;color:#F97316">${token}</p>
+      </div>
+      
+      <p style="color:#4b5563;margin-bottom:16px">This code will expire in <strong>10 minutes</strong>, so please verify your account as soon as possible.</p>
+      
+      <div style="text-align:center;margin:30px 0">
+        <a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Verify Email</a>
+      </div>
+      
+      <p style="color:#6b7280;font-size:14px;margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb">If you didn't create a WaZhop account, please ignore this message.</p>
+      
+      <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+        <p style="color:#4b5563;margin-bottom:8px">Thank you for joining the WaZhop community.<br/>We're excited to have you buy, sell, and grow with us!</p>
+        <p style="color:#4b5563;margin:16px 0 0">Warm regards,<br/><strong>The WaZhop Team</strong><br/><a href="mailto:support@wazhop.ng" style="color:#F97316;text-decoration:none">support@wazhop.ng</a></p>
+      </div>
     </div>
   `;
   try {
-    const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+    const resp = await sendEmail({ to: user.email, subject: 'Verify Your WaZhop Account', html });
     if (!resp?.ok) {
       console.log(`[dev] Email verification code for ${user.email}: ${token}`);
     }
@@ -398,14 +448,40 @@ exports.requestEmailVerificationPublic = asyncHandler(async (req, res) => {
   const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
   const verifyUrl = `${appUrl}/verify-email?token=${token}`;
   const html = `
-    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-      <h2>Verify your email</h2>
-      <p>Click below to verify your email for WaZhop.</p>
-      <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
+      <div style="text-align:center;margin-bottom:30px">
+        <h1 style="color:#F97316;margin:0">WaZhop</h1>
+      </div>
+      
+      <h2 style="color:#1f2937;margin-bottom:20px">Verify Your WaZhop Account</h2>
+      
+      <p style="color:#4b5563;margin-bottom:16px">Hi <strong>${user.name}</strong>,</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">Welcome to <strong>WaZhop</strong> — your trusted platform for buying and selling goods with ease and security.</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">To complete your registration and activate your account, please use the verification code below:</p>
+      
+      <div style="background:#f3f4f6;padding:20px;border-radius:8px;text-align:center;margin:24px 0">
+        <p style="color:#6b7280;font-size:14px;margin:0 0 8px">Your Verification Code:</p>
+        <p style="font-size:32px;letter-spacing:8px;font-weight:700;margin:0;color:#F97316">${token}</p>
+      </div>
+      
+      <p style="color:#4b5563;margin-bottom:16px">This code will expire in <strong>10 minutes</strong>, so please verify your account as soon as possible.</p>
+      
+      <div style="text-align:center;margin:30px 0">
+        <a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Verify Email</a>
+      </div>
+      
+      <p style="color:#6b7280;font-size:14px;margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb">If you didn't create a WaZhop account, please ignore this message.</p>
+      
+      <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+        <p style="color:#4b5563;margin-bottom:8px">Thank you for joining the WaZhop community.<br/>We're excited to have you buy, sell, and grow with us!</p>
+        <p style="color:#4b5563;margin:16px 0 0">Warm regards,<br/><strong>The WaZhop Team</strong><br/><a href="mailto:support@wazhop.ng" style="color:#F97316;text-decoration:none">support@wazhop.ng</a></p>
+      </div>
     </div>
   `;
   try {
-    const resp = await sendEmail({ to: user.email, subject: 'Verify your email', html });
+    const resp = await sendEmail({ to: user.email, subject: 'Verify Your WaZhop Account', html });
     if (!resp?.ok) {
       console.log(`[dev] Email verification code for ${user.email}: ${token}`);
     }
@@ -502,16 +578,37 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
       const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
       const verifyUrl = `${appUrl}/verify-email?token=${token}`;
       const html = `
-        <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-          <h2>Verify your email</h2>
-          <p>To reset your password, please verify your email first using this code:</p>
-          <p style="font-size:22px;letter-spacing:4px;font-weight:700;margin:12px 0 18px">${token}</p>
-          <p>Or click below to verify automatically:</p>
-          <p><a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Verify Email</a></p>
+        <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
+          <div style="text-align:center;margin-bottom:30px">
+            <h1 style="color:#F97316;margin:0">WaZhop</h1>
+          </div>
+          
+          <h2 style="color:#1f2937;margin-bottom:20px">Verify Your Email</h2>
+          
+          <p style="color:#4b5563;margin-bottom:16px">Hi <strong>${user.name}</strong>,</p>
+          
+          <p style="color:#4b5563;margin-bottom:16px">To reset your password, please verify your email first using the verification code below:</p>
+          
+          <div style="background:#f3f4f6;padding:20px;border-radius:8px;text-align:center;margin:24px 0">
+            <p style="color:#6b7280;font-size:14px;margin:0 0 8px">Your Verification Code:</p>
+            <p style="font-size:32px;letter-spacing:8px;font-weight:700;margin:0;color:#F97316">${token}</p>
+          </div>
+          
+          <p style="color:#4b5563;margin-bottom:16px">This code will expire in <strong>10 minutes</strong>, so please verify your account as soon as possible.</p>
+          
+          <div style="text-align:center;margin:30px 0">
+            <a href="${verifyUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Verify Email</a>
+          </div>
+          
+          <p style="color:#6b7280;font-size:14px;margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb">If you didn't request this, please ignore this message.</p>
+          
+          <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+            <p style="color:#4b5563;margin:16px 0 0">Warm regards,<br/><strong>The WaZhop Team</strong><br/><a href="mailto:support@wazhop.ng" style="color:#F97316;text-decoration:none">support@wazhop.ng</a></p>
+          </div>
         </div>
       `;
       try {
-        const resp = await sendEmail({ to: user.email, subject: 'Verify your email to reset password', html });
+        const resp = await sendEmail({ to: user.email, subject: 'Verify Your Email to Reset Password', html });
         if (!resp?.ok) {
           console.log(`[dev] Email verification code for ${user.email}: ${token}`);
         }
