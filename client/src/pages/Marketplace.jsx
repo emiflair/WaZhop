@@ -8,10 +8,12 @@ import SEO from '../components/SEO'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 // Product details now open on a dedicated page, not a modal
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
+  const { isAuthenticated, user } = useAuth()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -125,6 +127,18 @@ export default function Marketplace() {
             <p className="text-base sm:text-lg md:text-xl text-primary-100 max-w-3xl mx-auto mb-8">
               Shop from thousands of verified sellers. Best deals. Trusted reviews. Instant WhatsApp checkout.
             </p>
+
+            {/* Get Started CTA for guests */}
+            {!isAuthenticated && (
+              <div className="mb-6">
+                <Link
+                  to="/register?role=seller"
+                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-white text-primary-600 hover:bg-gray-50 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
 
             {/* Hero Search */}
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex gap-2">
