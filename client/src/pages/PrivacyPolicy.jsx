@@ -165,7 +165,7 @@ const PrivacyPolicy = () => {
                   <li><strong>Withdraw consent:</strong> Withdraw consent for data processing</li>
                 </ul>
                 <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-                  To exercise these rights, please contact us at privacy@wazhop.ng or through your account settings.
+                  To exercise these rights, please contact us at support@wazhop.ng or through your account settings.
                 </p>
               </section>
 
@@ -250,7 +250,7 @@ const PrivacyPolicy = () => {
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 space-y-2 text-sm sm:text-base">
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> privacy@wazhop.ng
+                    <strong className="text-gray-900 dark:text-gray-100">Email:</strong> support@wazhop.ng
                   </p>
                   <p className="text-gray-700 dark:text-gray-300">
                     <strong className="text-gray-900 dark:text-gray-100">Address:</strong> WaZhop, Lagos, Nigeria
