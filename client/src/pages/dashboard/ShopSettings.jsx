@@ -403,10 +403,10 @@ const ShopSettings = () => {
     }
   };
 
-  // Persist layout immediately for Premium users when a layout is selected
+  // Persist layout immediately for Pro and Premium users when a layout is selected
   const handleLayoutSelect = async (layoutValue) => {
     setTheme(prev => ({ ...prev, layout: layoutValue }));
-    if (user?.plan !== 'premium') return; // Pro users change layout via preset themes
+    if (user?.plan === 'free') return; // Free users can't change layout
 
     try {
       setSaving(true);
@@ -1154,8 +1154,8 @@ const ShopSettings = () => {
               </div>
             )}
 
-            {/* Layout, Font, Preview - Premium Only (Pro uses preset themes) */}
-            {user?.plan === 'premium' && (
+            {/* Layout, Font, Preview - Pro & Premium (Premium gets full color control) */}
+            {(user?.plan === 'pro' || user?.plan === 'premium') && (
               <div className="space-y-6 mt-6">
               {/* Layout */}
               <div>
