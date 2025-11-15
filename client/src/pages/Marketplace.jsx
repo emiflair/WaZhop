@@ -133,7 +133,7 @@ export default function Marketplace() {
               <div className="mb-6">
                 <Link
                   to="/register?role=seller"
-                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-white text-primary-600 hover:bg-gray-50 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-transparent text-white border border-white/80 hover:bg-white/10 active:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-colors duration-200 dark:border-white/60"
                 >
                   Get Started
                 </Link>
