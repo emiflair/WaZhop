@@ -199,7 +199,8 @@ exports.updateShop = asyncHandler(async (req, res) => {
   }
 
   // Update theme mode if provided (Premium only)
-  if (theme?.mode) {
+  // Only enforce Premium restriction if the mode is actually being CHANGED
+  if (theme?.mode && theme.mode !== shop.theme.mode) {
     // Get user plan from request
     const user = await User.findById(req.user.id);
 
