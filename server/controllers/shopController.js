@@ -267,8 +267,21 @@ exports.updateTheme = asyncHandler(async (req, res) => {
     });
   }
 
-  // PRO PLAN: Can only use preset themes
+  // PRO PLAN: Can use preset themes OR update layout/font independently
   if (userPlan === 'pro') {
+    // If updating layout or font only (without theme selection)
+    if ((layout || font) && !themeName) {
+      if (layout) shop.theme.layout = layout;
+      if (font) shop.theme.font = font;
+      await shop.save();
+      return res.status(200).json({
+        success: true,
+        data: shop,
+        message: 'Shop layout updated successfully'
+      });
+    }
+
+    // If selecting a preset theme
     if (!themeName || !PRO_THEMES[themeName]) {
       return res.status(400).json({
         success: false,
