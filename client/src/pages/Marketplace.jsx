@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart } from 'react-icons/fi'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS } from '../utils/categories'
 import Navbar from '../components/Navbar'
@@ -27,7 +27,13 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [ngState, setNgState] = useState('')
   const [area, setArea] = useState('')
-  const [popularSearches] = useState(['Fashion', 'Electronics', 'Home Decor', 'Beauty', 'Phones'])
+  const [popularSearches] = useState([
+    { name: 'Fashion', icon: FiShoppingCart },
+    { name: 'Electronics', icon: FiMonitor },
+    { name: 'Home Decor', icon: FiHomeIcon },
+    { name: 'Beauty', icon: FiStar },
+    { name: 'Phones', icon: FiSmartphone }
+  ])
   const [recentSearches, setRecentSearches] = useState(() => {
     const saved = localStorage.getItem('recentSearches')
     return saved ? JSON.parse(saved) : []
@@ -210,32 +216,38 @@ export default function Marketplace() {
                   {/* Desktop - Centered flex wrap */}
                   <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
                     <span className="text-xs text-white/80 font-bold uppercase tracking-wider">Trending:</span>
-                    {popularSearches.map((term, i) => (
-                      <button
-                        key={i}
-                        onClick={() => quickSearch(term)}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target"
-                      >
-                        <FiTrendingUp className="w-3.5 h-3.5" />
-                        {term}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Mobile - Single line horizontal scroll */}
-                  <div className="sm:hidden">
-                    <div className="text-sm text-white/90 font-bold uppercase tracking-wide mb-3 px-4">Trending:</div>
-                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-2">
-                      {popularSearches.map((term, i) => (
+                    {popularSearches.map((item, i) => {
+                      const Icon = item.icon
+                      return (
                         <button
                           key={i}
-                          onClick={() => quickSearch(term)}
-                          className="px-5 py-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-base font-semibold rounded-full transition-all duration-200 border border-white/30 flex items-center gap-2 whitespace-nowrap touch-target shadow-md"
+                          onClick={() => quickSearch(item.name)}
+                          className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target"
                         >
-                          <FiTrendingUp className="w-4 h-4" />
-                          {term}
+                          <Icon className="w-3.5 h-3.5" />
+                          {item.name}
                         </button>
-                      ))}
+                      )
+                    })}
+                  </div>
+
+                  {/* Mobile - Single line horizontal scroll with icons */}
+                  <div className="sm:hidden">
+                    <div className="text-sm text-white/90 font-bold uppercase tracking-wide mb-3 text-center">Trending:</div>
+                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-2">
+                      {popularSearches.map((item, i) => {
+                        const Icon = item.icon
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => quickSearch(item.name)}
+                            className="px-5 py-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-base font-semibold rounded-full transition-all duration-200 border border-white/30 flex items-center gap-2 whitespace-nowrap touch-target shadow-md"
+                          >
+                            <Icon className="w-4 h-4" />
+                            {item.name}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 </div>

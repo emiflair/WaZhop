@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { FiHome, FiBookmark, FiPlusCircle, FiMessageSquare, FiUser } from 'react-icons/fi'
+import { FiHome, FiInfo, FiPlusCircle, FiDollarSign, FiUser } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -61,9 +61,48 @@ export default function MobileBottomNav() {
     }
 
     if (user?.role === 'seller') {
+      // Take seller to add products page
+      navigate('/dashboard/products/new')
+    } else {
+      // Prompt buyer to upgrade to seller
+      toast((t) => (
+        <div className="flex flex-col gap-2">
+          <p className="font-medium">Switch to Seller Account?</p>
+          <p className="text-sm text-gray-600">Start selling your products on WaZhop</p>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id)
+                navigate('/profile?tab=upgrade')
+              }}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium"
+            >
+              Upgrade Now
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), { duration: 5000 })
+    }
+  }
+
+  const handleProfileClick = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to view profile')
+      navigate('/login')
+      return
+    }
+
+    if (user?.role === 'seller') {
+      // Take seller directly to dashboard
       navigate('/dashboard')
     } else {
-      // Prompt to upgrade to seller
+      // Prompt buyer to upgrade to seller
       toast((t) => (
         <div className="flex flex-col gap-2">
           <p className="font-medium">Switch to Seller Account?</p>
@@ -98,8 +137,8 @@ export default function MobileBottomNav() {
       onClick: () => navigate('/marketplace')
     },
     {
-      icon: FiBookmark,
-      label: 'Saved',
+      icon: FiInfo,
+      label: 'About',
       path: '/about',
       onClick: () => navigate('/about')
     },
@@ -111,23 +150,16 @@ export default function MobileBottomNav() {
       isSpecial: true
     },
     {
-      icon: FiMessageSquare,
-      label: 'Messages',
+      icon: FiDollarSign,
+      label: 'Pricing',
       path: '/pricing',
       onClick: () => navigate('/pricing')
     },
     {
       icon: FiUser,
       label: 'Profile',
-      path: '/profile',
-      onClick: () => {
-        if (!isAuthenticated) {
-          toast.error('Please login to view profile')
-          navigate('/login')
-        } else {
-          navigate('/profile')
-        }
-      }
+      path: null,
+      onClick: handleProfileClick
     }
   ]
 
