@@ -100,8 +100,7 @@ exports.register = asyncHandler(async (req, res) => {
     user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
     await user.save();
 
-    const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-    const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+    const verifyUrl = `https://wazhop.ng/verify-email?token=${token}`;
     const html = `
       <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
         <div style="text-align:center;margin-bottom:30px">
@@ -376,8 +375,7 @@ exports.requestEmailVerification = asyncHandler(async (req, res) => {
   user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
   await user.save();
 
-  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+  const verifyUrl = `https://wazhop.ng/verify-email?token=${token}`;
   const html = `
     <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
       <div style="text-align:center;margin-bottom:30px">
@@ -445,8 +443,7 @@ exports.requestEmailVerificationPublic = asyncHandler(async (req, res) => {
   user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
   await user.save();
 
-  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-  const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+  const verifyUrl = `https://wazhop.ng/verify-email?token=${token}`;
   const html = `
     <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
       <div style="text-align:center;margin-bottom:30px">
@@ -575,8 +572,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
       user.emailVerificationExpires = new Date(Date.now() + 1000 * 60 * 60 * 24);
       await user.save();
 
-      const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-      const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+      const verifyUrl = `https://wazhop.ng/verify-email?token=${token}`;
       const html = `
         <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
           <div style="text-align:center;margin-bottom:30px">
@@ -625,17 +621,36 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   user.passwordResetExpires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
   await user.save();
 
-  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
-  const resetUrl = `${appUrl}/reset-password/${token}`;
+  const resetUrl = `https://wazhop.ng/reset-password/${token}`;
   const html = `
-    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6">
-      <h2>Reset your password</h2>
-      <p>Click the button below to set a new password. This link expires in 15 minutes.</p>
-      <p><a href="${resetUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Reset Password</a></p>
-      <p>Or copy this link: <a href="${resetUrl}">${resetUrl}</a></p>
+    <div style="font-family:Inter,Arial,sans-serif;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;background:#ffffff">
+      <div style="text-align:center;margin-bottom:30px">
+        <h1 style="color:#F97316;margin:0">WaZhop</h1>
+      </div>
+      
+      <h2 style="color:#1f2937;margin-bottom:20px">Reset Your WaZhop Password</h2>
+      
+      <p style="color:#4b5563;margin-bottom:16px">Hi <strong>${user.name}</strong>,</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">We received a request to reset the password for your WaZhop account.</p>
+      
+      <p style="color:#4b5563;margin-bottom:16px">To continue, please use the secure link below:</p>
+      
+      <div style="text-align:center;margin:30px 0">
+        <a href="${resetUrl}" style="display:inline-block;background:#F97316;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Reset Password</a>
+      </div>
+      
+      <p style="color:#4b5563;margin-bottom:16px">This link will expire in <strong>10 minutes</strong> for your security.</p>
+      
+      <p style="color:#6b7280;font-size:14px;margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb">If you did not request a password reset, you can safely ignore this email—your account is still secure.</p>
+      
+      <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e5e7eb">
+        <p style="color:#4b5563;margin-bottom:8px">For any help, feel free to contact us at <a href="mailto:support@wazhop.ng" style="color:#F97316;text-decoration:none">support@wazhop.ng</a>.</p>
+        <p style="color:#4b5563;margin:16px 0 0">Stay safe,<br/><strong>The WaZhop Team</strong><br/><a href="https://wazhop.ng" style="color:#F97316;text-decoration:none">www.wazhop.ng</a></p>
+      </div>
     </div>
-  `;
-  try { await sendEmail({ to: user.email, subject: 'Reset your password', html }); } catch {}
+  ";
+  try { await sendEmail({ to: user.email, subject: 'Reset Your WaZhop Password', html }); } catch {}
 
   // In development, include token to ease testing (never in production)
   if ((process.env.NODE_ENV || 'development') !== 'production') {
