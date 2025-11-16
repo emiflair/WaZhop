@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FiHome, FiInfo, FiPlusCircle, FiDollarSign, FiUser } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext'
+import BuyerToSellerUpgrade from './BuyerToSellerUpgrade'
 import toast from 'react-hot-toast'
 
 export default function MobileBottomNav() {
@@ -10,6 +11,7 @@ export default function MobileBottomNav() {
   const { isAuthenticated, user } = useAuth()
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   useEffect(() => {
     let ticking = false
@@ -53,6 +55,16 @@ export default function MobileBottomNav() {
     }
   }, [lastScrollY])
 
+  const handleHomeClick = () => {
+    if (location.pathname === '/marketplace') {
+      // If already on marketplace, scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      // Navigate to marketplace
+      navigate('/marketplace')
+    }
+  }
+
   const handleSellClick = () => {
     if (!isAuthenticated) {
       toast.error('Please login to continue')
@@ -64,30 +76,24 @@ export default function MobileBottomNav() {
       // Take seller to add products page
       navigate('/dashboard/products/new')
     } else {
-      // Prompt buyer to upgrade to seller
-      toast((t) => (
-        <div className="flex flex-col gap-2">
-          <p className="font-medium">Switch to Seller Account?</p>
-          <p className="text-sm text-gray-600">Start selling your products on WaZhop</p>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                navigate('/profile?tab=upgrade')
-              }}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium"
-            >
-              Upgrade Now
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), { duration: 5000 })
+      // Show upgrade modal for buyer
+      setShowUpgradeModal(true)
+    }
+  }
+
+  const handleProfileClick = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to view profile')
+      navigate('/login')
+      return
+    }
+
+    if (user?.role === 'seller') {
+      // Take seller to dashboard
+      navigate('/dashboard')
+    } else {
+      // Show upgrade modal for buyer
+      setShowUpgradeModal(true)
     }
   }
 
@@ -134,7 +140,7 @@ export default function MobileBottomNav() {
       icon: FiHome,
       label: 'Home',
       path: '/marketplace',
-      onClick: () => navigate('/marketplace')
+      onClick: handleHomeClick
     },
     {
       icon: FiInfo,
@@ -199,6 +205,11 @@ export default function MobileBottomNav() {
           )
         })}
       </div>
+
+      {/* Buyer to Seller Upgrade Modal */}
+      {showUpgradeModal && (
+        <BuyerToSellerUpgrade onClose={() => setShowUpgradeModal(false)} />
+      )}
     </nav>
   )
 }

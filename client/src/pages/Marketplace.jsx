@@ -126,9 +126,11 @@ export default function Marketplace() {
         <Navbar />
 
         {/* Discover Amazing Products Banner */}
-        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-6 sm:py-8 text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight px-4">
-            Discover <span className="text-white/70">Amazing</span> Products
+        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-3 sm:py-6 text-center">
+          <h2 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight px-4">
+            <span className="inline">Discover</span>{' '}
+            <span className="inline text-white/70">Amazing</span>{' '}
+            <span className="inline">Products</span>
           </h2>
         </div>
 
@@ -231,20 +233,21 @@ export default function Marketplace() {
                     })}
                   </div>
 
-                  {/* Mobile - Single line horizontal scroll with icons */}
+                  {/* Mobile - Single line horizontal scroll with icons only */}
                   <div className="sm:hidden">
-                    <div className="text-sm text-white/90 font-bold uppercase tracking-wide mb-3 text-center">Trending:</div>
-                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-2">
+                    <div className="text-xs text-white/90 font-bold uppercase tracking-wider mb-2 text-center">Trending:</div>
+                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-1">
                       {popularSearches.map((item, i) => {
                         const Icon = item.icon
                         return (
                           <button
                             key={i}
                             onClick={() => quickSearch(item.name)}
-                            className="px-5 py-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-base font-semibold rounded-full transition-all duration-200 border border-white/30 flex items-center gap-2 whitespace-nowrap touch-target shadow-md"
+                            className="flex-shrink-0 p-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all duration-200 border border-white/30 flex items-center justify-center touch-target shadow-sm"
+                            aria-label={item.name}
+                            title={item.name}
                           >
                             <Icon className="w-4 h-4" />
-                            {item.name}
                           </button>
                         )
                       })}
