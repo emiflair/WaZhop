@@ -118,6 +118,13 @@ export default function Marketplace() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
 
+        {/* Discover Amazing Products Banner */}
+        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-4 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+            Discover Amazing Products
+          </h2>
+        </div>
+
         {/* Hero Section - Native App Style */}
         <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-orange-600 dark:from-primary-700 dark:via-primary-800 dark:to-orange-800 text-white overflow-hidden">
           {/* Decorative Elements */}
@@ -125,8 +132,8 @@ export default function Marketplace() {
           
           <div className="app-container relative z-10 py-4 sm:py-10 md:py-14">
             <div className="text-center">
-              {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-2 sm:mb-5 animate-fadeIn">
+              {/* Badge - Hidden since we have banner above */}
+              <div className="hidden items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-2 sm:mb-5 animate-fadeIn">
                 <FiZap className="w-4 h-4 mr-2" />
                 <span className="text-sm font-semibold">Discover Amazing Products</span>
               </div>
@@ -198,8 +205,9 @@ export default function Marketplace() {
 
               {/* Popular & Recent Searches - Native Style */}
               {!search && (
-                <div className="mt-4 sm:mt-6 max-w-3xl mx-auto animate-fadeIn">
-                  <div className="flex flex-wrap gap-2 justify-center">
+                <div className="mt-4 sm:mt-6 animate-fadeIn">
+                  {/* Desktop - Centered flex wrap */}
+                  <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
                     {recentSearches.length > 0 && (
                       <>
                         <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Recent:</span>
@@ -226,6 +234,41 @@ export default function Marketplace() {
                         {term}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Mobile - Single line horizontal scroll */}
+                  <div className="sm:hidden">
+                    {recentSearches.length > 0 && (
+                      <div className="mb-3">
+                        <div className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-2 px-4">Recent:</div>
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
+                          {recentSearches.map((term, i) => (
+                            <button
+                              key={i}
+                              onClick={() => quickSearch(term)}
+                              className="px-4 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 whitespace-nowrap touch-target"
+                            >
+                              {term}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-2 px-4">Trending:</div>
+                      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
+                        {popularSearches.map((term, i) => (
+                          <button
+                            key={i}
+                            onClick={() => quickSearch(term)}
+                            className="px-4 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 whitespace-nowrap touch-target"
+                          >
+                            <FiTrendingUp className="w-3.5 h-3.5" />
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
