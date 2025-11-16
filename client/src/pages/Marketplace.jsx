@@ -4,6 +4,7 @@ import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS } from '../utils/categories'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import MobileBottomNav from '../components/MobileBottomNav'
 import SEO from '../components/SEO'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
@@ -119,9 +120,9 @@ export default function Marketplace() {
         <Navbar />
 
         {/* Discover Amazing Products Banner */}
-        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-4 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
-            Discover Amazing Products
+        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-6 sm:py-8 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight px-4">
+            Discover <span className="text-white/70">Amazing</span> Products
           </h2>
         </div>
 
@@ -203,27 +204,12 @@ export default function Marketplace() {
                 </button>
               </div>
 
-              {/* Popular & Recent Searches - Native Style */}
+              {/* Trending Searches - Native Style */}
               {!search && (
                 <div className="mt-4 sm:mt-6 animate-fadeIn">
                   {/* Desktop - Centered flex wrap */}
                   <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
-                    {recentSearches.length > 0 && (
-                      <>
-                        <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Recent:</span>
-                        {recentSearches.map((term, i) => (
-                          <button
-                            key={i}
-                            onClick={() => quickSearch(term)}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 touch-target"
-                          >
-                            {term}
-                          </button>
-                        ))}
-                        <span className="text-white/50 px-2">•</span>
-                      </>
-                    )}
-                    <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Trending:</span>
+                    <span className="text-xs text-white/80 font-bold uppercase tracking-wider">Trending:</span>
                     {popularSearches.map((term, i) => (
                       <button
                         key={i}
@@ -238,36 +224,18 @@ export default function Marketplace() {
 
                   {/* Mobile - Single line horizontal scroll */}
                   <div className="sm:hidden">
-                    {recentSearches.length > 0 && (
-                      <div className="mb-3">
-                        <div className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-2 px-4">Recent:</div>
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
-                          {recentSearches.map((term, i) => (
-                            <button
-                              key={i}
-                              onClick={() => quickSearch(term)}
-                              className="px-4 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 whitespace-nowrap touch-target"
-                            >
-                              {term}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-xs text-white/70 font-semibold uppercase tracking-wider mb-2 px-4">Trending:</div>
-                      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
-                        {popularSearches.map((term, i) => (
-                          <button
-                            key={i}
-                            onClick={() => quickSearch(term)}
-                            className="px-4 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 whitespace-nowrap touch-target"
-                          >
-                            <FiTrendingUp className="w-3.5 h-3.5" />
-                            {term}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="text-sm text-white/90 font-bold uppercase tracking-wide mb-3 px-4">Trending:</div>
+                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-2">
+                      {popularSearches.map((term, i) => (
+                        <button
+                          key={i}
+                          onClick={() => quickSearch(term)}
+                          className="px-5 py-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-base font-semibold rounded-full transition-all duration-200 border border-white/30 flex items-center gap-2 whitespace-nowrap touch-target shadow-md"
+                        >
+                          <FiTrendingUp className="w-4 h-4" />
+                          {term}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -396,10 +364,10 @@ export default function Marketplace() {
         </div>
 
         {/* Products Grid */}
-        <div className="flex-1 py-8">
+        <div className="flex-1 py-8 pb-24 md:pb-8">
           <div className="container-custom">
             {loading && page === 1 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
                 {Array(10).fill(0).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
@@ -413,7 +381,7 @@ export default function Marketplace() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
                   {products.map(product => (
                     <ProductCard 
                       key={product._id} 
@@ -427,7 +395,7 @@ export default function Marketplace() {
 
                 {/* Load More */}
                 {hasMore && (
-                  <div className="text-center mt-12">
+                  <div className="text-center mt-12 mb-8">
                     <button onClick={loadMore} disabled={loading} className="btn btn-primary px-8">
                       {loading ? 'Loading...' : 'Load More'}
                     </button>
@@ -440,6 +408,9 @@ export default function Marketplace() {
 
         <Footer />
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* Product detail opens on a separate page now */}
     </>
@@ -589,7 +560,7 @@ function ProductCard({ product, onOpen }) {
           )}
         </div>
 
-        {/* Make Offer Button */}
+        {/* Price am Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -597,7 +568,7 @@ function ProductCard({ product, onOpen }) {
           }}
           className="mt-3 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
         >
-          Make Offer
+          Price am
         </button>
       </div>
     </div>
