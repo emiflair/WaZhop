@@ -1,40 +1,16 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp, FiArrowRight } from 'react-icons/fi';
+import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import LazyImage from '../components/LazyImage';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
   const { isAuthenticated, user } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';
-  
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
-  useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        // Fetch trending products with boosted first, then random selection
-        const response = await api.get('/products/marketplace?limit=4&sort=-clicks,-views');
-        // API interceptor already extracts data from { success: true, data: [...] }
-        setFeaturedProducts(Array.isArray(response) ? response : []);
-      } catch (error) {
-        console.error('Failed to fetch featured products:', error);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchFeaturedProducts();
-  }, []);
 
   const getStartedHref = () => {
     if (!isAuthenticated) return '/register?role=seller';
@@ -133,99 +109,6 @@ const Home = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Products - App Style */}
-      <section className="app-section bg-gray-50 dark:bg-gray-900">
-        <div className="app-container">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-sm font-semibold mb-4">
-              <FiTrendingUp className="mr-2" size={16} />
-              Trending Now
-            </div>
-            <h2 className="app-heading text-gray-900 dark:text-gray-100 mb-4">
-              Trending Products
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Discover what&apos;s hot on Wazhop. Your products could be here too!
-            </p>
-          </div>
-
-          {loadingProducts ? (
-            <div className="flex justify-center py-12">
-              <LoadingSpinner />
-            </div>
-          ) : featuredProducts.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {featuredProducts.map((product) => (
-                  <Link
-                    key={product._id}
-                    to={`/product/${product._id}`}
-                    state={{ fromMarketplace: true }}
-                    className="product-card-border group app-card hover:-translate-y-2 transform transition-all duration-300"
-                  >
-                    <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4 relative">
-                      {product.isBoosted && (
-                        <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-                          <FiStar className="w-3 h-3" />
-                          <span>Boosted</span>
-                        </div>
-                      )}
-                      <LazyImage
-                        src={product.images?.[0]?.url ?? product.images?.[0] ?? '/placeholder.png'}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        width={600}
-                        height={600}
-                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                        transform={{ w: 600, h: 600, fit: 'fill' }}
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 line-clamp-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {product.description}
-                      </p>
-                      <div className="flex items-center justify-between pt-2">
-                        <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                          ₦{product.price?.toLocaleString()}
-                        </span>
-                        {product.shop?.shopName && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px] px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            {product.shop.shopName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              <div className="text-center">
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-3 px-8 py-4 text-base font-semibold rounded-xl bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                >
-                  Explore All Products
-                  <FiArrowRight size={20} />
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <FiShoppingBag className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={64} />
-              <p className="text-gray-600 dark:text-gray-400 text-lg mb-6">
-                No products yet. Be the first seller on Wazhop!
-              </p>
-              <Link to={getStartedHref()} className="btn btn-primary">
-                Start Selling Now
-              </Link>
-            </div>
-          )}
         </div>
       </section>
 
