@@ -179,8 +179,8 @@ const Products = () => {
     try {
       // Handle Quick Add mode - minimal required fields
       if (quickAddMode) {
-        if (!formData.name || !formData.price || images.length === 0) {
-          toast.error('Quick Add requires: Name, Price, and 1 Image');
+        if (!formData.name || !formData.price || !formData.category || images.length === 0) {
+          toast.error('Quick Add requires: Name, Price, Category, and 1 Image');
           setUploading(false);
           return;
         }
@@ -189,7 +189,8 @@ const Products = () => {
           name: formData.name,
           description: formData.description || formData.name, // Default description to name
           price: parseFloat(formData.price),
-          category: 'other',
+          category: formData.category,
+          subcategory: formData.subcategory || null,
           tags: [],
           inStock: true,
           locationState: user?.shopDetails?.locationState || 'Lagos',
@@ -261,6 +262,8 @@ const Products = () => {
       id: `bulk-${Date.now()}-${index}`,
       name: '',
       price: '',
+      category: '',
+      subcategory: '',
       image: file,
       imagePreview: URL.createObjectURL(file)
     }));
@@ -281,10 +284,10 @@ const Products = () => {
     setUploading(true);
     
     try {
-      const validProducts = bulkProducts.filter(p => p.name && p.price && p.image);
+      const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image);
       
       if (validProducts.length === 0) {
-        toast.error('Please fill Name and Price for at least one product');
+        toast.error('Please fill Name, Price, and Category for at least one product');
         setUploading(false);
         return;
       }
@@ -294,7 +297,8 @@ const Products = () => {
           name: bulkProduct.name,
           description: bulkProduct.description || bulkProduct.name,
           price: parseFloat(bulkProduct.price),
-          category: 'other',
+          category: bulkProduct.category,
+          subcategory: bulkProduct.subcategory || null,
           tags: [],
           inStock: true,
           locationState: user?.shopDetails?.locationState || 'Lagos',
@@ -1037,6 +1041,8 @@ const Products = () => {
                               <th className="px-3 py-2 text-left text-xs font-medium">Image</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Name *</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Price (₦) *</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Category *</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Subcategory</th>
                               <th className="px-3 py-2 text-center text-xs font-medium">Action</th>
                             </tr>
                           </thead>
@@ -1070,6 +1076,42 @@ const Products = () => {
                                     step="0.01"
                                   />
                                 </td>
+                                <td className="px-3 py-2">
+                                  <select
+                                    value={product.category}
+                                    onChange={(e) => {
+                                      updateBulkProduct(product.id, 'category', e.target.value);
+                                      updateBulkProduct(product.id, 'subcategory', '');
+                                    }}
+                                    className="input text-sm w-full"
+                                  >
+                                    <option value="">Select</option>
+                                    {CATEGORY_SUGGESTIONS.map((c) => (
+                                      <option key={c} value={c}>{getCategoryLabel(c)}</option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="px-3 py-2">
+                                  {product.category && getSubcategories(product.category).length > 0 ? (
+                                    <select
+                                      value={product.subcategory}
+                                      onChange={(e) => updateBulkProduct(product.id, 'subcategory', e.target.value)}
+                                      className="input text-sm w-full"
+                                    >
+                                      <option value="">Select</option>
+                                      {getSubcategories(product.category).map((sub) => (
+                                        <option key={sub} value={sub}>{toLabel(sub)}</option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <input
+                                      type="text"
+                                      disabled
+                                      className="input text-sm w-full bg-gray-100"
+                                      placeholder="-"
+                                    />
+                                  )}
+                                </td>
                                 <td className="px-3 py-2 text-center">
                                   <TouchButton
                                     type="button"
@@ -1101,7 +1143,7 @@ const Products = () => {
                         <TouchButton
                           type="button"
                           onClick={handleBulkSubmit}
-                          disabled={uploading || bulkProducts.every(p => !p.name || !p.price)}
+                          disabled={uploading || bulkProducts.every(p => !p.name || !p.price || !p.category)}
                           loading={uploading}
                           variant="primary"
                           size="md"
@@ -1146,6 +1188,46 @@ const Products = () => {
                       className="input text-sm sm:text-base"
                       placeholder="10000"
                     />
+                  </div>
+
+                  {/* Category and Subcategory */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label text-sm sm:text-base">Category *</label>
+                      <select
+                        required
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value, subcategory: '' })}
+                        className="input text-sm sm:text-base"
+                      >
+                        <option value="">Select category</option>
+                        {CATEGORY_SUGGESTIONS.map((c) => (
+                          <option key={c} value={c}>{getCategoryLabel(c)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label text-sm sm:text-base">Subcategory</label>
+                      {formData.category && getSubcategories(formData.category).length > 0 ? (
+                        <select
+                          value={formData.subcategory}
+                          onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
+                          className="input text-sm sm:text-base"
+                        >
+                          <option value="">Select subcategory</option>
+                          {getSubcategories(formData.category).map((sub) => (
+                            <option key={sub} value={sub}>{toLabel(sub)}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          disabled
+                          className="input text-sm sm:text-base bg-gray-100 dark:bg-gray-700"
+                          placeholder="Select category first"
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {/* Image Upload */}
