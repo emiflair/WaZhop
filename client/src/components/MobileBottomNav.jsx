@@ -56,19 +56,19 @@ export default function MobileBottomNav() {
   }, [lastScrollY])
 
   const handleHomeClick = () => {
-    if (location.pathname === '/marketplace') {
-      // If already on marketplace, scroll to top smoothly
+    if (location.pathname === '/') {
+      // If already on marketplace (homepage), scroll to top smoothly like a refresh
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
-      // Navigate to marketplace
-      navigate('/marketplace')
+      // Navigate to marketplace (homepage)
+      navigate('/')
     }
   }
 
   const handleSellClick = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to continue')
-      navigate('/login')
+      // Redirect to login without showing popup
+      navigate('/login', { state: { from: '/dashboard/products', message: 'Please login or create an account to start selling' } })
       return
     }
 
@@ -83,8 +83,8 @@ export default function MobileBottomNav() {
 
   const handleProfileClick = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to view profile')
-      navigate('/login')
+      // Redirect to login without showing popup
+      navigate('/login', { state: { from: '/dashboard', message: 'Please login or create an account to view your profile' } })
       return
     }
 
@@ -101,7 +101,7 @@ export default function MobileBottomNav() {
     {
       icon: FiHome,
       label: 'Home',
-      path: '/marketplace',
+      path: '/',
       onClick: handleHomeClick
     },
     {
