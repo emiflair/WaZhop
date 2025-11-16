@@ -109,6 +109,11 @@ export default function Marketplace() {
     }
   }
 
+  // Initial loading screen
+  if (loading && products.length === 0) {
+    return <LoadingSpinner native fullScreen message="Loading amazing products..." />;
+  }
+
   return (
     <>
       <SEO
@@ -118,112 +123,142 @@ export default function Marketplace() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
 
-        {/* Hero Section (compact on mobile) */}
-        <div className="bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 dark:from-primary-700 dark:via-primary-600 dark:to-primary-700 text-white py-6 sm:py-10 md:py-14">
-          <div className="container-custom text-center">
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-3 sm:mb-4">
-              Discover <span className="text-primary-200">Amazing</span> Products
-            </h1>
-            <p className="text-sm sm:text-lg md:text-xl text-primary-100 max-w-3xl mx-auto mb-6 sm:mb-8">
-              Shop from thousands of verified sellers. Best deals. Trusted reviews. Instant WhatsApp checkout.
-            </p>
-
-            {/* Get Started CTA for guests */}
-            {!isAuthenticated && (
-              <div className="mb-6">
-                <Link
-                  to="/register?role=seller"
-                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-transparent text-white border border-white/80 hover:bg-white/10 active:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-colors duration-200 dark:border-white/60"
-                >
-                  Get Started
-                </Link>
+        {/* Hero Section - Native App Style */}
+        <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-orange-600 dark:from-primary-700 dark:via-primary-800 dark:to-orange-800 text-white overflow-hidden">
+          {/* Decorative Elements */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10"></div>
+          
+          <div className="app-container relative z-10 py-8 sm:py-12 md:py-16">
+            <div className="text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-6 animate-fadeIn">
+                <FiZap className="w-4 h-4 mr-2" />
+                <span className="text-sm font-semibold">Discover Amazing Products</span>
               </div>
-            )}
+              
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 animate-fadeIn">
+                Shop from <span className="text-white/90">Verified</span> Sellers
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-fadeIn">
+                Thousands of products. Best deals. Instant WhatsApp checkout.
+              </p>
 
-            {/* Hero Search */}
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex gap-2">
-              <div className="relative flex-1">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
-                <input
-                  type="text"
-                  placeholder="Search products or categories..."
-                  className="w-full pl-12 pr-4 py-3 sm:py-4 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 focus:ring-2 focus:ring-primary-300 text-sm sm:text-base"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="btn btn-secondary px-6 sm:px-8 text-sm sm:text-base whitespace-nowrap">
-                Search
-              </button>
-            </form>
-            {/* Location refinement */}
-            <div className="mt-2 sm:mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto">
-              <select value={ngState} onChange={(e)=>setNgState(e.target.value)} className="input py-2 text-sm">
-                <option value="">All States</option>
-                {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <input className="input py-2 text-sm" type="text" value={area} placeholder="Area (e.g., Victoria Island)" onChange={(e)=>setArea(e.target.value)} />
-              <button onClick={()=>fetchProducts(true)} className="btn btn-outline text-sm">Apply</button>
-            </div>
-
-            {/* Popular & Recent Searches (hidden on mobile for compact hero) */}
-            {!search && (
-              <div className="hidden sm:flex mt-4 sm:mt-6 max-w-2xl mx-auto">
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {recentSearches.length > 0 && (
-                    <>
-                      <span className="text-xs text-primary-200 font-medium">Recent:</span>
-                      {recentSearches.map((term, i) => (
-                        <button
-                          key={i}
-                          onClick={() => quickSearch(term)}
-                          className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded-full transition-colors"
-                        >
-                          {term}
-                        </button>
-                      ))}
-                      <span className="text-primary-200">•</span>
-                    </>
-                  )}
-                  <span className="text-xs text-primary-200 font-medium">Trending:</span>
-                  {popularSearches.map((term, i) => (
-                    <button
-                      key={i}
-                      onClick={() => quickSearch(term)}
-                      className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded-full transition-colors flex items-center gap-1"
-                    >
-                      <FiTrendingUp className="w-3 h-3" />
-                      {term}
-                    </button>
-                  ))}
+              {/* Get Started CTA for guests */}
+              {!isAuthenticated && (
+                <div className="mb-8 animate-fadeIn">
+                  <Link
+                    to="/register?role=seller"
+                    className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold rounded-2xl bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 touch-target"
+                  >
+                    Start Selling
+                  </Link>
                 </div>
+              )}
+
+              {/* Hero Search - Native App Style */}
+              <form onSubmit={handleSearch} className="max-w-3xl mx-auto animate-fadeIn">
+                <div className="relative">
+                  <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xl pointer-events-none z-10" />
+                  <input
+                    type="text"
+                    placeholder="Search products, categories..."
+                    className="w-full pl-14 pr-32 py-4 sm:py-5 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-2xl focus:ring-4 focus:ring-white/30 text-base sm:text-lg font-medium placeholder:text-gray-400"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  <button 
+                    type="submit" 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-orange-700 transition-all duration-200 shadow-lg text-sm sm:text-base touch-target"
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
+              {/* Location refinement - Native Style */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto animate-fadeIn">
+                <select 
+                  value={ngState} 
+                  onChange={(e)=>setNgState(e.target.value)} 
+                  className="px-4 py-3 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
+                >
+                  <option value="">All States</option>
+                  {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <input 
+                  className="px-4 py-3 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
+                  type="text" 
+                  value={area} 
+                  placeholder="Area (e.g., V.I.)" 
+                  onChange={(e)=>setArea(e.target.value)} 
+                />
+                <button 
+                  onClick={()=>fetchProducts(true)} 
+                  className="px-6 py-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 touch-target"
+                >
+                  Apply
+                </button>
               </div>
-            )}
+
+              {/* Popular & Recent Searches - Native Style */}
+              {!search && (
+                <div className="mt-8 max-w-3xl mx-auto animate-fadeIn">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {recentSearches.length > 0 && (
+                      <>
+                        <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Recent:</span>
+                        {recentSearches.map((term, i) => (
+                          <button
+                            key={i}
+                            onClick={() => quickSearch(term)}
+                            className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 touch-target"
+                          >
+                            {term}
+                          </button>
+                        ))}
+                        <span className="text-white/50 px-2">•</span>
+                      </>
+                    )}
+                    <span className="text-xs text-white/70 font-semibold uppercase tracking-wider">Trending:</span>
+                    {popularSearches.map((term, i) => (
+                      <button
+                        key={i}
+                        onClick={() => quickSearch(term)}
+                        className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target"
+                      >
+                        <FiTrendingUp className="w-3.5 h-3.5" />
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Filters & Sort Bar */}
-        <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="container-custom py-3 sm:py-4">
+        {/* Filters & Sort Bar - Native App Style */}
+        <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+          <div className="app-container py-4">
             <div className="flex flex-wrap items-center gap-3">
               {/* Mobile Filter Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="sm:hidden btn btn-outline flex items-center gap-2 text-sm"
+                className="sm:hidden flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors touch-target"
               >
-                <FiFilter /> Filters
+                <FiFilter className="w-4 h-4" />
+                <span className="text-sm">Filters</span>
               </button>
 
-              {/* Desktop Category Pills */}
-              <div className="hidden sm:flex items-center gap-2 flex-wrap flex-1">
+              {/* Category Pills - Native Style */}
+              <div className="hidden sm:flex items-center gap-2 flex-wrap flex-1 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => setCategory('all')}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 whitespace-nowrap touch-target ${
                     category === 'all'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-gradient-to-r from-primary-600 to-orange-600 text-white shadow-lg shadow-primary-500/30'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md'
                   }`}
                 >
                   All
@@ -232,10 +267,10 @@ export default function Marketplace() {
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 whitespace-nowrap touch-target ${
                       category === cat
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        ? 'bg-gradient-to-r from-primary-600 to-orange-600 text-white shadow-lg shadow-primary-500/30'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md'
                     }`}
                   >
                     {cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
@@ -243,11 +278,11 @@ export default function Marketplace() {
                 ))}
               </div>
 
-              {/* Sort Dropdown */}
+              {/* Sort Dropdown - Native Style */}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="input py-2 text-sm w-auto"
+                className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium border-0 focus:ring-2 focus:ring-primary-500 text-sm shadow-md touch-target"
               >
                 <option value="">Featured (Boosted first)</option>
                 <option value="-createdAt">Newest First</option>

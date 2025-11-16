@@ -10,13 +10,15 @@ import { FaSpinner } from 'react-icons/fa';
  * @param {boolean} props.fullScreen - Show as full-screen overlay
  * @param {string} props.color - Spinner color (Tailwind class)
  * @param {string} props.className - Additional CSS classes
+ * @param {boolean} props.native - Use native app-style loader
  */
 const LoadingSpinner = ({
   size = 'md',
   message = '',
   fullScreen = false,
   color = 'text-primary-500',
-  className = ''
+  className = '',
+  native = false
 }) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
@@ -27,22 +29,48 @@ const LoadingSpinner = ({
 
   const spinnerSize = sizeClasses[size] || sizeClasses.md;
 
+  // Native app-style loader
+  if (native || fullScreen) {
+    return (
+      <div className={`${fullScreen ? 'fixed' : 'absolute'} inset-0 bg-gradient-to-br from-primary-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center z-50 ${className}`}>
+        <div className="relative">
+          {/* Logo/Icon */}
+          <div className="w-20 h-20 mb-6 rounded-3xl bg-gradient-to-br from-primary-500 to-orange-600 shadow-2xl flex items-center justify-center animate-pulse">
+            <span className="text-white text-3xl font-bold">W</span>
+          </div>
+          
+          {/* Spinner */}
+          <div className="flex justify-center mb-4">
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 border-4 border-primary-200 dark:border-gray-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary-600 dark:border-primary-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+          </div>
+          
+          {/* Message */}
+          {message && (
+            <p className="text-center text-sm font-medium text-gray-700 dark:text-gray-300 animate-pulse">
+              {message}
+            </p>
+          )}
+          {!message && (
+            <p className="text-center text-sm font-medium text-gray-600 dark:text-gray-400">
+              Loading...
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const spinner = (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
       <FaSpinner className={`animate-spin ${spinnerSize} ${color}`} />
       {message && (
-        <p className="text-sm text-gray-600 font-medium">{message}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">{message}</p>
       )}
     </div>
   );
-
-  if (fullScreen) {
-    return (
-      <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-        {spinner}
-      </div>
-    );
-  }
 
   return spinner;
 };
