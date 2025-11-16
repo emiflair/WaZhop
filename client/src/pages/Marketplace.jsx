@@ -463,6 +463,18 @@ function ProductCard({ product, onOpen }) {
           loading="lazy"
         />
         
+        {/* WaZhop Watermark for Free Users */}
+        {(!product.shop?.owner?.plan || product.shop?.owner?.plan === 'free') && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="flex items-center gap-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
+              <svg className="w-6 h-6 text-primary-600" viewBox="0 0 100 100" fill="currentColor">
+                <text x="50" y="70" fontSize="80" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">W</text>
+              </svg>
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">WaZhop</span>
+            </div>
+          </div>
+        )}
+        
         {/* Multiple Images Indicator */}
         {product.images?.length > 1 && (
           <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
