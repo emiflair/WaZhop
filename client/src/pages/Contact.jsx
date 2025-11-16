@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import MobileBottomNav from '../components/MobileBottomNav';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
@@ -8,7 +9,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow py-16">
+      <div className="flex-1 py-16 pb-24 md:pb-16">
         <div className="container-custom">
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
             Get In Touch
@@ -53,6 +54,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
+      <MobileBottomNav />
       <Footer />
     </div>
   );

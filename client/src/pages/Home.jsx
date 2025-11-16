@@ -4,6 +4,7 @@ import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp, FiArrowRight } fro
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
@@ -23,7 +24,8 @@ const Home = () => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await api.get('/products/marketplace?limit=4&sort=-createdAt');
+        // Fetch trending products with boosted first, then random selection
+        const response = await api.get('/products/marketplace?limit=4&sort=-clicks,-views');
         // API interceptor already extracts data from { success: true, data: [...] }
         setFeaturedProducts(Array.isArray(response) ? response : []);
       } catch (error) {
@@ -515,6 +517,7 @@ const Home = () => {
         </div>
       </section>
 
+      <MobileBottomNav />
       <Footer />
     </div>
   );

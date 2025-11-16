@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
@@ -53,7 +54,7 @@ const HowItWorks = () => {
         description="Learn how to create your digital shop in 4 easy steps. Sign up, customize, share, and start selling on WhatsApp in minutes."
       />
       <Navbar />
-      <div className="flex-grow">
+      <div className="flex-1 pb-24 md:pb-8">
         {/* Hero Section */}
         <section className="app-section bg-gradient-to-br from-primary-500 via-primary-600 to-accent-600 dark:from-primary-700 dark:via-primary-800 dark:to-accent-800 text-white">
           <div className="app-container text-center">
@@ -142,6 +143,7 @@ const HowItWorks = () => {
           </div>
         </div>
       </div>
+      <MobileBottomNav />
       <Footer />
     </div>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
 import StarRating from '../components/StarRating';
@@ -482,6 +483,7 @@ export default function ProductDetail() {
           )}
         </div>
 
+        <MobileBottomNav />
         <Footer />
       </div>
     </>

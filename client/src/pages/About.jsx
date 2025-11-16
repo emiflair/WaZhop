@@ -8,7 +8,7 @@ const About = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <Navbar />
-      <div className="flex-grow py-16 pb-24 md:pb-16">
+      <div className="flex-1 py-16 pb-24 md:pb-16">
         <div className="container-custom">
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 dark:text-gray-100">About WaZhop</h1>
           <div className="max-w-3xl mx-auto text-center">
