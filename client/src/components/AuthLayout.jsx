@@ -8,58 +8,70 @@ const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-accent-50 dark:from-gray-900 dark:to-gray-950">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Top nav with brand - add safe area padding for mobile notch/status bar */}
+        {/* Top nav with brand */}
         <div className="flex items-center justify-between mb-8 pt-safe">
-          <Link to="/" className="flex items-center space-x-2">
-            <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" />
-            <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" />
+          <Link to="/" className="flex items-center">
+            <img src={logoBlack} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto dark:hidden" />
+            <img src={logoWhite} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto hidden dark:block" />
           </Link>
           {altLink}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
           {/* Art/Marketing panel */}
-          <div className="hidden md:flex relative overflow-hidden rounded-2xl p-8 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-xl">
+          <div className="hidden md:flex relative overflow-hidden rounded-2xl p-8 lg:p-10 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-xl">
             <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
             <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-black/10 blur-2xl" aria-hidden="true" />
 
-            <div className="relative z-10 flex flex-col justify-between">
+            <div className="relative z-10 flex flex-col justify-between w-full">
               <div>
-                <h2 className="text-3xl font-extrabold tracking-tight drop-shadow-sm">{title}</h2>
+                <h2 className="text-5xl lg:text-6xl font-extrabold tracking-tight drop-shadow-sm">{title}</h2>
                 {subtitle && (
-                  <p className="mt-3 text-white/90 leading-relaxed max-w-md">{subtitle}</p>
+                  <p className="mt-6 text-white/90 text-xl lg:text-2xl leading-relaxed max-w-lg">{subtitle}</p>
                 )}
               </div>
 
               {/* Feature bullets */}
-              <ul className="mt-8 space-y-3 text-white/95 text-sm">
-                <li className="flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✓</span> Beautiful storefronts in minutes</li>
-                <li className="flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✓</span> Seamless WhatsApp integration</li>
-                <li className="flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✓</span> Powerful analytics & insights</li>
+              <ul className="mt-12 space-y-6 text-white/95 text-lg lg:text-xl">
+                <li className="flex items-center gap-5">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg font-bold">✓</span>
+                  <span>Beautiful storefronts in minutes</span>
+                </li>
+                <li className="flex items-center gap-5">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg font-bold">✓</span>
+                  <span>Seamless WhatsApp integration</span>
+                </li>
+                <li className="flex items-center gap-5">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg font-bold">✓</span>
+                  <span>Powerful analytics & insights</span>
+                </li>
               </ul>
 
-              <div className="mt-10 flex items-center gap-3">
-                <img src={logoWhite} alt="Brand" className="h-10 w-auto rounded-xl shadow-lg" />
-                <div>
-                  <p className="font-semibold">Built for growth</p>
-                  <p className="text-white/80 text-sm">Scale from your first product to thousands.</p>
-                </div>
+              <div className="mt-14 pt-10 border-t border-white/20">
+                <p className="font-semibold text-2xl">Built for growth</p>
+                <p className="text-white/80 mt-3 text-lg">Scale from your first product to thousands.</p>
               </div>
             </div>
           </div>
 
           {/* Form card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 sm:p-8">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10">
+            {/* Mobile logo - only show on small screens */}
+            <div className="md:hidden flex justify-center mb-6">
+              <img src={logoBlack} alt="WaZhop" className="h-16 w-auto dark:hidden" />
+              <img src={logoWhite} alt="WaZhop" className="h-16 w-auto hidden dark:block" />
+            </div>
+            
             {aside}
-            <div className="text-center mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">{title}</h1>
               {subtitle && (
                 <p className="text-gray-600 dark:text-gray-300 mt-2">{subtitle}</p>
               )}
             </div>
             {children}
             {footer && (
-              <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">{footer}</div>
+              <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">{footer}</div>
             )}
           </div>
         </div>
