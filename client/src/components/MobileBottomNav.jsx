@@ -108,30 +108,8 @@ export default function MobileBottomNav() {
       // Take seller directly to dashboard
       navigate('/dashboard')
     } else {
-      // Prompt buyer to upgrade to seller
-      toast((t) => (
-        <div className="flex flex-col gap-2">
-          <p className="font-medium">Switch to Seller Account?</p>
-          <p className="text-sm text-gray-600">Start selling your products on WaZhop</p>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                navigate('/profile?tab=upgrade')
-              }}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium"
-            >
-              Upgrade Now
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ), { duration: 5000 })
+      // Show upgrade modal for buyer
+      setShowUpgradeModal(true)
     }
   }
 
