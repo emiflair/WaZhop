@@ -17,7 +17,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { TouchButton } from '../../components/mobile';
 import { useNavigate } from 'react-router-dom';
 import ProductPreviewModal from '../../components/ProductPreviewModal';
-import { CATEGORY_SUGGESTIONS, toLabel } from '../../utils/categories';
+import { CATEGORY_SUGGESTIONS, toLabel, getSubcategories, getCategoryLabel } from '../../utils/categories';
 
 const Products = () => {
   const { user } = useAuth();
@@ -45,6 +45,7 @@ const Products = () => {
     price: '',
     comparePrice: '',
     category: 'other',
+    subcategory: '',
     tags: '',
     inStock: true,
     sku: '',
@@ -328,6 +329,7 @@ const Products = () => {
       price: product.price.toString(),
       comparePrice: product.comparePrice?.toString() || '',
       category: product.category,
+      subcategory: product.subcategory || '',
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku || '',
@@ -359,6 +361,7 @@ const Products = () => {
       price: product.price.toString(),
       comparePrice: product.comparePrice?.toString() || '',
       category: product.category,
+      subcategory: product.subcategory || '',
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku ? `${product.sku}-copy` : '',
@@ -1271,34 +1274,58 @@ const Products = () => {
                   </div>
                 </div>
 
-                {/* Category and SKU */}
+                {/* Category and Subcategory */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="label text-sm sm:text-base">Category</label>
-                    <input
-                      type="text"
-                      list="category-suggestions"
+                    <label className="label text-sm sm:text-base">Category *</label>
+                    <select
+                      required
                       value={formData.category}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          category: e.target.value
-                            .toString()
-                            .trim()
-                            .toLowerCase()
-                            .replace(/\s+/g, '-'),
-                        })
-                      }
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value, subcategory: '' })}
                       className="input text-sm sm:text-base"
-                      placeholder="e.g., fashion, electronics, home-appliances"
-                    />
-                    <datalist id="category-suggestions">
+                    >
+                      <option value="">Select a category</option>
                       {CATEGORY_SUGGESTIONS.map((c) => (
-                        <option key={c} value={c}>{toLabel(c)}</option>
+                        <option key={c} value={c}>{getCategoryLabel(c)}</option>
                       ))}
-                    </datalist>
-                    <p className="text-xs text-gray-500 mt-1">Type to search or pick a suggestion.</p>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Select the main category for your product</p>
                   </div>
+                  <div>
+                    <label className="label text-sm sm:text-base">
+                      Subcategory {formData.category && getSubcategories(formData.category).length > 0 && '*'}
+                    </label>
+                    {formData.category && getSubcategories(formData.category).length > 0 ? (
+                      <>
+                        <select
+                          required={formData.category && getSubcategories(formData.category).length > 0}
+                          value={formData.subcategory}
+                          onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
+                          className="input text-sm sm:text-base"
+                        >
+                          <option value="">Select a subcategory</option>
+                          {getSubcategories(formData.category).map((sub) => (
+                            <option key={sub} value={sub}>{toLabel(sub)}</option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Select a specific subcategory</p>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          disabled
+                          className="input text-sm sm:text-base bg-gray-100 dark:bg-gray-700"
+                          placeholder="Select a category first"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Subcategory will appear after selecting category</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* SKU and Tags */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label text-sm sm:text-base">SKU (Optional)</label>
                     <input
@@ -1307,6 +1334,16 @@ const Products = () => {
                       onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                       className="input text-sm sm:text-base"
                       placeholder="PROD-001"
+                    />
+                  </div>
+                  <div>
+                    <label className="label text-sm sm:text-base">Tags (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={formData.tags}
+                      onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                      className="input text-sm sm:text-base"
+                      placeholder="leather, women, handbag"
                     />
                   </div>
                 </div>
@@ -1338,18 +1375,6 @@ const Products = () => {
                     />
                     <p className="text-xs text-gray-500 mt-1">More specific area or neighborhood.</p>
                   </div>
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <label className="label text-sm sm:text-base">Tags (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    className="input text-sm sm:text-base"
-                    placeholder="leather, women, handbag"
-                  />
                 </div>
 
                 {/* Stock Status */}

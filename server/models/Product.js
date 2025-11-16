@@ -53,6 +53,12 @@ const productSchema = new mongoose.Schema({
     lowercase: true,
     default: 'other'
   },
+  subcategory: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: null
+  },
   tags: [{
     type: String,
     trim: true,
@@ -234,6 +240,7 @@ productSchema.methods.incrementViews = async function () {
 productSchema.index({ shop: 1, isActive: 1 });
 productSchema.index({ shop: 1, position: 1 });
 productSchema.index({ shop: 1, category: 1 });
+productSchema.index({ shop: 1, category: 1, subcategory: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ 'boost.endAt': -1 });
 productSchema.index({ locationState: 1, locationArea: 1 });
