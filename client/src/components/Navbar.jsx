@@ -70,14 +70,14 @@ const Navbar = () => {
             <img
               src={logoBlack}
               alt="WaZhop logo"
-              className="h-8 md:h-10 w-auto dark:hidden"
+              className="h-16 md:h-20 lg:h-24 w-auto dark:hidden"
               decoding="async"
               loading="eager"
             />
             <img
               src={logoWhite}
               alt="WaZhop logo"
-              className="h-8 md:h-10 w-auto hidden dark:block"
+              className="h-16 md:h-20 lg:h-24 w-auto hidden dark:block"
               decoding="async"
               loading="eager"
             />
@@ -185,14 +185,14 @@ const Navbar = () => {
                 <img
                   src={logoBlack}
                   alt="WaZhop logo"
-                  className="h-8 w-auto dark:hidden"
+                  className="h-14 w-auto dark:hidden"
                   decoding="async"
                   loading="eager"
                 />
                 <img
                   src={logoWhite}
                   alt="WaZhop logo"
-                  className="h-8 w-auto hidden dark:block"
+                  className="h-14 w-auto hidden dark:block"
                   decoding="async"
                   loading="eager"
                 />

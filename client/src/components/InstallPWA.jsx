@@ -133,8 +133,8 @@ const InstallPWA = ({ onClose }) => {
         <div className="flex items-center gap-3 relative z-10">
           {/* Brand lockup: icon + aZhop (chip to match navbar look on gradient) */}
           <div className="flex items-center space-x-2 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg px-2 py-1 shadow-sm">
-            <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" decoding="async" loading="eager" />
-            <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" decoding="async" loading="eager" />
+            <img src={logoBlack} alt="WaZhop logo" className="h-12 w-auto dark:hidden" decoding="async" loading="eager" />
+            <img src={logoWhite} alt="WaZhop logo" className="h-12 w-auto hidden dark:block" decoding="async" loading="eager" />
           </div>
           
           {/* Content */}
@@ -183,8 +183,8 @@ const InstallPWA = ({ onClose }) => {
           {/* Sheet */}
           <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl border-t border-gray-200 dark:border-gray-800 p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
             <div className="flex items-start gap-3">
-              <img src={logoBlack} alt="WaZhop logo" className="h-12 w-auto dark:hidden" />
-              <img src={logoWhite} alt="WaZhop logo" className="h-12 w-auto hidden dark:block" />
+              <img src={logoBlack} alt="WaZhop logo" className="h-16 w-auto dark:hidden" />
+              <img src={logoWhite} alt="WaZhop logo" className="h-16 w-auto hidden dark:block" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div>

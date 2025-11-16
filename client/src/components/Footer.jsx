@@ -16,7 +16,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto" decoding="async" loading="eager" />
+                          <img src={logoWhite} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto mb-3" />
             </div>
             <p className="text-gray-400 text-sm">
               Create your WhatsApp shop in minutes. Customize, share, and sell smarter.
