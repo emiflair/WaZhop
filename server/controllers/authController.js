@@ -649,7 +649,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
         <p style="color:#4b5563;margin:16px 0 0">Stay safe,<br/><strong>The WaZhop Team</strong><br/><a href="https://wazhop.ng" style="color:#F97316;text-decoration:none">www.wazhop.ng</a></p>
       </div>
     </div>
-  ";
+  `;
   try { await sendEmail({ to: user.email, subject: 'Reset Your WaZhop Password', html }); } catch {}
 
   // In development, include token to ease testing (never in production)
