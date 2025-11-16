@@ -15,8 +15,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-                          <img src={logoWhite} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto mb-3" />
+            <div className="flex items-center space-x-2 mb-4 -ml-15">
+                          <img src={logoWhite} alt="WaZhop" className="h-20 w-auto object-contain mb-3" />
             </div>
             <p className="text-gray-400 text-sm">
               Create your WhatsApp shop in minutes. Customize, share, and sell smarter.

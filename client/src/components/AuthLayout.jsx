@@ -10,9 +10,9 @@ const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Top nav with brand */}
         <div className="flex items-center justify-between mb-8 pt-safe">
-          <Link to="/" className="flex items-center">
-            <img src={logoBlack} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto dark:hidden" />
-            <img src={logoWhite} alt="WaZhop" className="h-16 md:h-20 lg:h-24 w-auto hidden dark:block" />
+          <Link to="/" className="flex-shrink-0 flex items-center -ml-14">
+            <img src={logoBlack} alt="WaZhop" className="h-20 md:h-20 lg:h-24 w-auto object-contain dark:hidden" />
+            <img src={logoWhite} alt="WaZhop" className="h-20 md:h-20 lg:h-24 w-auto object-contain hidden dark:block" />
           </Link>
           {altLink}
         </div>
@@ -56,12 +56,6 @@ const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
 
           {/* Form card */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 sm:p-8 lg:p-10">
-            {/* Mobile logo - only show on small screens */}
-            <div className="md:hidden flex justify-center mb-6">
-              <img src={logoBlack} alt="WaZhop" className="h-16 w-auto dark:hidden" />
-              <img src={logoWhite} alt="WaZhop" className="h-16 w-auto hidden dark:block" />
-            </div>
-            
             {aside}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">{title}</h1>

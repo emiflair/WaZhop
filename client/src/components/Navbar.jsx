@@ -64,34 +64,34 @@ const Navbar = () => {
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
       <div className="container-custom">
-        <div className="flex justify-between items-center min-h-[56px] md:h-20">
+        <div className="flex flex-nowrap justify-between items-center gap-4 min-h-[56px] md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
+          <Link to="/" className="flex-shrink-0 flex items-center -ml-14" onClick={() => setIsOpen(false)}>
             <img
               src={logoBlack}
               alt="WaZhop logo"
-              className="h-16 md:h-20 lg:h-24 w-auto dark:hidden"
+              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain dark:hidden"
               decoding="async"
               loading="eager"
             />
             <img
               src={logoWhite}
               alt="WaZhop logo"
-              className="h-16 md:h-20 lg:h-24 w-auto hidden dark:block"
+              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain hidden dark:block"
               decoding="async"
               loading="eager"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2 lg:space-x-3 md:ml-8 lg:ml-12">
+          <div className="hidden md:flex items-center flex-nowrap space-x-1 lg:space-x-2 xl:space-x-3 md:ml-2 lg:ml-4 xl:ml-12">
             {menuLinks.map((link) => {
               const active = isActive(link.to);
               return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                  className={`px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all font-medium text-xs md:text-sm lg:text-base whitespace-nowrap ${
                     active
                       ? 'bg-primary-600 text-white shadow-sm hover:bg-primary-700 font-semibold'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -107,13 +107,13 @@ const Navbar = () => {
               <>
                 <Link 
                   to="/register?role=buyer" 
-                  className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all shadow-sm md:ml-2 lg:ml-4"
+                  className="px-2 lg:px-3 xl:px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all shadow-sm text-xs md:text-sm lg:text-base whitespace-nowrap"
                 >
                   BUY
                 </Link>
                 <Link 
                   to="/register?role=seller" 
-                  className="px-4 py-2 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm"
+                  className="px-2 lg:px-3 xl:px-4 py-2 rounded-lg font-semibold bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm text-xs md:text-sm lg:text-base whitespace-nowrap"
                 >
                   SELL
                 </Link>
@@ -145,11 +145,11 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition">
+              <div className="flex items-center space-x-2 lg:space-x-4">
+                <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition text-xs md:text-sm lg:text-base whitespace-nowrap">
                   Login
                 </Link>
-                <Link to="/register" className="btn btn-primary">
+                <Link to="/register" className="btn btn-primary text-xs md:text-sm lg:text-base whitespace-nowrap">
                   Get Started
                 </Link>
               </div>

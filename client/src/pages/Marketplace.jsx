@@ -126,8 +126,8 @@ export default function Marketplace() {
         <Navbar />
 
         {/* Discover Amazing Products Banner */}
-        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-3 sm:py-6 text-center">
-          <h2 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight px-4">
+        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-4 sm:py-6 md:py-8 text-center">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight px-4">
             <span className="inline">Discover</span>{' '}
             <span className="inline text-white/70">Amazing</span>{' '}
             <span className="inline">Products</span>
@@ -147,19 +147,19 @@ export default function Marketplace() {
                 <span className="text-sm font-semibold">Discover Amazing Products</span>
               </div>
               
-              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-1.5 sm:mb-3 animate-fadeIn">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2 sm:mb-3 md:mb-4 animate-fadeIn">
                 Shop from <span className="text-white/90">Verified</span> Sellers
               </h1>
-              <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-3 sm:mb-6 leading-relaxed animate-fadeIn">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed animate-fadeIn">
                 Thousands of products. Best deals. Instant WhatsApp checkout.
               </p>
 
               {/* Get Started CTA for guests */}
               {!isAuthenticated && (
-                <div className="mb-3 sm:mb-6 animate-fadeIn">
+                <div className="mb-4 sm:mb-6 md:mb-8 animate-fadeIn">
                   <Link
                     to="/register?role=seller"
-                    className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold rounded-2xl bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 touch-target"
+                    className="inline-flex items-center justify-center px-10 md:px-12 py-4 md:py-5 text-base md:text-lg font-semibold rounded-2xl bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 touch-target"
                   >
                     Start Selling
                   </Link>

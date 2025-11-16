@@ -72,8 +72,8 @@ const AdminLayout = ({ children }) => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile header */}
       <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-red-600 dark:bg-red-700 shadow-sm z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-red-700 dark:border-red-800 safe-top safe-left safe-right">
-        <div className="flex items-center space-x-2">
-          <img src={logoWhite} alt="WaZhop Admin" className="h-12 w-auto" decoding="async" loading="eager" />
+        <div className="flex-shrink-0 flex items-center -ml-14">
+          <img src={logoWhite} alt="WaZhop Admin" className="h-20 w-auto object-contain" decoding="async" loading="eager" />
           <span className="text-xl font-bold text-white">Admin Panel</span>
         </div>
         <div className="flex items-center gap-2">
@@ -105,8 +105,8 @@ const AdminLayout = ({ children }) => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-gray-700 bg-red-600 dark:bg-red-700">
-            <div className="flex items-center space-x-2">
-              <img src={logoWhite} alt="WaZhop Admin" className="h-16 md:h-20 w-auto" />
+            <div className="flex-shrink-0 flex items-center -ml-14">
+              <img src={logoWhite} alt="WaZhop Admin" className="h-20 w-auto object-contain" />
               <div>
                 <span className="text-lg font-bold text-white block">Admin Panel</span>
                 <span className="text-xs text-red-100">Platform Management</span>

@@ -72,10 +72,10 @@ const DashboardLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile header */}
-  <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
-        <Link to="/" className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg active:opacity-90" aria-label="Go to homepage">
-          <img src={logoBlack} alt="WaZhop logo" className="h-12 w-auto dark:hidden" decoding="async" loading="eager" />
-          <img src={logoWhite} alt="WaZhop logo" className="h-12 w-auto hidden dark:block" decoding="async" loading="eager" />
+      <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
+        <Link to="/" className="flex-shrink-0 flex items-center -ml-14 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg active:opacity-90" aria-label="Go to homepage">
+          <img src={logoBlack} alt="WaZhop logo" className="h-20 w-auto object-contain dark:hidden" decoding="async" loading="eager" />
+          <img src={logoWhite} alt="WaZhop logo" className="h-20 w-auto object-contain hidden dark:block" decoding="async" loading="eager" />
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -106,9 +106,9 @@ const DashboardLayout = ({ children }) => {
         <div className="h-full flex flex-col">
           {/* Logo - Desktop Only */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b dark:border-gray-700">
-            <Link to="/" className="flex items-center space-x-2">
-              <img src={logoBlack} alt="WaZhop logo" className="h-16 md:h-20 w-auto dark:hidden" decoding="async" loading="eager" />
-              <img src={logoWhite} alt="WaZhop logo" className="h-16 md:h-20 w-auto hidden dark:block" decoding="async" loading="eager" />
+            <Link to="/" className="flex-shrink-0 flex items-center -ml-14">
+              <img src={logoBlack} alt="WaZhop logo" className="h-20 w-auto object-contain dark:hidden" decoding="async" loading="eager" />
+              <img src={logoWhite} alt="WaZhop logo" className="h-20 w-auto object-contain hidden dark:block" decoding="async" loading="eager" />
             </Link>
             <ThemeToggle />
           </div>
