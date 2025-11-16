@@ -97,22 +97,6 @@ export default function MobileBottomNav() {
     }
   }
 
-  const handleProfileClick = () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to view profile')
-      navigate('/login')
-      return
-    }
-
-    if (user?.role === 'seller') {
-      // Take seller directly to dashboard
-      navigate('/dashboard')
-    } else {
-      // Show upgrade modal for buyer
-      setShowUpgradeModal(true)
-    }
-  }
-
   const navItems = [
     {
       icon: FiHome,
