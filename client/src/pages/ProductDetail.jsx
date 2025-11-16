@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
+import { getCategoryLabel, toLabel } from '../utils/categories';
 import StarRating from '../components/StarRating';
 import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2 } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
@@ -117,8 +118,31 @@ export default function ProductDetail() {
       if (!product?.category) return;
       try {
         setLoadingRelated(true);
-        const list = await productAPI.getMarketplaceProducts({ category: product.category, limit: 12 });
-        const items = Array.isArray(list) ? list : [];
+        
+        // First, try to get products from same subcategory (most relevant)
+        let items = [];
+        if (product.subcategory) {
+          const subcatList = await productAPI.getMarketplaceProducts({ 
+            category: product.category, 
+            subcategory: product.subcategory,
+            limit: 12 
+          });
+          items = Array.isArray(subcatList) ? subcatList : [];
+        }
+        
+        // If not enough from subcategory, fill with same category products
+        if (items.length < 8) {
+          const catList = await productAPI.getMarketplaceProducts({ 
+            category: product.category, 
+            limit: 12 
+          });
+          const catItems = Array.isArray(catList) ? catList : [];
+          // Merge without duplicates
+          const existingIds = new Set(items.map(p => p._id));
+          const additionalItems = catItems.filter(p => !existingIds.has(p._id));
+          items = [...items, ...additionalItems];
+        }
+        
         setRelatedProducts(items.filter((p) => p._id !== product._id).slice(0, 8));
       } catch {
         setRelatedProducts([]);
@@ -305,6 +329,40 @@ export default function ProductDetail() {
 
           {/* Info */}
           <div>
+            {/* Category Breadcrumb */}
+            {(product.category || product.subcategory) && (
+              <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <Link 
+                  to="/marketplace" 
+                  className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                >
+                  Marketplace
+                </Link>
+                {product.category && (
+                  <>
+                    <span>/</span>
+                    <Link 
+                      to={`/marketplace?category=${product.category}`}
+                      className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium"
+                    >
+                      {getCategoryLabel(product.category)}
+                    </Link>
+                  </>
+                )}
+                {product.subcategory && (
+                  <>
+                    <span>/</span>
+                    <Link 
+                      to={`/marketplace?category=${product.category}&subcategory=${product.subcategory}`}
+                      className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      {toLabel(product.subcategory)}
+                    </Link>
+                  </>
+                )}
+              </nav>
+            )}
+
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
             {product.numReviews > 0 && (
               <div className="mb-3">

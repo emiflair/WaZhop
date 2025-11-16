@@ -575,7 +575,7 @@ exports.trackProductClick = asyncHandler(async (req, res) => {
 // @access  Public
 exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   const {
-    page = 1, limit = 24, category, search, minPrice, maxPrice, sort, state, area
+    page = 1, limit = 24, category, subcategory, search, minPrice, maxPrice, sort, state, area
   } = req.query;
 
   // Build query for products from active shops only
@@ -589,6 +589,11 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     query.category = category.toLowerCase();
   }
 
+  // Filter by subcategory if provided
+  if (subcategory && subcategory !== 'all') {
+    query.subcategory = subcategory.toLowerCase();
+  }
+
   // Advanced search with weighted scoring
   // Split search into keywords for better matching
   const searchKeywords = search ? search.trim().toLowerCase().split(/\s+/).filter((k) => k.length > 0) : [];
@@ -600,7 +605,8 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
         { name: { $regex: keyword, $options: 'i' } },
         { description: { $regex: keyword, $options: 'i' } },
         { tags: { $elemMatch: { $regex: keyword, $options: 'i' } } },
-        { category: { $regex: keyword, $options: 'i' } }
+        { category: { $regex: keyword, $options: 'i' } },
+        { subcategory: { $regex: keyword, $options: 'i' } }
       ]
     }));
 
@@ -687,6 +693,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
       const descLower = (product.description || '').toLowerCase();
       const tagsLower = (product.tags || []).map((t) => t.toLowerCase());
       const categoryLower = (product.category || '').toLowerCase();
+      const subcategoryLower = (product.subcategory || '').toLowerCase();
 
       searchKeywords.forEach((keyword) => {
         // Exact match in name: 30 points
@@ -699,6 +706,10 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
         // Category exact match: 15 points
         if (categoryLower === keyword) relevanceScore += 15;
         else if (categoryLower.includes(keyword)) relevanceScore += 8;
+
+        // Subcategory exact match: 12 points
+        if (subcategoryLower === keyword) relevanceScore += 12;
+        else if (subcategoryLower.includes(keyword)) relevanceScore += 6;
 
         // Tags match: 12 points per tag
         if (tagsLower.some((tag) => tag === keyword)) relevanceScore += 12;
@@ -715,6 +726,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
           || descLower.includes(k)
           || tagsLower.some((t) => t.includes(k))
           || categoryLower.includes(k)
+          || subcategoryLower.includes(k)
         ));
         if (allMatch) relevanceScore += 15;
       }
