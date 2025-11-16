@@ -77,7 +77,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-3 md:ml-8 lg:ml-12">
             {menuLinks.map((link) => {
               const active = isActive(link.to);
               return (
@@ -100,7 +100,7 @@ const Navbar = () => {
               <>
                 <Link 
                   to="/register?role=buyer" 
-                  className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all shadow-sm"
+                  className="px-4 py-2 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-all shadow-sm md:ml-2 lg:ml-4"
                 >
                   BUY
                 </Link>
