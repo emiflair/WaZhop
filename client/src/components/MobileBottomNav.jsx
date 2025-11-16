@@ -73,8 +73,8 @@ export default function MobileBottomNav() {
     }
 
     if (user?.role === 'seller') {
-      // Take seller to add products page
-      navigate('/dashboard/products/new')
+      // Take seller to products page (where they can add new products)
+      navigate('/dashboard/products')
     } else {
       // Show upgrade modal for buyer
       setShowUpgradeModal(true)
