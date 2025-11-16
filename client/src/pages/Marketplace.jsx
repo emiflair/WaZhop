@@ -109,11 +109,6 @@ export default function Marketplace() {
     }
   }
 
-  // Initial loading screen
-  if (loading && products.length === 0) {
-    return <LoadingSpinner native fullScreen message="Loading amazing products..." />;
-  }
-
   return (
     <>
       <SEO
@@ -128,24 +123,24 @@ export default function Marketplace() {
           {/* Decorative Elements */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10"></div>
           
-          <div className="app-container relative z-10 py-8 sm:py-12 md:py-16">
+          <div className="app-container relative z-10 py-6 sm:py-10 md:py-14">
             <div className="text-center">
               {/* Badge */}
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-6 animate-fadeIn">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-3 sm:mb-5 animate-fadeIn">
                 <FiZap className="w-4 h-4 mr-2" />
                 <span className="text-sm font-semibold">Discover Amazing Products</span>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 animate-fadeIn">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-2 sm:mb-3 animate-fadeIn">
                 Shop from <span className="text-white/90">Verified</span> Sellers
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed animate-fadeIn">
+              <p className="text-sm sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-4 sm:mb-6 leading-relaxed animate-fadeIn">
                 Thousands of products. Best deals. Instant WhatsApp checkout.
               </p>
 
               {/* Get Started CTA for guests */}
               {!isAuthenticated && (
-                <div className="mb-8 animate-fadeIn">
+                <div className="mb-4 sm:mb-6 animate-fadeIn">
                   <Link
                     to="/register?role=seller"
                     className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold rounded-2xl bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 touch-target"
@@ -162,7 +157,7 @@ export default function Marketplace() {
                   <input
                     type="text"
                     placeholder="Search products, categories..."
-                    className="w-full pl-14 pr-32 py-4 sm:py-5 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-2xl focus:ring-4 focus:ring-white/30 text-base sm:text-lg font-medium placeholder:text-gray-400"
+                    className="w-full pl-14 pr-32 py-3 sm:py-4 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-2xl focus:ring-4 focus:ring-white/30 text-base sm:text-lg font-medium placeholder:text-gray-400"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -175,7 +170,7 @@ export default function Marketplace() {
                 </div>
               </form>
               {/* Location refinement - Native Style */}
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto animate-fadeIn">
+              <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 max-w-3xl mx-auto animate-fadeIn">
                 <select 
                   value={ngState} 
                   onChange={(e)=>setNgState(e.target.value)} 
