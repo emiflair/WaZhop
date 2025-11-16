@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
+import MobileBottomNav from '../components/MobileBottomNav';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -136,6 +137,7 @@ const Login = () => {
           {loading ? 'Logging in…' : 'Login'}
         </button>
       </form>
+      <MobileBottomNav />
     </AuthLayout>
   );
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
+import MobileBottomNav from '../components/MobileBottomNav';
 import { authAPI } from '../utils/api';
 
 export default function ForgotPassword() {
@@ -185,6 +186,7 @@ export default function ForgotPassword() {
           </form>
         )}
       </div>
+      <MobileBottomNav />
     </AuthLayout>
   );
 }

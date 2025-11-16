@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
+import MobileBottomNav from '../components/MobileBottomNav';
 import api from '../utils/api';
 
 const Register = () => {
@@ -262,6 +263,7 @@ const Register = () => {
           {loading ? 'Creating Account…' : 'Create Account'}
         </button>
       </form>
+      <MobileBottomNav />
     </AuthLayout>
   );
 };
