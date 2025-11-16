@@ -114,8 +114,7 @@ export default function MobileBottomNav() {
       icon: FiPlusCircle,
       label: 'Sell',
       path: null,
-      onClick: handleSellClick,
-      isSpecial: true
+      onClick: handleSellClick
     },
     {
       icon: FiDollarSign,
@@ -152,15 +151,13 @@ export default function MobileBottomNav() {
               key={index}
               onClick={item.onClick}
               className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px] touch-target ${
-                item.isSpecial
-                  ? 'text-primary-600 dark:text-primary-400'
-                  : active
+                active
                   ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
                   : 'text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800'
               }`}
             >
-              <Icon className={`${item.isSpecial ? 'w-7 h-7' : 'w-6 h-6'}`} />
-              <span className={`text-xs font-medium ${item.isSpecial ? 'font-semibold' : ''}`}>
+              <Icon className="w-6 h-6" />
+              <span className="text-xs font-medium">
                 {item.label}
               </span>
             </button>
