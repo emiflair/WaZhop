@@ -329,8 +329,8 @@ export default function ProductDetail() {
 
           {/* Info */}
           <div>
-            {/* Category Breadcrumb */}
-            {(product.category || product.subcategory) && (
+            {/* Category Breadcrumb - Hidden for cleaner product page */}
+            {/* {(product.category || product.subcategory) && (
               <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
                 <Link 
                   to="/marketplace" 
@@ -361,7 +361,7 @@ export default function ProductDetail() {
                   </>
                 )}
               </nav>
-            )}
+            )} */}
 
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
             {product.numReviews > 0 && (
