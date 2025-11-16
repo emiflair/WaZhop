@@ -7,10 +7,8 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { productAPI, authAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const Pricing = () => {
-  useMarketingTheme(); // Force light mode for marketing page
   const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
   const { user, isAuthenticated, updateUser } = useAuth();
   const isBuyer = isAuthenticated && user?.role === 'buyer';

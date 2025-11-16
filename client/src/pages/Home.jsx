@@ -10,10 +10,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import LazyImage from '../components/LazyImage';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const Home = () => {
-  useMarketingTheme(); // Force light mode for marketing page
   const { isAuthenticated, user } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';
@@ -166,7 +164,7 @@ const Home = () => {
                     key={product._id}
                     to={`/product/${product._id}`}
                     state={{ fromMarketplace: true }}
-                    className="group app-card hover:-translate-y-2 transform transition-all duration-300"
+                    className="product-card-border group app-card hover:-translate-y-2 transform transition-all duration-300"
                   >
                     <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 rounded-xl mb-4 relative">
                       {product.isBoosted && (

@@ -6,10 +6,8 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import LazyImage from '../components/LazyImage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../utils/api';
-import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const About = () => {
-  useMarketingTheme(); // Force light mode for marketing page
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
@@ -85,7 +83,7 @@ const About = () => {
                   <Link
                     key={product._id}
                     to={`/products/${product._id}`}
-                    className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-200 dark:border-gray-700"
+                    className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border-2"
                   >
                     <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
                       <LazyImage

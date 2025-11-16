@@ -2,10 +2,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
-import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const HowItWorks = () => {
-  useMarketingTheme(); // Force light mode for marketing page
   const sellerSteps = [
     {
       number: '1',

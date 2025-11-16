@@ -1,10 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useMarketingTheme } from '../hooks/useMarketingTheme';
 
 const TermsOfService = () => {
-  useMarketingTheme(); // Force light mode for marketing page
   return (
     <>
       <Helmet>
