@@ -4,7 +4,8 @@ import { FaStore } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logo from '../assets/brand/wazhop-icon.svg';
+import logoBlack from '/wazhoplogo/logoblack.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -72,9 +73,9 @@ const DashboardLayout = ({ children }) => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile header */}
   <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-700 safe-top safe-left safe-right">
-        <Link to="/" className="flex items-center space-x-0 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg active:opacity-90" aria-label="Go to homepage">
-          <img src={logo} alt="WaZhop logo" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
-          <span className="-ml-2 tracking-tighter text-2xl font-bold dark:text-gray-100">aZhop</span>
+        <Link to="/" className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg active:opacity-90" aria-label="Go to homepage">
+          <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" decoding="async" loading="eager" />
+          <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" decoding="async" loading="eager" />
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -105,9 +106,9 @@ const DashboardLayout = ({ children }) => {
         <div className="h-full flex flex-col">
           {/* Logo - Desktop Only */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b dark:border-gray-700">
-            <Link to="/" className="flex items-center space-x-0">
-              <img src={logo} alt="WaZhop logo" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
-              <span className="-ml-2 tracking-tighter text-2xl font-bold dark:text-gray-100">aZhop</span>
+            <Link to="/" className="flex items-center space-x-2">
+              <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" decoding="async" loading="eager" />
+              <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" decoding="async" loading="eager" />
             </Link>
             <ThemeToggle />
           </div>

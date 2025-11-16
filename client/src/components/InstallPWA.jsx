@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiDownload, FiChevronDown, FiChevronUp, FiSmartphone } from 'react-icons/fi';
-import logo from '../assets/brand/wazhop-icon.svg';
+import logoBlack from '/wazhoplogo/logoblack.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
 import { FaApple, FaAndroid, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -131,9 +132,9 @@ const InstallPWA = ({ onClose }) => {
         
         <div className="flex items-center gap-3 relative z-10">
           {/* Brand lockup: icon + aZhop (chip to match navbar look on gradient) */}
-          <div className="flex items-center space-x-0 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg pl-1 pr-2 py-1 shadow-sm">
-            <img src={logo} alt="WaZhop logo" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
-            <span className="-ml-2 tracking-tighter font-extrabold text-gray-900 dark:text-gray-100 text-base sm:text-lg">aZhop</span>
+          <div className="flex items-center space-x-2 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg px-2 py-1 shadow-sm">
+            <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" decoding="async" loading="eager" />
+            <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" decoding="async" loading="eager" />
           </div>
           
           {/* Content */}
@@ -182,7 +183,8 @@ const InstallPWA = ({ onClose }) => {
           {/* Sheet */}
           <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl border-t border-gray-200 dark:border-gray-800 p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
             <div className="flex items-start gap-3">
-              <img src={logo} alt="WaZhop logo" className="w-12 h-12 rounded-xl shadow-sm" />
+              <img src={logoBlack} alt="WaZhop logo" className="h-12 w-auto dark:hidden" />
+              <img src={logoWhite} alt="WaZhop logo" className="h-12 w-auto hidden dark:block" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div>

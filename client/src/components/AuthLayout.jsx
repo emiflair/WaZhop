@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import logo from '../assets/brand/wazhop-icon.svg';
+import logoBlack from '/wazhoplogo/logoblack.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
 
 // Shared layout for Login/Register with orange gradient art panel on the left (md+)
 // and content card on the right. Keeps things accessible and mobile-first.
@@ -9,9 +10,9 @@ const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Top nav with brand - add safe area padding for mobile notch/status bar */}
         <div className="flex items-center justify-between mb-8 pt-safe">
-          <Link to="/" className="flex items-center space-x-0">
-            <img src={logo} alt="WaZhop logo" className="h-10 w-10 rounded-lg shadow" />
-            <span className="-ml-2 tracking-tighter text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">aZhop</span>
+          <Link to="/" className="flex items-center space-x-2">
+            <img src={logoBlack} alt="WaZhop logo" className="h-8 w-auto dark:hidden" />
+            <img src={logoWhite} alt="WaZhop logo" className="h-8 w-auto hidden dark:block" />
           </Link>
           {altLink}
         </div>
@@ -38,7 +39,7 @@ const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
               </ul>
 
               <div className="mt-10 flex items-center gap-3">
-                <img src={logo} alt="Brand" className="h-12 w-12 rounded-xl shadow-lg" />
+                <img src={logoWhite} alt="Brand" className="h-10 w-auto rounded-xl shadow-lg" />
                 <div>
                   <p className="font-semibold">Built for growth</p>
                   <p className="text-white/80 text-sm">Scale from your first product to thousands.</p>

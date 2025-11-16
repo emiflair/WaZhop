@@ -3,7 +3,8 @@ import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logo from '../assets/brand/wazhop-icon.svg';
+import logoBlack from '/wazhoplogo/logoblack.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,15 +66,21 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex justify-between items-center min-h-[56px] md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-0" onClick={() => setIsOpen(false)}>
+          <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
             <img
-              src={logo}
+              src={logoBlack}
               alt="WaZhop logo"
-              className="w-9 h-9 md:w-11 md:h-11 rounded-lg shadow-sm"
+              className="h-8 md:h-10 w-auto dark:hidden"
               decoding="async"
               loading="eager"
             />
-            <span className="-ml-2 tracking-tighter text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
+            <img
+              src={logoWhite}
+              alt="WaZhop logo"
+              className="h-8 md:h-10 w-auto hidden dark:block"
+              decoding="async"
+              loading="eager"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -174,15 +181,21 @@ const Navbar = () => {
           <div className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-800 z-50 shadow-2xl md:hidden overflow-y-auto">
             {/* Header with Logo */}
             <div className="h-16 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-6">
-              <Link to="/" className="flex items-center space-x-0" onClick={() => setIsOpen(false)}>
+              <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
                 <img
-                  src={logo}
+                  src={logoBlack}
                   alt="WaZhop logo"
-                  className="w-9 h-9 rounded-lg shadow-sm"
+                  className="h-8 w-auto dark:hidden"
                   decoding="async"
                   loading="eager"
                 />
-                <span className="-ml-2 tracking-tighter text-2xl font-bold text-gray-900 dark:text-gray-100">aZhop</span>
+                <img
+                  src={logoWhite}
+                  alt="WaZhop logo"
+                  className="h-8 w-auto hidden dark:block"
+                  decoding="async"
+                  loading="eager"
+                />
               </Link>
               <button
                 onClick={() => setIsOpen(false)}

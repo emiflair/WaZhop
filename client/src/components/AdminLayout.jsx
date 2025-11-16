@@ -4,7 +4,7 @@ import { FaStore } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logo from '../assets/brand/wazhop-icon.svg';
+import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
 
 const AdminLayout = ({ children }) => {
   const location = useLocation();
@@ -73,7 +73,7 @@ const AdminLayout = ({ children }) => {
       {/* Mobile header */}
       <div ref={headerRef} className="lg:hidden fixed top-0 left-0 right-0 bg-red-600 dark:bg-red-700 shadow-sm z-40 min-h-[56px] flex items-center justify-between px-4 border-b border-red-700 dark:border-red-800 safe-top safe-left safe-right">
         <div className="flex items-center space-x-2">
-          <img src={logo} alt="WaZhop Admin" className="w-9 h-9 rounded-lg shadow-sm" decoding="async" loading="eager" />
+          <img src={logoWhite} alt="WaZhop Admin" className="h-9 w-auto" decoding="async" loading="eager" />
           <span className="text-xl font-bold text-white">Admin Panel</span>
         </div>
         <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ const AdminLayout = ({ children }) => {
           {/* Logo */}
           <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-gray-700 bg-red-600 dark:bg-red-700">
             <div className="flex items-center space-x-2">
-              <img src={logo} alt="WaZhop Admin" className="w-10 h-10 rounded-lg shadow-md" />
+              <img src={logoWhite} alt="WaZhop Admin" className="h-10 w-auto" />
               <div>
                 <span className="text-lg font-bold text-white block">Admin Panel</span>
                 <span className="text-xs text-red-100">Platform Management</span>
