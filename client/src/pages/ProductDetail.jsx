@@ -270,32 +270,32 @@ export default function ProductDetail() {
 
         {/* Shop Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="container-custom py-4 flex items-center gap-3">
-            <img src={shop?.logo?.url || shop?.profileImage?.url || '/placeholder.png'} alt="Shop logo" className="w-10 h-10 rounded-lg object-cover bg-gray-100" />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
+          <div className="container-custom py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
+            <img src={shop?.logo?.url || shop?.profileImage?.url || '/placeholder.png'} alt="Shop logo" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover bg-gray-100 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {shop?.slug ? (
-                  <Link to={`/${shop.slug}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-600">{shop?.shopName || 'Shop'}</Link>
+                  <Link to={`/${shop.slug}`} className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 hover:text-primary-600 truncate">{shop?.shopName || 'Shop'}</Link>
                 ) : (
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">{shop?.shopName || 'Shop'}</span>
+                  <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 truncate">{shop?.shopName || 'Shop'}</span>
                 )}
                 {(shop?.owner?.plan === 'pro' || shop?.owner?.plan === 'premium') && (
-                  <svg className="w-5 h-5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 )}
               </div>
-              {shop?.location && <div className="text-xs text-gray-500">{shop.location}</div>}
+              {shop?.location && <div className="text-xs text-gray-500 truncate">{shop.location}</div>}
             </div>
-            <Link to="/" className="text-sm text-primary-600 hover:underline">← Back to Home</Link>
+            <Link to="/" className="text-xs sm:text-sm text-primary-600 hover:underline whitespace-nowrap shrink-0">← Back</Link>
           </div>
         </div>
 
         {/* Product Content */}
-        <div className="container-custom py-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="container-custom py-4 sm:py-6 md:py-8 px-4 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* Gallery */}
           <div>
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700" style={{height: '480px'}}>
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 h-64 sm:h-80 md:h-96 lg:h-[480px]">
               {images.length > 0 ? (
                 <>
                   <img src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} alt={product.name} className="w-full h-full object-contain" />
@@ -317,10 +317,10 @@ export default function ProductDetail() {
               )}
             </div>
             {images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2 mt-3">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2 mt-3">
                 {images.map((img, idx) => (
                   <button key={idx} onClick={() => setSelectedImage(idx)} className={`border-2 rounded-lg overflow-hidden ${selectedImage === idx ? 'border-blue-500' : 'border-gray-200'}`}>
-                    <img src={(img?.url || img?.secure_url) || ''} alt="" className="w-full h-20 object-cover" />
+                    <img src={(img?.url || img?.secure_url) || ''} alt="" className="w-full h-16 sm:h-20 object-cover" />
                   </button>
                 ))}
               </div>
@@ -363,7 +363,7 @@ export default function ProductDetail() {
               </nav>
             )} */}
 
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{product.name}</h1>
             {product.numReviews > 0 && (
               <div className="mb-3">
                 <StarRating rating={product.averageRating || 0} count={product.numReviews} size={20} showCount={true} />
@@ -372,12 +372,12 @@ export default function ProductDetail() {
 
             {/* Price and stock */}
             <div className="mb-5">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-4xl font-bold" style={{color: primaryColor}}>{formatPrice(product.price, currency)}</span>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{color: primaryColor}}>{formatPrice(product.price, currency)}</span>
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
-                    <span className="text-xl text-gray-400 line-through">{formatPrice(product.comparePrice, currency)}</span>
-                    <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">-{Math.round(((product.comparePrice - product.price)/product.comparePrice)*100)}%</span>
+                    <span className="text-lg sm:text-xl text-gray-400 line-through">{formatPrice(product.comparePrice, currency)}</span>
+                    <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded whitespace-nowrap">-{Math.round(((product.comparePrice - product.price)/product.comparePrice)*100)}%</span>
                   </>
                 )}
               </div>
@@ -410,7 +410,7 @@ export default function ProductDetail() {
             )}
 
             {/* Actions */}
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {shop?.paymentSettings?.provider && shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink && (
                 <button onClick={() => {
                   const paymentLink = shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink;
@@ -420,27 +420,27 @@ export default function ProductDetail() {
                     url.searchParams.append('amount', product.price);
                     window.open(url.toString(), '_blank');
                   } else { toast.error('Payment link not configured'); }
-                }} disabled={isOutOfStock} className="btn btn-primary w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <FiCreditCard size={22} /> {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
+                }} disabled={isOutOfStock} className="btn btn-primary w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <FiCreditCard size={18} className="sm:w-5 sm:h-5" /> {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
                 </button>
               )}
               {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
-                <button onClick={handleOrderOnWhatsApp} disabled={isOutOfStock} className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white">
-                  <IoLogoWhatsapp size={24} /> {isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}
+                <button onClick={handleOrderOnWhatsApp} disabled={isOutOfStock} className="btn btn-whatsapp w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white">
+                  <IoLogoWhatsapp size={20} className="sm:w-6 sm:h-6" /> <span className="truncate">{isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}</span>
                 </button>
               )}
-              <button onClick={handleShareToWhatsApp} className="btn w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20">
-                <FiShare2 size={22} /> Share on WhatsApp
+              <button onClick={handleShareToWhatsApp} className="btn w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20">
+                <FiShare2 size={18} className="sm:w-5 sm:h-5" /> Share on WhatsApp
               </button>
             </div>
           </div>
         </div>
 
         {/* Related Products */}
-        <div className="container-custom py-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold">Related Products</h3>
-            {product?.category && <span className="text-sm text-gray-500 capitalize">in {product.category}</span>}
+        <div className="container-custom py-6 sm:py-8 px-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold">Related Products</h3>
+            {product?.category && <span className="text-xs sm:text-sm text-gray-500 capitalize truncate ml-2">in {product.category}</span>}
           </div>
           {loadingRelated ? (
             <div className="text-center py-6">
@@ -449,7 +449,7 @@ export default function ProductDetail() {
           ) : !Array.isArray(relatedProducts) || relatedProducts.length === 0 ? (
             <p className="text-gray-500">No related products found.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {relatedProducts.map((rp) => (
                 <Link 
                   key={rp._id} 
