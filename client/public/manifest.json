@@ -1,13 +1,13 @@
 {
-  "name": "WaZhop - Seller Dashboard",
+  "name": "WaZhop - Shop on WhatsApp",
   "short_name": "WaZhop",
-  "description": "Manage your online shop, products, and orders on WaZhop",
-  "start_url": "/dashboard",
+  "description": "Discover amazing products and shop via WhatsApp. Browse trending items from Nigerian sellers.",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#F97316",
   "theme_color": "#F97316",
   "orientation": "portrait-primary",
-  "categories": ["shopping", "business", "productivity"],
+  "categories": ["shopping", "lifestyle", "business"],
   "icons": [
     {
       "src": "/wazhop-icon.svg",
@@ -29,6 +29,6 @@
     }
   ],
   "screenshots": [],
-  "scope": "/dashboard/",
+  "scope": "/",
   "prefer_related_applications": false
 }

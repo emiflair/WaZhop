@@ -5,6 +5,7 @@ import { CATEGORY_SUGGESTIONS } from '../utils/categories'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MobileBottomNav from '../components/MobileBottomNav'
+import InstallPrompt from '../components/InstallPrompt'
 import SEO from '../components/SEO'
 import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
@@ -423,6 +424,9 @@ export default function Marketplace() {
 
         <Footer />
       </div>
+
+      {/* Install App Prompt */}
+      <InstallPrompt />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
