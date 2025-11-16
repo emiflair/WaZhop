@@ -90,12 +90,13 @@ function AppRoutes() {
     const el = document.getElementById('app-splash')
     if (!el) return
 
-    // If we navigated to a marketing page, remove splash immediately
+    // Configure splash duration based on page type
     const path = location?.pathname || window.location.pathname
-  const isLogin = path === '/login' || path === '/register'
+    const isMarketplace = path === '/'
+    const isLogin = path === '/login' || path === '/register'
     const isDashboard = path.startsWith('/dashboard')
-    // Only dashboard gets the long splash; login/register get a short one; all other pages (including storefront) remove immediately
-    const MIN_SPLASH_MS = isDashboard ? 1600 : (isLogin ? 900 : 0)
+    // Dashboard gets long splash (1600ms), marketplace gets medium (1000ms), login/register get short (900ms), others remove immediately
+    const MIN_SPLASH_MS = isDashboard ? 1600 : (isMarketplace ? 1000 : (isLogin ? 900 : 0))
 
     const FADE_MS = 350
     const start = (window).__SPLASH_START || (performance.now ? performance.now() : Date.now())

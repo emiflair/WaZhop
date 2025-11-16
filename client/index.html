@@ -65,15 +65,14 @@
   </head>
   <body>
     <script>
-      // Inject splash only for dashboard (/dashboard) and login/register; storefront is explicitly excluded
+      // Inject splash for marketplace, dashboard, and login/register; storefront is explicitly excluded
       (function() {
         var path = location.pathname;
-        var marketing = ['/', '/about', '/pricing', '/how-it-works', '/contact', '/login', '/register', '/privacy-policy', '/terms-of-service'];
-        var isMarketing = marketing.indexOf(path) !== -1 || path.startsWith('/demo');
+        var isMarketplace = path === '/';
         var isLogin = path === '/login' || path === '/register';
-  var isDashboard = path.startsWith('/dashboard');
-  // Exclude storefront from splash. Only dashboard and login/register should show it.
-  var shouldSplash = isDashboard || isLogin;
+        var isDashboard = path.startsWith('/dashboard');
+        // Show splash for marketplace (homepage), dashboard, and login/register. Exclude storefronts (/:slug)
+        var shouldSplash = isMarketplace || isDashboard || isLogin;
         if (!shouldSplash) return;
 
         window.__SPLASH_START = (window.performance && performance.now) ? performance.now() : Date.now();
