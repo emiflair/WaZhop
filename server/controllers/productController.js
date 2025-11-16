@@ -659,7 +659,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
       select: 'shopName slug logo banner owner',
       populate: {
         path: 'owner',
-        select: 'name whatsapp'
+        select: 'name whatsapp plan'
       }
     })
     .lean();
