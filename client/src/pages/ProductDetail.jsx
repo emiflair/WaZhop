@@ -392,25 +392,8 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* Description */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-gray-700 dark:text-gray-200 whitespace-pre-line">{product.description}</p>
-            </div>
-
-            {/* Tags */}
-            {Array.isArray(product.tags) && product.tags.length > 0 && (
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((t, i) => (
-                    <span key={i} className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">#{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="space-y-2.5 sm:space-y-3">
+            {/* Actions - Moved right after price */}
+            <div className="space-y-2.5 sm:space-y-3 mb-6">
               {shop?.paymentSettings?.provider && shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink && (
                 <button onClick={() => {
                   const paymentLink = shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink;
@@ -433,6 +416,23 @@ export default function ProductDetail() {
                 <FiShare2 size={18} className="sm:w-5 sm:h-5" /> Share on WhatsApp
               </button>
             </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <p className="text-gray-700 dark:text-gray-200 whitespace-pre-line">{product.description}</p>
+            </div>
+
+            {/* Tags */}
+            {Array.isArray(product.tags) && product.tags.length > 0 && (
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((t, i) => (
+                    <span key={i} className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">#{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
