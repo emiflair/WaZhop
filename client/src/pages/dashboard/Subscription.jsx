@@ -423,6 +423,7 @@ const Subscription = () => {
     
     const planParam = searchParams.get('plan');
     const billingParam = searchParams.get('billing');
+    const checkoutParam = searchParams.get('checkout');
     
     if (billingParam && (billingParam === 'monthly' || billingParam === 'yearly')) {
       setBillingPeriod(billingParam);
@@ -441,7 +442,14 @@ const Subscription = () => {
           setAckIrreversible(false);
           setShowDowngradeModal(true);
         } else {
-          setShowUpgradeModal(true);
+          // If checkout=1 is present, skip the preview modal and go straight to payment
+          if (checkoutParam === '1') {
+            setPaymentInitiated(true);
+            setShowUpgradeModal(false);
+            setShowPreviewModal(false);
+          } else {
+            setShowUpgradeModal(true);
+          }
         }
       }
     }
