@@ -162,10 +162,13 @@ const gracefulShutdown = (signal) => {
     console.log('✅ HTTP server closed');
     logger.info('HTTP server closed');
 
-    mongoose.connection.close(false, () => {
+    mongoose.connection.close(false).then(() => {
       console.log('✅ MongoDB connection closed');
       logger.info('MongoDB connection closed');
       process.exit(0);
+    }).catch((err) => {
+      logger.error('Error closing MongoDB connection:', err);
+      process.exit(1);
     });
   });
 
