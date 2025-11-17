@@ -101,6 +101,20 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'expired', 'cancelled'],
     default: 'active'
   },
+  // Auto-renewal retry tracking
+  renewalAttempts: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  lastRenewalAttempt: {
+    type: Date,
+    default: null
+  },
+  renewalFailureReason: {
+    type: String,
+    default: null
+  },
   storageUsed: {
     type: Number,
     default: 0, // in bytes
