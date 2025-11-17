@@ -35,6 +35,7 @@ const couponRoutes = require('./routes/coupon');
 const adminRoutes = require('./routes/admin');
 const settingsRoutes = require('./routes/settings');
 const healthRoutes = require('./routes/health');
+const paymentRoutes = require('./routes/payment');
 
 // Import cron jobs
 const { startSubscriptionCron } = require('./utils/subscriptionCron');
@@ -96,6 +97,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/whatsapp', require('./routes/whatsapp'));
+app.use('/api/payments', paymentRoutes);
 
 // Legacy health check (keep for backwards compatibility)
 app.get('/api/health', (req, res) => {

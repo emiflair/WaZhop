@@ -59,6 +59,9 @@ const Subscription = () => {
 
   // Pre-select plan from URL parameter if present
   useEffect(() => {
+    // Only run after initial data load to ensure user plan is available
+    if (loading) return;
+
     const planParam = searchParams.get('plan');
     const billingParam = searchParams.get('billing');
     
@@ -67,9 +70,20 @@ const Subscription = () => {
     }
     
     if (planParam) {
+      console.log('[Subscription] Plan param detected:', planParam, 'Current plan:', user?.plan);
       const plan = plans.find(p => p.id === planParam.toLowerCase());
-      if (plan && plan.id !== user?.plan) {
+      console.log('[Subscription] Found plan:', plan);
+      
+      if (plan) {
+        // Only skip if user is already on this exact plan
+        if (plan.id === user?.plan) {
+          console.log('[Subscription] User already on this plan, skipping modal');
+          toast.error('You are already on this plan');
+          return;
+        }
+        
         // Auto-open the upgrade modal for the selected plan
+        console.log('[Subscription] Opening modal for plan:', plan.name);
         setSelectedPlan(plan);
         
         // Check if it's a downgrade to free
@@ -84,7 +98,7 @@ const Subscription = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, user?.plan]);
+  }, [searchParams, user?.plan, loading]);
 
   const fetchData = async () => {
     try {
@@ -399,6 +413,20 @@ const Subscription = () => {
       setPaymentInitiated(false);
     } finally {
       setUpgrading(false);
+    }
+  };
+
+  const handlePaymentClose = (data) => {
+    setPaymentInitiated(false);
+    
+    if (data?.cancelled) {
+      toast.error('Payment was cancelled');
+      // Close modals and stay on current page
+      setShowPreviewModal(false);
+      setShowUpgradeModal(false);
+    } else if (data?.failed) {
+      toast.error('Payment failed. Please try again or contact support.');
+      // Keep modals open so user can retry
     }
   };
 
@@ -962,6 +990,14 @@ const Subscription = () => {
                       phone={user?.phone || ''}
                       planName="Product Boost"
                       billingPeriod={`${boostHours} hour${boostHours > 1 ? 's' : ''}`}
+                      paymentType="boost"
+                      metadata={{
+                        productId: boostProductId,
+                        boostHours: Number(boostHours),
+                        state: boostState,
+                        area: boostArea
+                      }}
+                      returnUrl="/dashboard/subscription"
                       onSuccess={async (paymentData) => {
                         if (!boostProductId) { toast.error('Select a product'); return; }
                         if (!boostHours || boostHours < 1) { toast.error('Enter at least 1 hour'); return; }
@@ -1220,15 +1256,16 @@ const Subscription = () => {
                     phone={user?.phone || ''}
                     planName={selectedPlan.name}
                     billingPeriod={billingPeriod}
-                    onSuccess={handlePaymentSuccess}
-                    onClose={(closeData) => {
-                      setPaymentInitiated(false);
-                      if (closeData?.cancelled) {
-                        toast.info('Payment cancelled');
-                      } else if (closeData?.failed) {
-                        toast.error('Payment failed. Please try again.');
-                      }
+                    paymentType="subscription"
+                    metadata={{
+                      plan: selectedPlan.id,
+                      billingPeriod: billingPeriod,
+                      couponCode: couponData ? couponCode.trim() : null,
+                      discountApplied: couponData ? true : false
                     }}
+                    returnUrl="/dashboard/subscription"
+                    onSuccess={handlePaymentSuccess}
+                    onClose={handlePaymentClose}
                   >
                     <button
                       className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"

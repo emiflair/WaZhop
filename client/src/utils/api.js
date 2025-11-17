@@ -255,4 +255,24 @@ export const adminAPI = {
   getActivity: (limit) => api.get('/admin/activity', { params: { limit } }),
 };
 
+export const paymentAPI = {
+  // Track payment initiation
+  initiatePayment: (data) => api.post('/payments/initiate', data),
+  
+  // Update payment status (cancelled, failed, etc.)
+  updatePaymentStatus: (transactionRef, data) => 
+    api.patch(`/payments/${transactionRef}/status`, data),
+  
+  // Get payment history
+  getPaymentHistory: (params) => api.get('/payments/history', { params }),
+  
+  // Get payment analytics
+  getPaymentAnalytics: (days = 30) => 
+    api.get('/payments/analytics', { params: { days } }),
+  
+  // Get specific transaction details
+  getTransactionDetails: (transactionRef) => 
+    api.get(`/payments/${transactionRef}`),
+};
+
 export default api;

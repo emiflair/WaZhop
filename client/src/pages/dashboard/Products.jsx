@@ -433,12 +433,17 @@ const Products = () => {
   };
 
   const handleBoostPaymentCancel = (data) => {
-    if (data.cancelled || data.failed) {
+    if (data?.cancelled || data?.failed) {
       setBoostModal({ open: false, product: null });
       // Use setTimeout to ensure modal closes before navigation
       setTimeout(() => {
-        toast.error('Payment was cancelled or failed');
-        navigate('/dashboard/subscription');
+        if (data.cancelled) {
+          toast.error('Payment was cancelled');
+        } else if (data.failed) {
+          toast.error('Payment failed. Please try again.');
+        }
+        // Stay on products page instead of redirecting to subscription
+        // User can retry boost from here
       }, 100);
     }
   };
@@ -1731,6 +1736,14 @@ const Products = () => {
                 phone={user?.phone || ''}
                 planName="Product Boost"
                 billingPeriod={`${boostForm.hours} hour${boostForm.hours > 1 ? 's' : ''}`}
+                paymentType="boost"
+                metadata={{
+                  productId: boostModal.product?._id,
+                  boostHours: Number(boostForm.hours),
+                  state: boostForm.state,
+                  area: boostForm.area
+                }}
+                returnUrl="/dashboard/products"
                 onSuccess={submitBoost}
                 onClose={handleBoostPaymentCancel}
               >
