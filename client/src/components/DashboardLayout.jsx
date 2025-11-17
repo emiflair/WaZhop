@@ -19,13 +19,13 @@ const DashboardLayout = ({ children }) => {
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
     { name: 'My Shops', href: '/dashboard/shops', icon: FaStore },
     { name: 'Products', href: '/dashboard/products', icon: FiShoppingBag },
+    { name: 'Subscription', href: '/dashboard/subscription', icon: FiCreditCard },
     { name: 'Inventory', href: '/dashboard/inventory', icon: FiPackage },
     { name: 'Reviews', href: '/dashboard/reviews', icon: FiStar },
     { name: 'Shop Settings', href: '/dashboard/shop', icon: FiSettings },
     { name: 'Analytics', href: '/dashboard/analytics', icon: FiBarChart2 },
     { name: 'Profile', href: '/dashboard/profile', icon: FiUser },
     { name: 'Referrals', href: '/dashboard/referrals', icon: FiGift },
-    { name: 'Subscription', href: '/dashboard/subscription', icon: FiCreditCard },
   ];
 
   // Close sidebar on route change (mobile)
