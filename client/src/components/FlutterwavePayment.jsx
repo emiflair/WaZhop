@@ -12,8 +12,15 @@ const FlutterwavePayment = ({
   onClose,
   children 
 }) => {
+  // Debug: Log the public key to see what's being used
+  const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
+  console.log('🔑 Flutterwave Public Key:', publicKey);
+  console.log('🔑 Key type:', typeof publicKey);
+  console.log('🔑 Key length:', publicKey?.length);
+  console.log('🔑 All env vars:', import.meta.env);
+  
   const config = {
-    public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
+    public_key: publicKey,
     tx_ref: `WZ-SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     amount: amount,
     currency: 'NGN',
@@ -34,6 +41,8 @@ const FlutterwavePayment = ({
       user_email: email,
     },
   };
+  
+  console.log('💳 Full Flutterwave Config:', config);
 
   const handleFlutterPayment = useFlutterwave(config);
 
