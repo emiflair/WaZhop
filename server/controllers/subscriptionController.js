@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Shop = require('../models/Shop');
 const Coupon = require('../models/Coupon');
 const { asyncHandler } = require('../utils/helpers');
+const axios = require('axios');
 
 // Plan pricing (in days)
 const PLAN_DURATIONS = {
@@ -316,6 +317,185 @@ exports.getSubscriptionStatus = asyncHandler(async (req, res) => {
       daysRemaining
     }
   });
+});
+
+// @desc    Verify Flutterwave payment and upgrade plan
+// @route   POST /api/subscription/verify-payment
+// @access  Private
+exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
+  const { transactionId, txRef, plan, billingPeriod, couponCode } = req.body;
+
+  if (!transactionId || !txRef) {
+    return res.status(400).json({
+      success: false,
+      message: 'Transaction ID and reference are required'
+    });
+  }
+
+  if (!['pro', 'premium'].includes(plan)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid plan. Choose "pro" or "premium"'
+    });
+  }
+
+  if (!['monthly', 'yearly'].includes(billingPeriod)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid billing period. Choose "monthly" or "yearly"'
+    });
+  }
+
+  // Verify payment with Flutterwave
+  try {
+    const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY;
+    
+    if (!flutterwaveSecretKey) {
+      console.error('Flutterwave secret key not configured');
+      return res.status(500).json({
+        success: false,
+        message: 'Payment verification is not configured. Please contact support.'
+      });
+    }
+
+    // Verify transaction with Flutterwave API
+    const verifyResponse = await axios.get(
+      `https://api.flutterwave.com/v3/transactions/${transactionId}/verify`,
+      {
+        headers: {
+          Authorization: `Bearer ${flutterwaveSecretKey}`
+        }
+      }
+    );
+
+    const paymentData = verifyResponse.data.data;
+
+    // Check if payment was successful
+    if (paymentData.status !== 'successful') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment was not successful. Please try again.'
+      });
+    }
+
+    // Check if transaction reference matches
+    if (paymentData.tx_ref !== txRef) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction reference mismatch. Please contact support.'
+      });
+    }
+
+    // Get expected amount based on plan
+    const prices = {
+      'pro-monthly': 9000,
+      'pro-yearly': 75600,
+      'premium-monthly': 18000,
+      'premium-yearly': 151200
+    };
+
+    const priceKey = `${plan}-${billingPeriod}`;
+    const expectedAmount = prices[priceKey];
+    let finalAmount = expectedAmount;
+    let discountApplied = null;
+
+    // Apply coupon if provided
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+
+      if (coupon) {
+        const validation = coupon.isValid();
+        if (validation.valid && coupon.applicablePlans.includes(plan)) {
+          const discount = coupon.calculateDiscount(expectedAmount);
+          finalAmount = discount.finalAmount;
+          discountApplied = {
+            code: coupon.code,
+            discountAmount: discount.discountAmount,
+            discountPercentage: discount.discountPercentage
+          };
+
+          // Record usage
+          coupon.usedBy.push({
+            user: req.user.id,
+            usedAt: new Date(),
+            plan,
+            originalAmount: discount.originalAmount,
+            discountAmount: discount.discountAmount,
+            finalAmount: discount.finalAmount
+          });
+          coupon.usedCount += 1;
+          await coupon.save();
+        }
+      }
+    }
+
+    // Verify amount paid (with 1 NGN tolerance for rounding)
+    if (Math.abs(paymentData.amount - finalAmount) > 1) {
+      return res.status(400).json({
+        success: false,
+        message: `Payment amount mismatch. Expected ₦${finalAmount.toLocaleString()}, got ₦${paymentData.amount.toLocaleString()}`
+      });
+    }
+
+    // Payment verified successfully - upgrade user plan
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Calculate expiry date
+    const duration = getPlanDuration(plan, billingPeriod);
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + duration);
+
+    user.plan = plan;
+    user.billingPeriod = billingPeriod;
+    user.planExpiry = expiryDate;
+    user.lastBillingDate = new Date();
+    user.subscriptionStatus = 'active';
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `Successfully upgraded to ${plan} plan (${billingPeriod})`,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        plan: user.plan,
+        billingPeriod: user.billingPeriod,
+        planExpiry: user.planExpiry,
+        subscriptionStatus: user.subscriptionStatus
+      },
+      payment: {
+        transactionId,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        discountApplied
+      }
+    });
+
+  } catch (error) {
+    console.error('Payment verification error:', error.response?.data || error.message);
+    
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found. Please contact support.'
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to verify payment. Please contact support with your transaction reference.'
+    });
+  }
 });
 
 // @desc    Check and downgrade expired subscriptions (called by cron or middleware)

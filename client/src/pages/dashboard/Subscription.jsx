@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, productAPI, shopAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import FlutterwavePayment from '../../components/FlutterwavePayment';
 import { 
   FaCrown, 
   FaCheck, 
@@ -49,6 +50,8 @@ const Subscription = () => {
   // Location targeting for boost
   const [boostState, setBoostState] = useState('Lagos');
   const [boostArea, setBoostArea] = useState('');
+  // Payment state
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -308,45 +311,63 @@ const Subscription = () => {
     }
   };
 
-  const handleConfirmUpgrade = async () => {
+  const handlePaymentSuccess = async (paymentData) => {
     if (!selectedPlan) return;
+
+    // Store plan name before clearing state
+    const planName = selectedPlan.name;
+    const planId = selectedPlan.id;
 
     try {
       setUpgrading(true);
+      toast.loading('Verifying payment and upgrading your plan...');
       
-      // Check if upgrading or downgrading
-      const isUpgrade = getPlanLevel(selectedPlan.id) > getPlanLevel(user?.plan);
+      // Verify payment and upgrade plan
+      const data = await userAPI.verifyPaymentAndUpgrade({
+        transactionId: paymentData.transactionId,
+        txRef: paymentData.txRef,
+        plan: planId,
+        billingPeriod: billingPeriod,
+        couponCode: couponData ? couponCode.trim() : null
+      });
       
-      if (isUpgrade) {
-        const data = await userAPI.upgradePlan(
-          selectedPlan.id, 
-          billingPeriod === 'yearly' ? 12 : 1, 
-          billingPeriod,
-          couponData ? couponCode.trim() : null
-        );
-        updateUser(data.user);
-        
-        if (data.payment?.discountApplied) {
-          toast.success(`Successfully upgraded with ${data.payment.discountApplied.discountPercentage}% discount!`);
-        } else {
-          toast.success(`Successfully upgraded to ${selectedPlan.name} plan!`);
-        }
-      } else {
-        // Non-destructive plan changes (e.g., Premium -> Pro) use standard flow
-        const data = await userAPI.downgradePlan(selectedPlan.id);
-        updateUser(data.user);
-        toast.success(`Successfully changed to ${selectedPlan.name} plan!`);
-      }
+      updateUser(data.user);
+      toast.dismiss();
       
+      // Show success message with payment details
+      const successMessage = data.payment?.discountApplied 
+        ? `🎉 Payment successful! Upgraded to ${planName} with ${data.payment.discountApplied.discountPercentage}% discount!`
+        : `🎉 Payment successful! Welcome to ${planName} plan!`;
+      
+      toast.success(successMessage, { duration: 5000 });
+      
+      // Close modals and reset state immediately
+      setShowPreviewModal(false);
       setShowUpgradeModal(false);
+      setPaymentInitiated(false);
       setSelectedPlan(null);
       setCouponCode('');
       setCouponData(null);
       setCouponError('');
-      fetchData();
+      
+      // Refresh subscription data
+      await fetchData();
+      
+      // Show what they unlocked
+      setTimeout(() => {
+        toast.success(`✅ All ${planName} features are now active!`, { duration: 4000 });
+      }, 1000);
+      
     } catch (error) {
-      console.error('Error changing plan:', error);
-      toast.error(error.response?.data?.message || 'Failed to change plan');
+      console.error('Error verifying payment:', error);
+      toast.dismiss();
+      toast.error(
+        error.response?.data?.message || 
+        'Payment verification failed. Please contact support with your transaction reference.',
+        { duration: 6000 }
+      );
+      // Don't close modals on error so user can retry
+      setPaymentInitiated(false);
     } finally {
       setUpgrading(false);
     }
@@ -900,26 +921,64 @@ const Subscription = () => {
                     <span className="text-sm text-gray-700 dark:text-gray-300">Total</span>
                     <span className="text-lg font-semibold">₦{(Number(boostHours || 0) * BOOST_RATE).toLocaleString()}</span>
                   </div>
-                  <button
-                    onClick={async () => {
-                      if (!boostProductId) { toast.error('Select a product'); return; }
-                      if (!boostHours || boostHours < 1) { toast.error('Enter at least 1 hour'); return; }
-                      try {
-                        setBoostLoading(true);
-                        await productAPI.boostProduct(boostProductId, { hours: Number(boostHours), state: boostState, area: boostArea });
-                        toast.success('Boost activated');
-                        setBoostOpen(false);
-                      } catch (e) {
-                        toast.error(e.userMessage || 'Failed to start boost');
-                      } finally {
-                        setBoostLoading(false);
-                      }
-                    }}
-                    className={`w-full py-3 rounded-lg text-white font-semibold ${boostLoading ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
-                    disabled={boostLoading}
-                  >
-                    {boostLoading ? 'Starting…' : 'Start Boost'}
-                  </button>
+                  
+                  {/* Payment Integration for Boost */}
+                  {!boostLoading ? (
+                    <FlutterwavePayment
+                      amount={Number(boostHours || 0) * BOOST_RATE}
+                      email={user?.email}
+                      name={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email}
+                      phone={user?.phone || ''}
+                      planName="Product Boost"
+                      billingPeriod={`${boostHours} hour${boostHours > 1 ? 's' : ''}`}
+                      onSuccess={async (paymentData) => {
+                        if (!boostProductId) { toast.error('Select a product'); return; }
+                        if (!boostHours || boostHours < 1) { toast.error('Enter at least 1 hour'); return; }
+                        try {
+                          setBoostLoading(true);
+                          toast.loading('Activating boost...');
+                          await productAPI.boostProduct(boostProductId, { 
+                            hours: Number(boostHours), 
+                            state: boostState, 
+                            area: boostArea,
+                            transactionId: paymentData.transactionId,
+                            txRef: paymentData.txRef
+                          });
+                          toast.dismiss();
+                          toast.success('🎉 Boost activated successfully!');
+                          setBoostOpen(false);
+                        } catch (e) {
+                          toast.dismiss();
+                          toast.error(e.userMessage || 'Failed to start boost');
+                        } finally {
+                          setBoostLoading(false);
+                        }
+                      }}
+                      onClose={(closeData) => {
+                        if (closeData?.cancelled) {
+                          toast.info('Payment cancelled');
+                        } else if (closeData?.failed) {
+                          toast.error('Payment failed. Please try again.');
+                        }
+                      }}
+                    >
+                      <button
+                        className="w-full py-3 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700"
+                      >
+                        Pay ₦{(Number(boostHours || 0) * BOOST_RATE).toLocaleString()} & Start Boost
+                      </button>
+                    </FlutterwavePayment>
+                  ) : (
+                    <button
+                      className="w-full py-3 rounded-lg text-white font-semibold bg-purple-400"
+                      disabled
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Activating...
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1098,17 +1157,6 @@ const Subscription = () => {
                 </ul>
               </div>
 
-              {/* Notice */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-6">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
-                  <FaInfoCircle className="mt-0.5 flex-shrink-0" />
-                  <span>
-                    <strong>Note:</strong> Payment integration is coming soon. 
-                    This upgrade is currently free for testing purposes.
-                  </span>
-                </p>
-              </div>
-
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
@@ -1117,27 +1165,57 @@ const Subscription = () => {
                     setShowUpgradeModal(true);
                   }}
                   className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium text-gray-700 dark:text-gray-200"
-                  disabled={upgrading}
+                  disabled={upgrading || paymentInitiated}
                 >
                   ← Back
                 </button>
-                <button
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    handleConfirmUpgrade();
-                  }}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"
-                  disabled={upgrading}
-                >
-                  {upgrading ? (
+                
+                {/* Flutterwave Payment Button */}
+                {!paymentInitiated ? (
+                  <FlutterwavePayment
+                    amount={(() => {
+                      const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                        ? selectedPlan.yearlyPrice 
+                        : selectedPlan.price;
+                      if (!couponData) return originalPrice;
+                      
+                      const discountAmount = couponData.discountType === 'percentage'
+                        ? (originalPrice * couponData.discountValue) / 100
+                        : couponData.discountValue;
+                      return originalPrice - discountAmount;
+                    })()}
+                    email={user?.email}
+                    name={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email}
+                    phone={user?.phone || ''}
+                    planName={selectedPlan.name}
+                    billingPeriod={billingPeriod}
+                    onSuccess={handlePaymentSuccess}
+                    onClose={(closeData) => {
+                      setPaymentInitiated(false);
+                      if (closeData?.cancelled) {
+                        toast.info('Payment cancelled');
+                      } else if (closeData?.failed) {
+                        toast.error('Payment failed. Please try again.');
+                      }
+                    }}
+                  >
+                    <button
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"
+                    >
+                      Proceed to Payment
+                    </button>
+                  </FlutterwavePayment>
+                ) : (
+                  <button
+                    className="flex-1 px-4 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+                    disabled
+                  >
                     <span className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processing...
+                      Verifying...
                     </span>
-                  ) : (
-                    'Confirm & Upgrade'
-                  )}
-                </button>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1271,13 +1349,6 @@ const Subscription = () => {
                     {selectedPlan.limits.products === Infinity ? 'Unlimited' : selectedPlan.limits.products}
                   </span>
                 </div>
-              </div>
-
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Note:</strong> Payment integration is coming soon. 
-                  This change is currently free for testing.
-                </p>
               </div>
 
               <div className="flex gap-3">

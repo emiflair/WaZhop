@@ -188,6 +188,7 @@ export const userAPI = {
     billingPeriod,
     couponCode 
   }),
+  verifyPaymentAndUpgrade: (data) => api.post('/subscription/verify-payment', data),
   downgradePlan: (plan, extra = {}) => api.post('/users/downgrade', { plan, ...extra }),
   switchToSeller: (whatsappNumber, plan) => api.post('/users/switch-to-seller', { whatsappNumber, plan }),
   setup2FA: () => api.post('/auth/2fa/setup'),
