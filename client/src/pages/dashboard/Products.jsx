@@ -391,6 +391,16 @@ const Products = () => {
   ];
 
   const openBoost = async (product) => {
+<<<<<<< HEAD
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to boost "${product.name}"?\n\n` +
+      `This will make your product more visible to nearby customers.\n` +
+      `Pricing: ₦400/hour`
+    );
+    
+    if (!confirmed) return;
+=======
     // Show custom confirmation modal
     setBoostConfirmModal({ open: true, product });
   };
@@ -398,6 +408,7 @@ const Products = () => {
   const confirmBoost = async () => {
     const product = boostConfirmModal.product;
     setBoostConfirmModal({ open: false, product: null });
+>>>>>>> develop
     
     setBoostModal({ open: true, product });
     setBoostForm((prev) => ({ ...prev, area: '', state: 'Lagos', hours: 5 }));
@@ -433,18 +444,20 @@ const Products = () => {
   };
 
   const handleBoostPaymentCancel = (data) => {
-    if (data?.cancelled || data?.failed) {
+    if (data.cancelled || data.failed) {
+<<<<<<< HEAD
+      toast.error('Payment was cancelled or failed');
+      setBoostModal({ open: false, product: null });
+      // Redirect to subscription page
+      navigate('/dashboard/subscription');
+=======
       setBoostModal({ open: false, product: null });
       // Use setTimeout to ensure modal closes before navigation
       setTimeout(() => {
-        if (data.cancelled) {
-          toast.error('Payment was cancelled');
-        } else if (data.failed) {
-          toast.error('Payment failed. Please try again.');
-        }
-        // Stay on products page instead of redirecting to subscription
-        // User can retry boost from here
+        toast.error('Payment was cancelled or failed');
+        navigate('/dashboard/subscription');
       }, 100);
+>>>>>>> develop
     }
   };
 
@@ -1736,14 +1749,6 @@ const Products = () => {
                 phone={user?.phone || ''}
                 planName="Product Boost"
                 billingPeriod={`${boostForm.hours} hour${boostForm.hours > 1 ? 's' : ''}`}
-                paymentType="boost"
-                metadata={{
-                  productId: boostModal.product?._id,
-                  boostHours: Number(boostForm.hours),
-                  state: boostForm.state,
-                  area: boostForm.area
-                }}
-                returnUrl="/dashboard/products"
                 onSuccess={submitBoost}
                 onClose={handleBoostPaymentCancel}
               >
