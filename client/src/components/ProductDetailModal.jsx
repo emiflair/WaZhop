@@ -36,6 +36,11 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
   // Reset selected image whenever the product changes to avoid index issues
   useEffect(() => {
     setSelectedImage(0);
+    // Scroll modal content to top when product changes or modal opens
+    const modalContent = document.querySelector('.product-detail-modal-content');
+    if (modalContent) {
+      modalContent.scrollTop = 0;
+    }
   }, [product?._id]);
   
   // Calculate stock status
@@ -179,8 +184,8 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-none sm:rounded-lg max-w-6xl w-full min-h-screen sm:min-h-0 sm:my-8 relative sm:max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-start sm:items-center justify-center p-0 sm:p-4">
+      <div className="product-detail-modal-content bg-white dark:bg-gray-900 dark:text-gray-100 rounded-none sm:rounded-lg max-w-6xl w-full min-h-screen sm:min-h-0 sm:my-8 relative sm:max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -293,52 +298,8 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
               )}
             </div>
 
-            {/* Description */}
-            <div className="mb-4 sm:mb-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-2">Description</h3>
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-pre-line">{product.description}</p>
-            </div>
-
-            {/* Variants */}
-            {Array.isArray(product.variants) && product.variants.length > 0 && (
-              <div className="mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Available Options</h3>
-                {product.variants.map((variant, idx) => (
-                  <div key={idx} className="mb-3">
-                    <p className="font-medium text-sm text-gray-700 mb-2">{variant.name}:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.isArray(variant.options) && variant.options.map((option, optIdx) => (
-                        <div key={optIdx} className="border border-gray-300 rounded px-3 py-2 text-sm">
-                          <span className="font-medium">{option.value}</span>
-                          {option.price && option.price !== product.price && (
-                            <span className="ml-2 text-gray-600">{formatPrice(option.price, shop?.paymentSettings?.currency || 'NGN')}</span>
-                          )}
-                          {option.stock !== undefined && option.stock === 0 && (
-                            <span className="ml-2 text-red-500 text-xs">(Out of stock)</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Tags */}
-            {Array.isArray(product.tags) && product.tags.length > 0 && (
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag, idx) => (
-                    <span key={idx} className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded-full">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Action Buttons */}
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               <button
                 onClick={() => {
                   addToCart(product, shop, 1);
@@ -395,6 +356,50 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
                 Share on WhatsApp
               </button>
             </div>
+
+            {/* Description */}
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Description</h3>
+              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-pre-line">{product.description}</p>
+            </div>
+
+            {/* Variants */}
+            {Array.isArray(product.variants) && product.variants.length > 0 && (
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Available Options</h3>
+                {product.variants.map((variant, idx) => (
+                  <div key={idx} className="mb-3">
+                    <p className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">{variant.name}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(variant.options) && variant.options.map((option, optIdx) => (
+                        <div key={optIdx} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm">
+                          <span className="font-medium">{option.value}</span>
+                          {option.price && option.price !== product.price && (
+                            <span className="ml-2 text-gray-600 dark:text-gray-400">{formatPrice(option.price, shop?.paymentSettings?.currency || 'NGN')}</span>
+                          )}
+                          {option.stock !== undefined && option.stock === 0 && (
+                            <span className="ml-2 text-red-500 text-xs">(Out of stock)</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Tags */}
+            {Array.isArray(product.tags) && product.tags.length > 0 && (
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag, idx) => (
+                    <span key={idx} className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
