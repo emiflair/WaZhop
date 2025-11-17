@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
+import VersionCheck from './components/VersionCheck'
 import { useTheme } from './context/ThemeContext'
 
 // Loading component
@@ -182,6 +183,7 @@ function App() {
           <Router>
             <AuthProvider>
               <CartProvider>
+                <VersionCheck />
                 <AppRoutes />
               </CartProvider>
             </AuthProvider>
