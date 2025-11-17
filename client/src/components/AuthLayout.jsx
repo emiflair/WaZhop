@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import logoBlack from '/wazhoplogo/logoblack.PNG?url';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoBlack from '/wazhoplogo/logoblack.PNG.png';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 // Shared layout for Login/Register with orange gradient art panel on the left (md+)
 // and content card on the right. Keeps things accessible and mobile-first.

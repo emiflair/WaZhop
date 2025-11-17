@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiDownload, FiChevronDown, FiChevronUp, FiSmartphone } from 'react-icons/fi';
-import logoBlack from '/wazhoplogo/logoblack.PNG?url';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoBlack from '/wazhoplogo/logoblack.PNG.png';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 import { FaApple, FaAndroid, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 

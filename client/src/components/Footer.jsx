@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

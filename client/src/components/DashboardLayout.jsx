@@ -4,8 +4,8 @@ import { FaStore } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logoBlack from '/wazhoplogo/logoblack.PNG?url';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoBlack from '/wazhoplogo/logoblack.PNG.png';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();

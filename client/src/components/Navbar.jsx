@@ -3,8 +3,8 @@ import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logoBlack from '/wazhoplogo/logoblack.PNG?url';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoBlack from '/wazhoplogo/logoblack.PNG.png';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

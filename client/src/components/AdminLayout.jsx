@@ -4,7 +4,7 @@ import { FaStore } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import logoWhite from '/wazhoplogo/Logowhite.PNG?url';
+import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 const AdminLayout = ({ children }) => {
   const location = useLocation();

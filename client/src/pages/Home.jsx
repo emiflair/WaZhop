@@ -8,7 +8,7 @@ import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, openSubscriptionModal, promptSellerUpgrade } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';
 
@@ -44,6 +44,33 @@ const Home = () => {
       features: ['Up to 3 shops', 'Unlimited products', 'Payment integration', 'Custom domain', 'Remove Wazhop branding', '24/7 support']
     }
   ];
+
+  const handlePlanClick = (planName) => {
+    if (!isAuthenticated) {
+      window.location.href = '/register?role=seller';
+      return;
+    }
+
+    if (isBuyer) {
+      if (typeof promptSellerUpgrade === 'function') {
+        promptSellerUpgrade({ source: 'pricing', plan: planName });
+      } else {
+        window.location.href = '/pricing?upgrade=seller';
+      }
+      return;
+    }
+
+    if (isSeller || user?.role === 'admin') {
+      if (typeof openSubscriptionModal === 'function') {
+        openSubscriptionModal({ plan: planName, source: 'home-pricing' });
+      } else {
+        window.location.href = '/pricing?plan=' + encodeURIComponent(planName.toLowerCase());
+      }
+      return;
+    }
+
+    window.location.href = '/pricing';
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
@@ -355,16 +382,17 @@ const Home = () => {
                   ))}
                 </ul>
 
-                <Link
-                  to={getStartedHref()}
+                <button
+                  type="button"
+                  onClick={() => handlePlanClick(plan.name)}
                   className={`block w-full py-3 px-6 rounded-lg text-center font-semibold transition-colors ${
                     plan.popular
                       ? 'bg-primary-600 text-white hover:bg-primary-700'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
-                  Get Started
-                </Link>
+                  {plan.name === 'Free' ? 'Get Started Free' : 'Choose ' + plan.name}
+                </button>
               </div>
             ))}
           </div>
