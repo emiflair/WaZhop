@@ -1,5 +1,8 @@
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { FaCreditCard } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { paymentAPI } from '../utils/api';
+import toast from 'react-hot-toast';
 
 const FlutterwavePayment = ({ 
   amount, 
@@ -10,7 +13,11 @@ const FlutterwavePayment = ({
   billingPeriod,
   onSuccess, 
   onClose,
-  children 
+  children,
+  // Payment tracking metadata
+  paymentType = 'subscription', // 'subscription', 'boost', 'renewal'
+  metadata = {},
+  returnUrl // Where to redirect after payment
 }) => {
   // Debug: Log the public key to see what's being used
   const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
@@ -45,15 +52,65 @@ const FlutterwavePayment = ({
   console.log('💳 Full Flutterwave Config:', config);
 
   const handleFlutterPayment = useFlutterwave(config);
+  const [tracking, setTracking] = useState(false);
 
-  const handlePayment = () => {
+  const trackPayment = async (status, data = {}) => {
+    if (tracking) return; // Prevent duplicate tracking
+    setTracking(true);
+    
+    try {
+      await paymentAPI.updatePaymentStatus(config.tx_ref, {
+        status,
+        providerTransactionId: data.transactionId,
+        providerResponse: data.response,
+        paymentMethod: data.paymentType,
+        errorMessage: data.errorMessage,
+        errorCode: data.errorCode
+      });
+    } catch (error) {
+      console.error('Failed to track payment:', error);
+    } finally {
+      setTracking(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      // Track payment initiation
+      await paymentAPI.initiatePayment({
+        transactionRef: config.tx_ref,
+        type: paymentType,
+        amount: amount,
+        currency: 'NGN',
+        paymentProvider: 'flutterwave',
+        metadata: {
+          plan: planName?.toLowerCase(),
+          billingPeriod: billingPeriod,
+          ...metadata
+        },
+        returnUrl: returnUrl || window.location.href
+      });
+      
+      toast.loading('Opening payment gateway...', { duration: 1500 });
+    } catch (error) {
+      console.error('Failed to track payment initiation:', error);
+      // Continue anyway - tracking failure shouldn't block payment
+    }
+
     handleFlutterPayment({
-      callback: (response) => {
+      callback: async (response) => {
         console.log('Flutterwave payment response:', response);
         closePaymentModal();
         
         if (response.status === 'successful' || response.status === 'completed') {
-          // Immediately call success handler - this will verify and activate the plan
+          // Track successful payment
+          await trackPayment('successful', {
+            transactionId: response.transaction_id,
+            paymentType: response.payment_type,
+            response: response
+          });
+          
+          // Call success handler
           onSuccess({
             transactionId: response.transaction_id,
             txRef: response.tx_ref,
@@ -63,15 +120,32 @@ const FlutterwavePayment = ({
             status: response.status,
           });
         } else if (response.status === 'cancelled') {
-          onClose({ cancelled: true });
+          // Track cancellation
+          await trackPayment('cancelled', {
+            errorMessage: 'User cancelled payment'
+          });
+          
+          onClose({ cancelled: true, returnUrl });
         } else {
-          // Payment failed
-          onClose({ failed: true, response });
+          // Track failure
+          await trackPayment('failed', {
+            response: response,
+            errorMessage: `Payment failed with status: ${response.status}`,
+            errorCode: response.status
+          });
+          
+          onClose({ failed: true, response, returnUrl });
         }
       },
-      onClose: () => {
+      onClose: async () => {
         console.log('Payment modal closed by user');
-        onClose({ cancelled: true });
+        
+        // Track cancellation
+        await trackPayment('cancelled', {
+          errorMessage: 'Payment modal closed without completion'
+        });
+        
+        onClose({ cancelled: true, returnUrl });
       },
     });
   };
