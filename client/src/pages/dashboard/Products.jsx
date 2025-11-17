@@ -389,6 +389,15 @@ const Products = () => {
   ];
 
   const openBoost = async (product) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to boost "${product.name}"?\n\n` +
+      `This will make your product more visible to nearby customers.\n` +
+      `Pricing: ₦400/hour`
+    );
+    
+    if (!confirmed) return;
+    
     setBoostModal({ open: true, product });
     setBoostForm((prev) => ({ ...prev, area: '', state: 'Lagos', hours: 5 }));
     try {
@@ -419,6 +428,15 @@ const Products = () => {
       setBoostModal({ open: false, product: null });
     } catch (e) {
       toast.error(e.userMessage || 'Failed to start boost');
+    }
+  };
+
+  const handleBoostPaymentCancel = (data) => {
+    if (data.cancelled || data.failed) {
+      toast.error('Payment was cancelled or failed');
+      setBoostModal({ open: false, product: null });
+      // Redirect to subscription page
+      navigate('/dashboard/subscription');
     }
   };
 
@@ -1659,13 +1677,13 @@ const Products = () => {
               </div>
               <FlutterwavePayment
                 amount={Number(boostForm.hours || 0) * 400}
-                email={boostModal.product?.user?.email || 'user@example.com'}
-                name={boostModal.product?.name || 'Product Boost'}
-                phone=""
+                email={user?.email || 'user@example.com'}
+                name={user?.name || 'User'}
+                phone={user?.phone || ''}
                 planName="Product Boost"
                 billingPeriod={`${boostForm.hours} hour${boostForm.hours > 1 ? 's' : ''}`}
                 onSuccess={submitBoost}
-                onClose={() => {}}
+                onClose={handleBoostPaymentCancel}
               >
                 <TouchButton variant="purple" size="md" className="w-full">Pay ₦{(Number(boostForm.hours || 0) * 400).toLocaleString()}</TouchButton>
               </FlutterwavePayment>
