@@ -442,11 +442,10 @@ const Subscription = () => {
           setAckIrreversible(false);
           setShowDowngradeModal(true);
         } else {
-          // If checkout=1 is present, skip the preview modal and go straight to payment
+          // If checkout=1 is present, go directly to preview modal (skip the plan selection modal)
           if (checkoutParam === '1') {
-            setPaymentInitiated(true);
             setShowUpgradeModal(false);
-            setShowPreviewModal(false);
+            setShowPreviewModal(true);
           } else {
             setShowUpgradeModal(true);
           }

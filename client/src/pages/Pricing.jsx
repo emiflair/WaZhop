@@ -284,7 +284,7 @@ const Pricing = () => {
                   </button>
                 ) : (
                   <Link
-                    to={isAuthenticated ? `/dashboard/subscription?plan=${plan.name.toLowerCase()}&billing=${billingPeriod}&checkout=1` : (plan.ctaLink || '/register?role=seller')}
+                    to={isAuthenticated ? `/dashboard/subscription?plan=${plan.name.toLowerCase()}&billing=${billingPeriod}${plan.name.toLowerCase() !== 'free' ? '&checkout=1' : ''}` : (plan.ctaLink || '/register?role=seller')}
                     className={`btn w-full text-center block text-sm sm:text-base py-3 sm:py-2 ${
                       plan.popular ? 'btn-primary' : 'btn-outline'
                     }`}
