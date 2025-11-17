@@ -171,7 +171,7 @@ orderSchema.pre('validate', async function (next) {
 // Indexes for faster queries
 orderSchema.index({ shop: 1, createdAt: -1 });
 orderSchema.index({ 'customer.user': 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
+// orderNumber already has unique index from schema definition
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
 
