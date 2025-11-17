@@ -886,13 +886,15 @@ const Subscription = () => {
                   </div>
                   <div>
                     <label className="label">Hours</label>
-                    <input
-                      type="number"
-                      min={1}
+                    <select
                       className="input"
                       value={boostHours}
                       onChange={(e) => setBoostHours(Number(e.target.value))}
-                    />
+                    >
+                      {[5, 10, 15, 20, 24, 48, 72, 96, 120, 168].map((h) => (
+                        <option key={h} value={h}>{h} hour{h > 1 ? 's' : ''} - ₦{(h * 400).toLocaleString()}</option>
+                      ))}
+                    </select>
                   </div>
                   {/* Location targeting */}
                   <div>

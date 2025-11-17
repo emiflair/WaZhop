@@ -18,6 +18,7 @@ import { TouchButton } from '../../components/mobile';
 import { useNavigate } from 'react-router-dom';
 import ProductPreviewModal from '../../components/ProductPreviewModal';
 import { CATEGORY_SUGGESTIONS, toLabel, getSubcategories, getCategoryLabel } from '../../utils/categories';
+import FlutterwavePayment from '../../components/FlutterwavePayment';
 
 const Products = () => {
   const { user } = useAuth();
@@ -400,13 +401,19 @@ const Products = () => {
     }
   };
 
-  const submitBoost = async () => {
+  const submitBoost = async (paymentData) => {
     const { product } = boostModal;
     if (!product) return;
     try {
-      const payload = { hours: Number(boostForm.hours), state: boostForm.state, area: boostForm.area };
+      const payload = { 
+        hours: Number(boostForm.hours), 
+        state: boostForm.state, 
+        area: boostForm.area,
+        transactionId: paymentData.transactionId,
+        amount: paymentData.amount
+      };
       const updated = await productAPI.boostProduct(product._id, payload);
-      toast.success('Boost activated');
+      toast.success('Boost activated successfully!');
       setProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
       setFilteredProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
       setBoostModal({ open: false, product: null });
@@ -1614,13 +1621,15 @@ const Products = () => {
             <div className="space-y-3">
               <div>
                 <label className="label">Hours</label>
-                <input
-                  type="number"
-                  min={1}
+                <select
+                  className="input"
                   value={boostForm.hours}
                   onChange={(e) => setBoostForm({ ...boostForm, hours: Number(e.target.value) })}
-                  className="input"
-                />
+                >
+                  {[5, 10, 15, 20, 24, 48, 72, 96, 120, 168].map((h) => (
+                    <option key={h} value={h}>{h} hour{h > 1 ? 's' : ''} - ₦{(h * 400).toLocaleString()}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="label">State (Nigeria)</label>
@@ -1648,7 +1657,18 @@ const Products = () => {
                 <span className="text-sm text-gray-700">Total</span>
                 <span className="text-lg font-semibold">₦{(Number(boostForm.hours || 0) * 400).toLocaleString()}</span>
               </div>
-              <TouchButton onClick={submitBoost} variant="purple" size="md" className="w-full">Start Boost</TouchButton>
+              <FlutterwavePayment
+                amount={Number(boostForm.hours || 0) * 400}
+                email={boostModal.product?.user?.email || 'user@example.com'}
+                name={boostModal.product?.name || 'Product Boost'}
+                phone=""
+                planName="Product Boost"
+                billingPeriod={`${boostForm.hours} hour${boostForm.hours > 1 ? 's' : ''}`}
+                onSuccess={submitBoost}
+                onClose={() => {}}
+              >
+                <TouchButton variant="purple" size="md" className="w-full">Pay ₦{(Number(boostForm.hours || 0) * 400).toLocaleString()}</TouchButton>
+              </FlutterwavePayment>
             </div>
           </div>
         </div>
