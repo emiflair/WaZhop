@@ -57,38 +57,8 @@ const Subscription = () => {
     fetchData();
   }, []);
 
-  // Pre-select plan from URL parameter if present
-  useEffect(() => {
-    // Wait for initial data to load and user to be available
-    if (loading || !user) return;
-    
-    const planParam = searchParams.get('plan');
-    const billingParam = searchParams.get('billing');
-    
-    if (billingParam && (billingParam === 'monthly' || billingParam === 'yearly')) {
-      setBillingPeriod(billingParam);
-    }
-    
-    if (planParam) {
-      const plan = plans.find(p => p.id === planParam.toLowerCase());
-      if (plan) {
-        // Auto-open the upgrade modal for the selected plan
-        // Allow opening even if user already has the plan (for re-subscription or billing period change)
-        setSelectedPlan(plan);
-        
-        // Check if it's a downgrade to free
-        const isDowngradeToFree = plan.id === 'free' && getPlanLevel(user?.plan) > getPlanLevel('free');
-        if (isDowngradeToFree) {
-          setConfirmPhrase('');
-          setAckIrreversible(false);
-          setShowDowngradeModal(true);
-        } else {
-          setShowUpgradeModal(true);
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, user?.plan, loading]);
+  // Pre-select plan from URL parameter if present - moved after plans definition
+  // This will be handled in a later useEffect
 
   const fetchData = async () => {
     try {
@@ -445,6 +415,38 @@ const Subscription = () => {
     const levels = { free: 0, pro: 1, premium: 2 };
     return levels[planId] || 0;
   };
+
+  // Pre-select plan from URL parameter if present
+  useEffect(() => {
+    // Wait for initial data to load and user to be available
+    if (loading || !user) return;
+    
+    const planParam = searchParams.get('plan');
+    const billingParam = searchParams.get('billing');
+    
+    if (billingParam && (billingParam === 'monthly' || billingParam === 'yearly')) {
+      setBillingPeriod(billingParam);
+    }
+    
+    if (planParam) {
+      const plan = plans.find(p => p.id === planParam.toLowerCase());
+      if (plan && plan.id !== user?.plan) {
+        // Auto-open the upgrade modal for the selected plan
+        setSelectedPlan(plan);
+        
+        // Check if it's a downgrade to free
+        const isDowngradeToFree = plan.id === 'free' && getPlanLevel(user?.plan) > getPlanLevel('free');
+        if (isDowngradeToFree) {
+          setConfirmPhrase('');
+          setAckIrreversible(false);
+          setShowDowngradeModal(true);
+        } else {
+          setShowUpgradeModal(true);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.plan, loading]);
 
   const getColorClasses = (color) => {
     const colors = {
