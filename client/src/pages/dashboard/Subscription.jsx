@@ -59,9 +59,9 @@ const Subscription = () => {
 
   // Pre-select plan from URL parameter if present
   useEffect(() => {
-    // Only run after initial data load to ensure user plan is available
-    if (loading) return;
-
+    // Wait for initial data to load and user to be available
+    if (loading || !user) return;
+    
     const planParam = searchParams.get('plan');
     const billingParam = searchParams.get('billing');
     
@@ -70,20 +70,10 @@ const Subscription = () => {
     }
     
     if (planParam) {
-      console.log('[Subscription] Plan param detected:', planParam, 'Current plan:', user?.plan);
       const plan = plans.find(p => p.id === planParam.toLowerCase());
-      console.log('[Subscription] Found plan:', plan);
-      
       if (plan) {
-        // Only skip if user is already on this exact plan
-        if (plan.id === user?.plan) {
-          console.log('[Subscription] User already on this plan, skipping modal');
-          toast.error('You are already on this plan');
-          return;
-        }
-        
         // Auto-open the upgrade modal for the selected plan
-        console.log('[Subscription] Opening modal for plan:', plan.name);
+        // Allow opening even if user already has the plan (for re-subscription or billing period change)
         setSelectedPlan(plan);
         
         // Check if it's a downgrade to free

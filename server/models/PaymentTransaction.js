@@ -4,26 +4,26 @@ const paymentTransactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
-    // indexed via compound index below
+    required: true,
+    index: true
   },
   transactionRef: {
     type: String,
     required: true,
-    unique: true
-    // unique creates its own index automatically
+    unique: true,
+    index: true
   },
   type: {
     type: String,
     enum: ['subscription', 'boost', 'renewal', 'upgrade'],
-    required: true
-    // indexed via compound index below
+    required: true,
+    index: true
   },
   status: {
     type: String,
     enum: ['initiated', 'pending', 'successful', 'failed', 'cancelled', 'abandoned'],
-    default: 'initiated'
-    // indexed via compound indexes below
+    default: 'initiated',
+    index: true
   },
   amount: {
     type: Number,
@@ -54,8 +54,8 @@ const paymentTransactionSchema = new mongoose.Schema({
   // Payment flow tracking
   initiatedAt: {
     type: Date,
-    default: Date.now
-    // indexed via compound index below
+    default: Date.now,
+    index: true
   },
   redirectedAt: {
     type: Date
