@@ -7,6 +7,7 @@ const {
   createShop,
   deleteShop,
   getShopBySlug,
+  getShopBySubdomain,
   updateShop,
   updateTheme,
   uploadLogo,
@@ -48,6 +49,7 @@ router.delete('/my/domain', protect, requireRole('seller'), removeCustomDomain);
 router.put('/my/subdomain', protect, requireRole('seller'), setSubdomain);
 
 // Public routes (dynamic routes must come last)
+router.get('/by-subdomain/:subdomain', getShopBySubdomain);
 router.get('/:slug', getShopBySlug);
 
 module.exports = router;

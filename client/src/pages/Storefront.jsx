@@ -34,7 +34,31 @@ const Storefront = () => {
   const { addToCart, getCartCount } = useCart();
 
   useEffect(() => {
-    fetchShop();
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const host = window.location.hostname; // e.g. emy.wazhop.ng
+
+        // Special-case non-store subdomains like develop, api, etc.
+        const [sub, root, tld] = host.split('.');
+        const isBaseDomain = host === 'wazhop.ng' || host === 'www.wazhop.ng';
+        const isNonStoreSubdomain = ['develop', 'api'].includes(sub);
+
+        if (!isBaseDomain && !isNonStoreSubdomain && root === 'wazhop' && tld === 'ng') {
+          // Treat as shop subdomain
+          await fetchShopBySubdomain(sub);
+        } else {
+          // Fallback to slug-based shop URL (e.g. /:slug)
+          await fetchShopBySlug(slug);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
@@ -77,22 +101,32 @@ const Storefront = () => {
     };
   }, [shop]);
 
-  const fetchShop = async () => {
+  const applyShopPayload = (shopData) => {
+    setShop(shopData.shop);
+
+    const shopCurrency = shopData.shop.paymentSettings?.currency || 'NGN';
+    const convertedProducts = shopData.products.map((product) =>
+      convertProductPrice(product, shopCurrency)
+    );
+
+    setProducts(convertedProducts);
+  };
+
+  const fetchShopBySlug = async (slugParam) => {
     try {
-      const shopData = await shopAPI.getShopBySlug(slug);
-      setShop(shopData.shop);
-      
-      // Convert product prices to shop's currency
-      const shopCurrency = shopData.shop.paymentSettings?.currency || 'NGN';
-      const convertedProducts = shopData.products.map(product => 
-        convertProductPrice(product, shopCurrency)
-      );
-      
-      setProducts(convertedProducts);
+      const shopData = await shopAPI.getShopBySlug(slugParam);
+      applyShopPayload(shopData);
     } catch (err) {
       setError(err.response?.data?.message || 'Shop not found');
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchShopBySubdomain = async (subdomain) => {
+    try {
+      const shopData = await shopAPI.getShopBySubdomain(subdomain);
+      applyShopPayload(shopData);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Shop not found');
     }
   };
 

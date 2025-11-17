@@ -113,6 +113,7 @@ export const shopAPI = {
   getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`),
   getMyShops: () => api.get('/shops/my/shops'),
   getShopBySlug: (slug) => api.get(`/shops/${slug}`),
+  getShopBySubdomain: (subdomain) => api.get(`/shops/by-subdomain/${subdomain}`),
   createShop: (data) => api.post('/shops', data),
   deleteShop: (id) => api.delete(`/shops/${id}`),
   updateShop: (data, shopId) => api.put(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`, data),

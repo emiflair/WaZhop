@@ -75,40 +75,67 @@ exports.getMyShop = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get shop by slug (public)
-// @route   GET /api/shops/:slug
-// @access  Public
-exports.getShopBySlug = asyncHandler(async (req, res) => {
-  const { slug } = req.params;
-
-  const shop = await Shop.findOne({ slug, isActive: true })
+// Helper used by both slug and subdomain lookup
+const loadPublicShopWithProducts = async (criteria) => {
+  const shop = await Shop.findOne({ ...criteria, isActive: true })
     .populate({
       path: 'owner',
       select: 'name whatsapp plan'
     });
 
   if (!shop) {
+    return null;
+  }
+
+  const products = await Product.find({
+    shop: shop._id,
+    isActive: true
+  }).sort({ position: 1, createdAt: -1 });
+
+  await shop.incrementViews();
+
+  return { shop, products };
+};
+
+// @desc    Get shop by slug (public)
+// @route   GET /api/shops/:slug
+// @access  Public
+exports.getShopBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const result = await loadPublicShopWithProducts({ slug });
+
+  if (!result) {
     return res.status(404).json({
       success: false,
       message: 'Shop not found'
     });
   }
 
-  // Get active products for this shop
-  const products = await Product.find({
-    shop: shop._id,
-    isActive: true
-  }).sort({ position: 1, createdAt: -1 });
+  res.status(200).json({
+    success: true,
+    data: result
+  });
+});
 
-  // Increment view count
-  await shop.incrementViews();
+// @desc    Get shop by subdomain (public)
+// @route   GET /api/shops/by-subdomain/:subdomain
+// @access  Public
+exports.getShopBySubdomain = asyncHandler(async (req, res) => {
+  const { subdomain } = req.params;
+
+  const result = await loadPublicShopWithProducts({ subdomain });
+
+  if (!result) {
+    return res.status(404).json({
+      success: false,
+      message: 'Shop not found'
+    });
+  }
 
   res.status(200).json({
     success: true,
-    data: {
-      shop,
-      products
-    }
+    data: result
   });
 });
 
