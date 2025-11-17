@@ -179,21 +179,21 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-lg max-w-6xl w-full my-8 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-none sm:rounded-lg max-w-6xl w-full min-h-screen sm:min-h-0 sm:my-8 relative sm:max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
+          className="fixed sm:absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          <FiX size={24} />
+          <FiX size={20} className="sm:w-6 sm:h-6" />
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 p-3 sm:p-6">
           {/* Left side - Image Gallery */}
           <div>
             {/* Main Image */}
-            <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-4" style={{ height: '400px' }}>
+            <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-3 sm:mb-4 h-64 sm:h-80 md:h-96">
               {images.length > 0 ? (
                 <>
                   <img
@@ -205,38 +205,38 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
                     <>
                       <button
                         onClick={prevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 hover:bg-opacity-100"
+                        className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-90 rounded-full p-1.5 sm:p-2 hover:bg-opacity-100 dark:hover:bg-opacity-100"
                       >
-                        <FiChevronLeft size={24} />
+                        <FiChevronLeft size={20} className="sm:w-6 sm:h-6" />
                       </button>
                       <button
                         onClick={nextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 hover:bg-opacity-100"
+                        className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-90 rounded-full p-1.5 sm:p-2 hover:bg-opacity-100 dark:hover:bg-opacity-100"
                       >
-                        <FiChevronRight size={24} />
+                        <FiChevronRight size={20} className="sm:w-6 sm:h-6" />
                       </button>
                     </>
                   )}
                 </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <FiPackage size={64} className="text-gray-300" />
+                  <FiPackage size={48} className="sm:w-16 sm:h-16 text-gray-300" />
                 </div>
               )}
             </div>
 
             {/* Thumbnail Gallery */}
             {images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
                     className={`border-2 rounded-lg overflow-hidden ${
-                      selectedImage === idx ? 'border-blue-500' : 'border-gray-200'
+                      selectedImage === idx ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700'
                     }`}
                   >
-                    <img src={(img && (img.url || img.secure_url)) || ''} alt="" className="w-full h-20 object-cover" />
+                    <img src={(img && (img.url || img.secure_url)) || ''} alt="" className="w-full h-16 sm:h-20 object-cover" />
                   </button>
                 ))}
               </div>
@@ -245,32 +245,32 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
 
           {/* Right side - Product Info */}
           <div>
-            <h2 className="text-3xl font-bold mb-3">{product.name}</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 pr-8">{product.name}</h2>
 
             {/* Rating */}
             {product.numReviews > 0 && (
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <StarRating 
                   rating={product.averageRating || 0} 
                   count={product.numReviews} 
-                  size={20}
+                  size={16}
                   showCount={true}
                 />
               </div>
             )}
 
             {/* Price */}
-            <div className="mb-6">
-              <div className="flex items-baseline gap-3 mb-2">
-                <p className="text-4xl font-bold" style={{ color: primaryColor }}>
+            <div className="mb-4 sm:mb-6">
+              <div className="flex items-baseline gap-2 sm:gap-3 mb-2 flex-wrap">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: primaryColor }}>
                   {formatPrice(product.price, shop?.paymentSettings?.currency || 'NGN')}
                 </p>
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
-                    <p className="text-xl text-gray-400 line-through">
+                    <p className="text-base sm:text-xl text-gray-400 line-through">
                       {formatPrice(product.comparePrice, shop?.paymentSettings?.currency || 'NGN')}
                     </p>
-                    <span className="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
+                    <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded">
                       -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
                     </span>
                   </>
@@ -294,15 +294,15 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
             </div>
 
             {/* Description */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-gray-700 whitespace-pre-line">{product.description}</p>
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Description</h3>
+              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 whitespace-pre-line">{product.description}</p>
             </div>
 
             {/* Variants */}
             {Array.isArray(product.variants) && product.variants.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Available Options</h3>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Available Options</h3>
                 {product.variants.map((variant, idx) => (
                   <div key={idx} className="mb-3">
                     <p className="font-medium text-sm text-gray-700 mb-2">{variant.name}:</p>
@@ -338,16 +338,16 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
             )}
 
             {/* Action Buttons */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <button
                 onClick={() => {
                   addToCart(product, shop, 1);
                   toast.success('Added to cart!');
                 }}
                 disabled={isOutOfStock}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-secondary w-full flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FiShoppingCart size={22} />
+                <FiShoppingCart size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
                 Add to Cart
               </button>
               
@@ -367,9 +367,9 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
                     }
                   }}
                   disabled={isOutOfStock}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary w-full flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FiCreditCard size={22} />
+                  <FiCreditCard size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   {isOutOfStock ? 'Out of Stock' : 'Pay Now'}
                 </button>
               )}
@@ -379,19 +379,19 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
                 <button
                   onClick={handleOrderOnWhatsApp}
                   disabled={isOutOfStock}
-                  className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
+                  className="btn btn-whatsapp w-full flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white"
                 >
-                  <IoLogoWhatsapp size={24} />
-                  {isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}
+                  <IoLogoWhatsapp size={20} className="sm:w-6 sm:h-6" />
+                  <span className="truncate">{isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}</span>
                 </button>
               )}
               
               {/* Share to WhatsApp Button */}
               <button
                 onClick={handleShareToWhatsApp}
-                className="btn w-full flex items-center justify-center gap-2 text-lg py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20"
+                className="btn w-full flex items-center justify-center gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20"
               >
-                <FiShare2 size={22} />
+                <FiShare2 size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
                 Share on WhatsApp
               </button>
             </div>
