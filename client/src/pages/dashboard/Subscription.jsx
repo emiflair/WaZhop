@@ -57,6 +57,35 @@ const Subscription = () => {
     fetchData();
   }, []);
 
+  // Pre-select plan from URL parameter if present
+  useEffect(() => {
+    const planParam = searchParams.get('plan');
+    const billingParam = searchParams.get('billing');
+    
+    if (billingParam && (billingParam === 'monthly' || billingParam === 'yearly')) {
+      setBillingPeriod(billingParam);
+    }
+    
+    if (planParam) {
+      const plan = plans.find(p => p.id === planParam.toLowerCase());
+      if (plan && plan.id !== user?.plan) {
+        // Auto-open the upgrade modal for the selected plan
+        setSelectedPlan(plan);
+        
+        // Check if it's a downgrade to free
+        const isDowngradeToFree = plan.id === 'free' && getPlanLevel(user?.plan) > getPlanLevel('free');
+        if (isDowngradeToFree) {
+          setConfirmPhrase('');
+          setAckIrreversible(false);
+          setShowDowngradeModal(true);
+        } else {
+          setShowUpgradeModal(true);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.plan]);
+
   const fetchData = async () => {
     try {
       setLoading(true);

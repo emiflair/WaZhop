@@ -11,6 +11,7 @@ import {
   FiUpload,
   FiImage,
   FiAlertCircle,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import { FaCrown } from 'react-icons/fa';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -35,6 +36,7 @@ const Products = () => {
   const [previewProduct, setPreviewProduct] = useState(null);
   const [boostModal, setBoostModal] = useState({ open: false, product: null });
   const [boostForm, setBoostForm] = useState({ hours: 5, state: 'Lagos', area: '' });
+  const [boostConfirmModal, setBoostConfirmModal] = useState({ open: false, product: null });
   const [quickAddMode, setQuickAddMode] = useState(false);
   const [bulkUploadMode, setBulkUploadMode] = useState(false);
   const [bulkProducts, setBulkProducts] = useState([]);
@@ -389,14 +391,13 @@ const Products = () => {
   ];
 
   const openBoost = async (product) => {
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to boost "${product.name}"?\n\n` +
-      `This will make your product more visible to nearby customers.\n` +
-      `Pricing: ₦400/hour`
-    );
-    
-    if (!confirmed) return;
+    // Show custom confirmation modal
+    setBoostConfirmModal({ open: true, product });
+  };
+
+  const confirmBoost = async () => {
+    const product = boostConfirmModal.product;
+    setBoostConfirmModal({ open: false, product: null });
     
     setBoostModal({ open: true, product });
     setBoostForm((prev) => ({ ...prev, area: '', state: 'Lagos', hours: 5 }));
@@ -433,10 +434,12 @@ const Products = () => {
 
   const handleBoostPaymentCancel = (data) => {
     if (data.cancelled || data.failed) {
-      toast.error('Payment was cancelled or failed');
       setBoostModal({ open: false, product: null });
-      // Redirect to subscription page
-      navigate('/dashboard/subscription');
+      // Use setTimeout to ensure modal closes before navigation
+      setTimeout(() => {
+        toast.error('Payment was cancelled or failed');
+        navigate('/dashboard/subscription');
+      }, 100);
     }
   };
 
@@ -1623,6 +1626,52 @@ const Products = () => {
           product={previewProduct}
           onClose={() => setPreviewProduct(null)}
         />
+      )}
+
+      {/* Boost Confirmation Modal */}
+      {boostConfirmModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+                <FiTrendingUp className="text-primary-600 dark:text-primary-400" size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Boost This Product?</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Reach more nearby customers</p>
+              </div>
+            </div>
+            {boostConfirmModal.product && (
+              <div className="mb-6">
+                <p className="text-gray-700 dark:text-gray-300 mb-2">
+                  You&apos;re about to boost <strong className="text-gray-900 dark:text-white">{boostConfirmModal.product.name}</strong>
+                </p>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mb-1">• Pricing: <span className="font-semibold">₦400/hour</span></p>
+                  <p>• Your product will appear in targeted search results</p>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <TouchButton
+                onClick={() => setBoostConfirmModal({ open: false, product: null })}
+                variant="secondary"
+                size="md"
+                className="flex-1"
+              >
+                Cancel
+              </TouchButton>
+              <TouchButton
+                onClick={confirmBoost}
+                variant="primary"
+                size="md"
+                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white"
+              >
+                Continue
+              </TouchButton>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Boost Modal */}

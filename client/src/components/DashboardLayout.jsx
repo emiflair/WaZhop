@@ -16,6 +16,7 @@ const DashboardLayout = ({ children }) => {
   const [headerHeight, setHeaderHeight] = useState(64);
 
   const navigation = [
+    { name: 'Marketplace', href: '/', icon: FiShoppingBag, external: true },
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
     { name: 'My Shops', href: '/dashboard/shops', icon: FaStore },
     { name: 'Products', href: '/dashboard/products', icon: FiShoppingBag },
@@ -131,7 +132,7 @@ const DashboardLayout = ({ children }) => {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = !item.external && location.pathname === item.href;
               return (
                 <Link
                   key={item.name}
