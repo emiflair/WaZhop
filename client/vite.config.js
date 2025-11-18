@@ -18,6 +18,7 @@ const injectBuildTimestamp = () => {
 }
 
 // https://vitejs.dev/config/
+// Build: Nov 18, 2025 - Free subscription upgrade backend fix
 export default defineConfig({
   plugins: [react(), injectBuildTimestamp()],
   resolve: {
