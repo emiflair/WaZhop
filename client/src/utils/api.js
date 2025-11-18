@@ -261,6 +261,14 @@ export const adminAPI = {
   toggleUserStatus: (id) => api.patch(`/admin/users/${id}/status`),
   updateUserPlan: (id, plan, duration) => api.patch(`/admin/users/${id}/plan`, { plan, duration }),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getAllShops: (params) => api.get('/admin/shops', { params }),
+  deleteShop: (id) => api.delete(`/admin/shops/${id}`),
+  getAllProducts: (params) => api.get('/admin/products', { params }),
+  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  getAllOrders: (params) => api.get('/admin/orders', { params }),
+  updateOrderStatus: (id, status) => api.patch(`/admin/orders/${id}/status`, { status }),
+  getAnalytics: () => api.get('/admin/analytics'),
+  getRevenue: () => api.get('/admin/revenue'),
   getActivity: (limit) => api.get('/admin/activity', { params: { limit } }),
 };
 

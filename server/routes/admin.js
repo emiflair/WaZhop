@@ -17,6 +17,24 @@ router.patch('/users/:id/status', adminController.toggleUserStatus);
 router.patch('/users/:id/plan', adminController.updateUserPlan);
 router.delete('/users/:id', adminController.deleteUser);
 
+// Shop management
+router.get('/shops', adminController.getAllShops);
+router.delete('/shops/:id', adminController.deleteShop);
+
+// Product management
+router.get('/products', adminController.getAllProducts);
+router.delete('/products/:id', adminController.deleteProduct);
+
+// Order management
+router.get('/orders', adminController.getAllOrders);
+router.patch('/orders/:id/status', adminController.updateOrderStatus);
+
+// Analytics
+router.get('/analytics', adminController.getAnalytics);
+
+// Revenue
+router.get('/revenue', adminController.getRevenue);
+
 // System activity
 router.get('/activity', adminController.getSystemActivity);
 

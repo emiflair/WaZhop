@@ -1,24 +1,46 @@
+import { useState, useEffect } from 'react';
 import { FiUsers, FiShoppingBag, FiDollarSign, FiTrendingUp, FiPackage } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
 import AdminLayout from '../../components/AdminLayout';
+import { adminAPI } from '../../utils/api';
+import toast from 'react-hot-toast';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function AdminDashboard() {
-  // Mock data for now (no authentication required)
-  const stats = {
-    totalUsers: 0,
-    totalShops: 0,
-    totalProducts: 0,
-    totalRevenue: 0,
-    activeSubscriptions: 0,
-    totalOrders: 0
-  };
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const activity = [];
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await adminAPI.getStats();
+        setStats(data.stats);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        toast.error('Failed to load dashboard stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="lg" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const activity = stats?.recentUsers || [];
 
   const statCards = [
     {
       name: 'Total Users',
-      value: stats?.totalUsers || 0,
+      value: stats?.users?.total || 0,
       icon: FiUsers,
       color: 'blue',
       bgColor: 'bg-blue-100 dark:bg-blue-900/30',
@@ -26,7 +48,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Shops',
-      value: stats?.totalShops || 0,
+      value: stats?.shops || 0,
       icon: FaStore,
       color: 'purple',
       bgColor: 'bg-purple-100 dark:bg-purple-900/30',
@@ -34,7 +56,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Products',
-      value: stats?.totalProducts || 0,
+      value: stats?.products || 0,
       icon: FiShoppingBag,
       color: 'green',
       bgColor: 'bg-green-100 dark:bg-green-900/30',
@@ -42,7 +64,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Revenue',
-      value: `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
+      value: `₦${(stats?.orders?.revenue || 0).toLocaleString()}`,
       icon: FiDollarSign,
       color: 'yellow',
       bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
@@ -50,7 +72,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Active Subscriptions',
-      value: stats?.activeSubscriptions || 0,
+      value: stats?.subscriptions?.active || 0,
       icon: FiTrendingUp,
       color: 'indigo',
       bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
@@ -58,7 +80,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Orders',
-      value: stats?.totalOrders || 0,
+      value: stats?.orders?.total || 0,
       icon: FiPackage,
       color: 'pink',
       bgColor: 'bg-pink-100 dark:bg-pink-900/30',
@@ -100,11 +122,13 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
           {activity && activity.length > 0 ? (
             <div className="space-y-4">
-              {activity.map((item, index) => (
+              {activity.map((user, index) => (
                 <div key={index} className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0">
                   <div className="flex-1">
-                    <p className="text-sm text-gray-900 dark:text-white">{item.description}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.timestamp}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{user.name} ({user.email})</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Joined {new Date(user.createdAt).toLocaleDateString()} • {user.role} • {user.plan} plan
+                    </p>
                   </div>
                 </div>
               ))}

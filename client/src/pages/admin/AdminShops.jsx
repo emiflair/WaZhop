@@ -1,22 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSearch, FiEye, FiTrash2, FiUser, FiCalendar, FiExternalLink } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
 import AdminLayout from '../../components/AdminLayout';
+import { adminAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function AdminShops() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [shops] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchShops = async () => {
+    try {
+      setLoading(true);
+      const data = await adminAPI.getAllShops({ search: searchTerm });
+      setShops(data.shops || []);
+      setStats({
+        total: data.total,
+        active: data.activeShops,
+        avgProducts: data.shops?.length > 0 
+          ? Math.round(data.shops.reduce((sum, s) => sum + (s.productsCount || 0), 0) / data.shops.length)
+          : 0
+      });
+    } catch (error) {
+      console.error('Failed to fetch shops:', error);
+      toast.error('Failed to load shops');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== '') {
+        fetchShops();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const filteredShops = shops.filter(shop =>
     shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     shop.owner?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteShop = () => {
-    if (!confirm('Are you sure you want to delete this shop? This action cannot be undone.')) return;
-    toast.success('Shop deleted successfully');
+  const handleDeleteShop = async (id) => {
+    if (!confirm('Are you sure you want to delete this shop? This will also delete all products and orders. This action cannot be undone.')) return;
+    try {
+      await adminAPI.deleteShop(id);
+      toast.success('Shop deleted successfully');
+      fetchShops();
+    } catch (error) {
+      console.error('Failed to delete shop:', error);
+      toast.error('Failed to delete shop');
+    }
   };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="lg" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -33,7 +87,7 @@ export default function AdminShops() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Shops</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">0</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats?.total || 0}</p>
               </div>
               <FaStore className="text-3xl text-red-400" />
             </div>
@@ -42,7 +96,7 @@ export default function AdminShops() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Active Shops</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">0</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats?.active || 0}</p>
               </div>
               <FaStore className="text-3xl text-green-400" />
             </div>
@@ -51,7 +105,7 @@ export default function AdminShops() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Avg Products/Shop</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">0</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">{stats?.avgProducts || 0}</p>
               </div>
               <FaStore className="text-3xl text-blue-400" />
             </div>
@@ -86,7 +140,7 @@ export default function AdminShops() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredShops.length === 0 ? (
+                {shops.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                       <div className="flex flex-col items-center gap-2">
@@ -97,13 +151,13 @@ export default function AdminShops() {
                     </td>
                   </tr>
                 ) : (
-                  filteredShops.map((shop) => (
+                  shops.map((shop) => (
                     <tr key={shop._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            {shop.logo ? (
-                              <img src={shop.logo} alt={shop.name} className="h-10 w-10 rounded-lg object-cover" />
+                            {shop.branding?.logo ? (
+                              <img src={shop.branding.logo} alt={shop.shopName} className="h-10 w-10 rounded-lg object-cover" />
                             ) : (
                               <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900 flex items-center justify-center">
                                 <FaStore className="text-red-600 dark:text-red-300" />
@@ -111,7 +165,7 @@ export default function AdminShops() {
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">{shop.name}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{shop.shopName}</div>
                           </div>
                         </div>
                       </td>
@@ -134,7 +188,7 @@ export default function AdminShops() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <a
-                            href={shop.customDomain ? `https://${shop.customDomain}` : undefined}
+                            href={`/shops/${shop.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
@@ -143,6 +197,7 @@ export default function AdminShops() {
                             <FiExternalLink size={18} />
                           </a>
                           <button
+                            onClick={() => window.location.href = `/shops/${shop.slug}`}
                             className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                             title="View Details"
                           >
