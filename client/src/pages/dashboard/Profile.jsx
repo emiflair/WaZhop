@@ -644,7 +644,7 @@ const Profile = () => {
             ) : (
               <TouchButton
                 onClick={() => setShow2FADisable(true)}
-                variant="secondary"
+                variant="danger"
                 size="md"
                 disabled={loading}
               >
