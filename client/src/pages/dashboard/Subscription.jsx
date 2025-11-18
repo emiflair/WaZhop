@@ -1238,40 +1238,78 @@ const Subscription = () => {
                 
                 {/* Flutterwave Payment Button */}
                 {!paymentInitiated ? (
-                  <FlutterwavePayment
-                    amount={(() => {
-                      const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
-                        ? selectedPlan.yearlyPrice 
-                        : selectedPlan.price;
-                      if (!couponData) return originalPrice;
-                      
+                  (() => {
+                    const originalPrice = billingPeriod === 'yearly' && selectedPlan.yearlyPrice 
+                      ? selectedPlan.yearlyPrice 
+                      : selectedPlan.price;
+                    let finalAmount = originalPrice;
+                    
+                    if (couponData) {
                       const discountAmount = couponData.discountType === 'percentage'
                         ? (originalPrice * couponData.discountValue) / 100
                         : couponData.discountValue;
-                      return originalPrice - discountAmount;
-                    })()}
-                    email={user?.email}
-                    name={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email}
-                    phone={user?.phone || ''}
-                    planName={selectedPlan.name}
-                    billingPeriod={billingPeriod}
-                    paymentType="subscription"
-                    metadata={{
-                      plan: selectedPlan.id,
-                      billingPeriod: billingPeriod,
-                      couponCode: couponData ? couponCode.trim() : null,
-                      discountApplied: couponData ? true : false
-                    }}
-                    returnUrl="/dashboard/subscription"
-                    onSuccess={handlePaymentSuccess}
-                    onClose={handlePaymentClose}
-                  >
-                    <button
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"
-                    >
-                      Proceed to Payment
-                    </button>
-                  </FlutterwavePayment>
+                      finalAmount = Math.max(0, originalPrice - discountAmount);
+                    }
+                    
+                    // If amount is 0 (100% discount), bypass payment gateway
+                    if (finalAmount <= 0) {
+                      return (
+                        <button
+                          onClick={async () => {
+                            try {
+                              setPaymentInitiated(true);
+                              toast.loading('Processing free upgrade...');
+                              
+                              // Directly process free upgrade
+                              await handlePaymentSuccess({
+                                transactionId: `FREE_${Date.now()}`,
+                                txRef: `free_upgrade_${Date.now()}`,
+                                status: 'successful'
+                              });
+                              
+                              toast.dismiss();
+                              toast.success('🎉 Plan upgraded successfully! No payment required.');
+                            } catch (error) {
+                              toast.dismiss();
+                              toast.error('Failed to process upgrade');
+                              setPaymentInitiated(false);
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-colors font-bold shadow-lg"
+                        >
+                          Complete Free Upgrade
+                        </button>
+                      );
+                    }
+                    
+                    // Normal paid upgrade with Flutterwave
+                    return (
+                      <FlutterwavePayment
+                        amount={finalAmount}
+                        email={user?.email}
+                        name={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email}
+                        phone={user?.phone || ''}
+                        planName={selectedPlan.name}
+                        billingPeriod={billingPeriod}
+                        paymentType="subscription"
+                        metadata={{
+                          plan: selectedPlan.id,
+                          billingPeriod: billingPeriod,
+                          couponCode: couponData ? couponCode.trim() : null,
+                          discountApplied: couponData ? true : false
+                        }}
+                        returnUrl="/dashboard/subscription"
+                        onSuccess={handlePaymentSuccess}
+                        onClose={handlePaymentClose}
+                      >
+                        <button
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-lg transition-colors font-bold shadow-lg"
+                        >
+                          Proceed to Payment
+                        </button>
+                      </FlutterwavePayment>
+                    );
+                  })()
                 ) : (
                   <button
                     className="flex-1 px-4 py-3 bg-gray-400 text-white rounded-lg cursor-not-allowed"
