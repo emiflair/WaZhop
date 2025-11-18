@@ -347,7 +347,142 @@ exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify payment with Flutterwave
+  // Check if this is a free upgrade (100% discount)
+  const isFreeUpgrade = transactionId.startsWith('FREE_') && txRef.startsWith('free_upgrade_');
+
+  if (isFreeUpgrade) {
+    // Process free upgrade without payment verification
+    try {
+      // Get expected amount based on plan
+      const prices = {
+        'pro-monthly': 9000,
+        'pro-yearly': 75600,
+        'premium-monthly': 18000,
+        'premium-yearly': 151200
+      };
+
+      const priceKey = `${plan}-${billingPeriod}`;
+      const expectedAmount = prices[priceKey];
+      let finalAmount = expectedAmount;
+      let discountApplied = null;
+
+      // Verify coupon provides 100% discount
+      if (couponCode) {
+        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+
+        if (!coupon) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid coupon code'
+          });
+        }
+
+        const validation = coupon.isValid();
+        if (!validation.valid) {
+          return res.status(400).json({
+            success: false,
+            message: validation.message
+          });
+        }
+
+        if (!coupon.applicablePlans.includes(plan)) {
+          return res.status(400).json({
+            success: false,
+            message: `Coupon not applicable to ${plan} plan`
+          });
+        }
+
+        const discount = coupon.calculateDiscount(expectedAmount);
+        finalAmount = discount.finalAmount;
+
+        // Verify it's actually a 100% discount
+        if (finalAmount > 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Free upgrade requires 100% discount coupon'
+          });
+        }
+
+        discountApplied = {
+          code: coupon.code,
+          discountAmount: discount.discountAmount,
+          discountPercentage: discount.discountPercentage
+        };
+
+        // Record usage
+        coupon.usedBy.push({
+          user: req.user.id,
+          usedAt: new Date(),
+          plan,
+          originalAmount: discount.originalAmount,
+          discountAmount: discount.discountAmount,
+          finalAmount: discount.finalAmount
+        });
+        coupon.usedCount += 1;
+        await coupon.save();
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Coupon code required for free upgrade'
+        });
+      }
+
+      // Upgrade user plan
+      const user = await User.findById(req.user.id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Calculate expiry date
+      const duration = getPlanDuration(plan, billingPeriod);
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + duration);
+
+      user.plan = plan;
+      user.billingPeriod = billingPeriod;
+      user.planExpiry = expiryDate;
+      user.lastBillingDate = new Date();
+      user.subscriptionStatus = 'active';
+      user.renewalAttempts = 0;
+      user.lastRenewalAttempt = null;
+      user.renewalFailureReason = null;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: `Successfully upgraded to ${plan} plan (${billingPeriod}) - Free with 100% discount!`,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          plan: user.plan,
+          billingPeriod: user.billingPeriod,
+          planExpiry: user.planExpiry,
+          subscriptionStatus: user.subscriptionStatus
+        },
+        payment: {
+          transactionId,
+          amount: 0,
+          currency: 'NGN',
+          discountApplied
+        }
+      });
+    } catch (error) {
+      console.error('Free upgrade error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to process free upgrade. Please try again.'
+      });
+    }
+  }
+
+  // Verify payment with Flutterwave for paid upgrades
   try {
     const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY;
     
