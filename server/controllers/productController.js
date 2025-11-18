@@ -141,6 +141,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
     });
 
   if (!product) {
+    console.log(`❌ Product not found with ID: ${req.params.id}`);
     return res.status(404).json({
       success: false,
       message: 'Product not found'
@@ -149,6 +150,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
 
   // Check if shop exists and is populated
   if (!product.shop) {
+    console.log(`❌ Product ${req.params.id} has no shop or shop was deleted`);
     return res.status(404).json({
       success: false,
       message: 'Product not found'
@@ -157,6 +159,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
 
   // Check if shop is active (hidden if inactive)
   if (!product.shop.isActive) {
+    console.log(`❌ Product ${req.params.id} shop is inactive: ${product.shop.shopName}`);
     return res.status(404).json({
       success: false,
       message: 'Product not found'
