@@ -21,11 +21,13 @@ const { moderateProductContent } = require('../middlewares/contentModeration');
 
 // Public routes
 router.get('/marketplace', getMarketplaceProducts);
+
+// Protected routes - place specific routes before dynamic :id routes
+router.get('/my/products', protect, requireRole('seller'), getMyProducts);
+
+// Dynamic routes (must come after specific routes)
 router.get('/:id', getProduct);
 router.post('/:id/click', trackProductClick);
-
-// Protected routes
-router.get('/my/products', protect, requireRole('seller'), getMyProducts);
 router.post('/', protect, requireRole('seller'), checkPlanLimit('products'), upload.array('images', 5), moderateProductContent, createProduct);
 router.put('/:id', protect, requireRole('seller'), moderateProductContent, updateProduct);
 router.put('/:id/boost', protect, requireRole('seller'), boostProduct);
