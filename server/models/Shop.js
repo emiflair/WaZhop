@@ -184,6 +184,10 @@ const shopSchema = new mongoose.Schema({
     type: Boolean,
     default: true // Free plan shows watermark, Pro/Premium hides it
   },
+  isActive: {
+    type: Boolean,
+    default: true // Shops are active by default
+  },
   views: {
     type: Number,
     default: 0
