@@ -85,35 +85,34 @@ export default function Marketplace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
-  // Smart prefetching: Load next page and first 10 product details ahead of time
+  // Smart prefetching: Load next page ONLY (removed aggressive product detail prefetching)
   useEffect(() => {
-    if (products.length > 0 && !loading) {
-      // Prefetch next page
-      const nextPageParams = {
-        page: page + 1,
-        limit: 24,
-        ...(sortBy ? { sort: sortBy } : {}),
-        ...(category !== 'all' && { category }),
-        ...(search && { search }),
-        ...(ngState && { state: ngState }),
-        ...(area && { area }),
-        ...(priceRange.min && { minPrice: priceRange.min }),
-        ...(priceRange.max && { maxPrice: priceRange.max })
-      };
-      prefetchProducts(nextPageParams).catch(() => {});
-
-      // Prefetch first 10 products' details and images
-      products.slice(0, 10).forEach((product, idx) => {
-        setTimeout(() => {
-          prefetchProductDetail(product._id).catch(() => {});
-          // Preload product images
-          if (product.images?.[0]?.url) {
-            preloadImage(product.images[0].url);
-          }
-        }, idx * 100); // Stagger requests to avoid overwhelming
-      });
+    if (products.length > 0 && !loading && hasMore) {
+      // Only prefetch next page if user has scrolled past halfway point
+      const shouldPrefetch = products.length >= 12;
+      
+      if (shouldPrefetch) {
+        const nextPageParams = {
+          page: page + 1,
+          limit: 24,
+          ...(sortBy ? { sort: sortBy } : {}),
+          ...(category !== 'all' && { category }),
+          ...(search && { search }),
+          ...(ngState && { state: ngState }),
+          ...(area && { area }),
+          ...(priceRange.min && { minPrice: priceRange.min }),
+          ...(priceRange.max && { maxPrice: priceRange.max })
+        };
+        
+        // Debounce prefetch to avoid rapid calls
+        const timer = setTimeout(() => {
+          prefetchProducts(nextPageParams).catch(() => {});
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, [products, loading, page, sortBy, category, search, ngState, area, priceRange]);
+  }, [products, loading, page, sortBy, category, search, ngState, area, priceRange, hasMore]);
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -472,16 +471,11 @@ function ProductCard({ product, onOpen }) {
   const isTrending = product.views > 50 || product.clicks > 20
   const isHot = product.clicks > 50 // Very popular
 
-  // Prefetch product detail on hover for instant navigation
-  const handleHover = () => {
-    setIsHovered(true);
-    prefetchProductDetail(product._id).catch(() => {});
-  };
-
+  // Removed hover prefetching to reduce API calls
   return (
     <div
       onClick={() => onOpen()}
-      onMouseEnter={handleHover}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
     >

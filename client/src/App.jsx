@@ -89,11 +89,8 @@ function AppRoutes() {
     }
   }, [location?.pathname, theme])
 
-  // Prefetch marketplace products on app load for instant navigation
-  useEffect(() => {
-    // Prefetch first 20 products from marketplace
-    prefetchProducts({ page: 1, limit: 24 }).catch(() => {});
-  }, [])
+  // Removed automatic prefetch on app load to reduce initial API calls
+  // Products will load normally when user navigates to marketplace
   // On route changes, fade out and remove splash screen inserted in index.html
   useEffect(() => {
     const el = document.getElementById('app-splash')

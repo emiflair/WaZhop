@@ -5,6 +5,8 @@
 
 const cache = new Map();
 const pendingRequests = new Map();
+const lastRequestTime = new Map();
+const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 seconds between same requests
 
 /**
  * Prefetch products from API and cache them
@@ -22,10 +24,24 @@ export async function prefetchProducts(params) {
     }
   }
 
+  // Rate limiting: Don't make same request within MIN_REQUEST_INTERVAL
+  if (lastRequestTime.has(cacheKey)) {
+    const timeSinceLastRequest = Date.now() - lastRequestTime.get(cacheKey);
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      // Return cached data even if slightly stale, or reject
+      if (cache.has(cacheKey)) {
+        return cache.get(cacheKey).data;
+      }
+      return Promise.reject(new Error('Rate limited'));
+    }
+  }
+
   // If already fetching, return that promise
   if (pendingRequests.has(cacheKey)) {
     return pendingRequests.get(cacheKey);
   }
+
+  lastRequestTime.set(cacheKey, Date.now());
 
   // Fetch and cache
   const promise = fetch(`${import.meta.env.VITE_API_URL || '/api'}/products/marketplace?${new URLSearchParams(params)}`)
@@ -60,9 +76,22 @@ export async function prefetchProductDetail(productId) {
     }
   }
 
+  // Rate limiting for product details too
+  if (lastRequestTime.has(cacheKey)) {
+    const timeSinceLastRequest = Date.now() - lastRequestTime.get(cacheKey);
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      if (cache.has(cacheKey)) {
+        return cache.get(cacheKey).data;
+      }
+      return Promise.reject(new Error('Rate limited'));
+    }
+  }
+
   if (pendingRequests.has(cacheKey)) {
     return pendingRequests.get(cacheKey);
   }
+
+  lastRequestTime.set(cacheKey, Date.now());
 
   const promise = fetch(`${import.meta.env.VITE_API_URL || '/api'}/products/${productId}`)
     .then(res => res.json())
