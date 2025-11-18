@@ -96,8 +96,15 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
-      // Email verification is not required for login - users can log in immediately
-      // Verification is only for registration and password reset flows
+      const requiresVerification = error.response?.data?.requiresVerification;
+      const email = error.response?.data?.email;
+      
+      // If email verification is required, store email for verification flow
+      if (requiresVerification && email) {
+        localStorage.setItem('pendingVerifyEmail', email);
+        return { success: false, error: message, requiresVerification: true };
+      }
+      
       return { success: false, error: message };
     }
   };

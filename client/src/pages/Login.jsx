@@ -57,6 +57,11 @@ const Login = () => {
       });
       return;
     }
+    // Check if email verification is required
+    else if (result.requiresVerification) {
+      navigate('/verify-email', { replace: true });
+      return;
+    }
     // Inline error feedback on failure
     else if (!result.success) {
       const msg = (result.error || '').toLowerCase();

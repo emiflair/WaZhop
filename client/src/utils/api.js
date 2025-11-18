@@ -92,6 +92,19 @@ api.interceptors.response.use(
       }
     }
 
+    // Handle email verification requirement (403 with requiresVerification flag)
+    if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
+      // Store email for verification flow if provided
+      if (error.response?.data?.email) {
+        localStorage.setItem('pendingVerifyEmail', error.response.data.email);
+      }
+      
+      // Redirect to verify email page if not already there
+      if (!window.location.pathname.includes('/verify-email')) {
+        window.location.href = '/verify-email';
+      }
+    }
+
     // Enhance error object with parsed message
     error.userMessage = parseApiError(error);
     

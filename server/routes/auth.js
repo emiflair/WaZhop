@@ -16,7 +16,7 @@ const {
   requestSmsCode,
   verifySmsCode
 } = require('../controllers/authController');
-const { protect } = require('../middlewares/auth');
+const { protect, protectAllowUnverified } = require('../middlewares/auth');
 const {
   validateRegister,
   validateLogin,
@@ -43,7 +43,7 @@ router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.put('/upgrade-to-seller', protect, upgradeToSeller);
 router.put('/change-password', protect, changePassword);
-router.post('/request-email-verification', protect, requestEmailVerification);
+router.post('/request-email-verification', protectAllowUnverified, requestEmailVerification);
 router.post('/request-sms-code', protect, requestSmsCode);
 router.post('/verify-sms', protect, verifySmsCode);
 

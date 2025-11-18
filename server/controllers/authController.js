@@ -202,6 +202,16 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
+  // Check if email is verified - REQUIRED
+  if (!user.emailVerified) {
+    return res.status(403).json({
+      success: false,
+      message: 'Please verify your email address before logging in. Check your inbox for the verification code.',
+      requiresVerification: true,
+      email: user.email
+    });
+  }
+
   // Check if 2FA is enabled
   if (user.twoFactorEnabled) {
     // If 2FA token not provided, ask for it
@@ -229,9 +239,6 @@ exports.login = asyncHandler(async (req, res) => {
       });
     }
   }
-
-  // Allow login regardless of email verification status
-  // Email verification is optional, not required for login
 
   // Send token response
   sendTokenResponse(user, 200, res);
