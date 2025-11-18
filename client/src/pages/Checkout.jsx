@@ -169,7 +169,56 @@ export default function Checkout() {
     setError('');
 
     try {
-      // Create orders for each shop
+      // Check if this is a free order (100% discount or totalAmount is 0)
+      const isFreeOrder = totalAmount <= 0 || (appliedCoupon && discountAmount >= subtotalAmount);
+      
+      // For free orders, create orders directly without payment gateway
+      if (isFreeOrder) {
+        // Create orders for each shop
+        const orderPromises = shops.map(async (shopData) => {
+          const shopTotal = Math.max(0, shopData.subtotal - ((shopData.subtotal / subtotalAmount) * discountAmount));
+          const orderData = {
+            shopId: shopData.shop._id,
+            items: shopData.items.map(item => ({
+              productId: item.product._id,
+              quantity: item.quantity
+            })),
+            customer: customerInfo,
+            shippingAddress: {
+              ...shippingAddress,
+              fullAddress: `${shippingAddress.street}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.country}`
+            },
+            paymentMethod: 'free',
+            customerNotes,
+            subtotal: shopData.subtotal,
+            shippingFee: 0,
+            discount: appliedCoupon ? (shopData.subtotal / subtotalAmount) * discountAmount : 0,
+            couponCode: appliedCoupon?.code || null,
+            total: 0,
+            currency: shopData.shop.paymentSettings?.currency || 'NGN'
+          };
+
+          const response = await orderAPI.createOrder(orderData);
+          return response.order;
+        });
+
+        const orders = await Promise.all(orderPromises);
+
+        // Clear cart
+        clearCart();
+
+        // Show success message
+        toast.success('🎉 Order placed successfully! No payment required.', { duration: 4000 });
+
+        // Navigate to confirmation page with order details
+        navigate('/order-confirmation', {
+          state: { orders, customerInfo }
+        });
+        
+        return;
+      }
+
+      // For paid orders, create orders with selected payment method
       const orderPromises = shops.map(async (shopData) => {
         const shopTotal = appliedCoupon ? shopData.subtotal - ((shopData.subtotal / subtotalAmount) * discountAmount) : shopData.subtotal;
         const orderData = {
@@ -183,7 +232,7 @@ export default function Checkout() {
             ...shippingAddress,
             fullAddress: `${shippingAddress.street}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.country}`
           },
-          paymentMethod: shopTotal === 0 ? 'free' : paymentMethod,
+          paymentMethod: paymentMethod,
           customerNotes,
           subtotal: shopData.subtotal,
           shippingFee: 0, // Calculate shipping if needed
@@ -546,7 +595,9 @@ export default function Checkout() {
                       Processing...
                     </span>
                   ) : (
-                    'Place Order'
+                    totalAmount <= 0 || (appliedCoupon && discountAmount >= subtotalAmount) 
+                      ? 'Complete Free Order' 
+                      : 'Place Order'
                   )}
                 </button>
               )}

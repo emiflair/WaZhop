@@ -4,6 +4,32 @@ import App from './App.jsx'
 import './index.css'
 import { Toaster } from 'react-hot-toast'
 
+// Clear old caches on app load to ensure users get fresh updates
+if ('caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => {
+      caches.delete(name);
+    });
+  });
+}
+
+// Unregister any service workers (in case they were previously registered)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.unregister();
+    });
+  });
+}
+
+// Force reload if page was loaded from cache (BFCache)
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    // Page was loaded from cache, force reload to get fresh version
+    window.location.reload();
+  }
+});
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
