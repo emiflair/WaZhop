@@ -143,11 +143,37 @@ const Register = () => {
 
     if (!result.success) {
       const msg = (result.error || '').toLowerCase();
-      const newErrors = { ...errors, general: result.error || 'Registration failed' };
-      if (/email/.test(msg)) newErrors.email = result.error;
-      if (/whatsapp|phone/.test(msg)) newErrors.whatsapp = result.error;
+      const newErrors = { ...errors };
+      
+      // Parse backend validation errors (array of {field, message})
+      if (result.errors && Array.isArray(result.errors)) {
+        result.errors.forEach(err => {
+          const field = err.field || err.param;
+          if (field && err.message) {
+            newErrors[field] = err.message;
+          }
+        });
+        // Set general error only if no specific fields matched
+        if (Object.keys(newErrors).filter(k => k !== 'general' && newErrors[k]).length === 0) {
+          newErrors.general = 'Please check your inputs and try again';
+        }
+      } else {
+        // Fallback to old parsing logic
+        newErrors.general = result.error || 'Registration failed';
+        if (/email/.test(msg)) newErrors.email = result.error;
+        if (/whatsapp|phone/.test(msg)) newErrors.whatsapp = result.error;
+        if (/password/.test(msg)) newErrors.password = result.error;
+        if (/name/.test(msg)) newErrors.name = result.error;
+      }
+      
       setErrors(newErrors);
-      setTouched({ ...touched, email: true, whatsapp: true });
+      setTouched({ 
+        name: true,
+        email: true, 
+        password: true,
+        confirmPassword: true,
+        whatsapp: true 
+      });
     }
 
     setLoading(false);
@@ -222,11 +248,12 @@ const Register = () => {
           <label htmlFor="password" className="label">Password</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaLock /></span>
-            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6} className={`input pl-10 pr-10 ${touched.password && errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.password} onChange={handleChange} onBlur={handleBlur} />
+            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={8} className={`input pl-10 pr-10 ${touched.password && errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.password} onChange={handleChange} onBlur={handleBlur} />
             <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Hide password' : 'Show password'}>
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">At least 8 characters with uppercase, lowercase, and number</p>
           {touched.password && errors.password ? (<p className="text-sm text-red-600 mt-1">{errors.password}</p>) : null}
         </div>
 
@@ -234,7 +261,7 @@ const Register = () => {
           <label htmlFor="confirmPassword" className="label">Confirm Password</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><FaLock /></span>
-            <input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required minLength={6} className={`input pl-10 pr-10 ${touched.confirmPassword && errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
+            <input id="confirmPassword" name="confirmPassword" type={showConfirm ? 'text' : 'password'} required minLength={8} className={`input pl-10 pr-10 ${touched.confirmPassword && errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`} placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
             <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label={showConfirm ? 'Hide password' : 'Show password'}>
               {showConfirm ? <FaEyeSlash /> : <FaEye />}
             </button>
