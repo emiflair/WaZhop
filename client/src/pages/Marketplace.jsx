@@ -4,6 +4,7 @@ import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, F
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { prefetchProducts, prefetchProductDetail, preloadImage } from '../utils/prefetch'
+import { useDebounce } from '../hooks/useDebounce'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MobileBottomNav from '../components/MobileBottomNav'
@@ -21,7 +22,8 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('') // Immediate UI update
+  const debouncedSearch = useDebounce(searchInput, 300) // Debounced for API calls
   const [category, setCategory] = useState('all')
   // Empty sort means backend default (featured: boosted first)
   const [sortBy, setSortBy] = useState('')
@@ -57,7 +59,7 @@ export default function Marketplace() {
         limit: 24,
         ...(sortBy ? { sort: sortBy } : {}),
         ...(category !== 'all' && { category }),
-        ...(search && { search }),
+        ...(debouncedSearch && { search: debouncedSearch }),
         ...(ngState && { state: ngState }),
         ...(area && { area }),
         ...(priceRange.min && { minPrice: priceRange.min }),
@@ -78,12 +80,12 @@ export default function Marketplace() {
     } finally {
       setLoading(false)
     }
-  }, [page, category, search, sortBy, priceRange, ngState, area])
+  }, [page, category, debouncedSearch, sortBy, priceRange, ngState, area])
 
   useEffect(() => {
     fetchProducts(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, sortBy, search])
+  }, [category, sortBy, debouncedSearch])
 
   // When page changes (and not a reset), load more
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function Marketplace() {
           limit: 24,
           ...(sortBy ? { sort: sortBy } : {}),
           ...(category !== 'all' && { category }),
-          ...(search && { search }),
+          ...(debouncedSearch && { search: debouncedSearch }),
           ...(ngState && { state: ngState }),
           ...(area && { area }),
           ...(priceRange.min && { minPrice: priceRange.min }),
@@ -138,34 +140,34 @@ export default function Marketplace() {
       window.removeEventListener('scroll', throttledScroll);
       if (scrollTimeout) clearTimeout(scrollTimeout);
     };
-  }, [products, loading, page, sortBy, category, search, ngState, area, priceRange, hasMore]);
+  }, [products, loading, page, sortBy, category, debouncedSearch, ngState, area, priceRange, hasMore]);
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (search.trim()) {
+    if (searchInput.trim()) {
       // Add to recent searches
-      const updated = [search, ...recentSearches.filter(s => s !== search)].slice(0, 5)
+      const updated = [searchInput, ...recentSearches.filter(s => s !== searchInput)].slice(0, 5)
       setRecentSearches(updated)
       localStorage.setItem('recentSearches', JSON.stringify(updated))
     }
-    fetchProducts(true)
+    // fetchProducts will be called automatically by debouncedSearch effect
   }
 
   const quickSearch = (term) => {
-    setSearch(term)
-    setTimeout(() => fetchProducts(true), 100)
+    setSearchInput(term)
+    // Debounce will handle the API call automatically
   }
 
   const selectCategory = (categoryValue) => {
     setCategory(categoryValue)
-    setSearch('')
+    setSearchInput('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const clearFilters = () => {
     setCategory('all')
     setSortBy('')
-    setSearch('')
+    setSearchInput('')
     setPriceRange({ min: '', max: '' })
     setNgState('')
     setArea('')
@@ -236,9 +238,14 @@ export default function Marketplace() {
                     type="text"
                     placeholder="Search products, categories..."
                     className="w-full pl-14 pr-32 py-3 sm:py-4 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-2xl focus:ring-4 focus:ring-white/30 text-base sm:text-lg font-medium placeholder:text-gray-400"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                   />
+                  {searchInput && searchInput !== debouncedSearch && (
+                    <span className="absolute right-32 sm:right-36 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400 animate-pulse">
+                      searching...
+                    </span>
+                  )}
                   <button 
                     type="submit" 
                     className="absolute right-2 top-1/2 -translate-y-1/2 px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-orange-700 transition-all duration-200 shadow-lg text-sm sm:text-base touch-target"
@@ -291,7 +298,7 @@ export default function Marketplace() {
               </div>
 
               {/* Trending Categories - Native Style */}
-              {!search && (
+              {!searchInput && (
                 <div className="mt-4 sm:mt-6 animate-fadeIn">
                   {/* Desktop - Centered flex wrap */}
                   <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
