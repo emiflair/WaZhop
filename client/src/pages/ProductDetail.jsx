@@ -7,6 +7,7 @@ import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
 import { getCategoryLabel, toLabel } from '../utils/categories';
 import StarRating from '../components/StarRating';
+import { getCachedData } from '../utils/prefetch';
 import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2 } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import toast from 'react-hot-toast';
@@ -41,6 +42,32 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         setLoadingRelated(true);
+        
+        // Check if product is already cached from prefetching
+        const cachedProduct = getCachedData(`product_${id}`);
+        if (cachedProduct) {
+          setProduct(cachedProduct);
+          setLoading(false);
+          
+          // Load shop and related products in background
+          if (cachedProduct?.shop?.slug) {
+            shopAPI.getShopBySlug(cachedProduct.shop.slug)
+              .then(s => setShop(s?.shop || s?.data?.shop || s))
+              .catch(() => setShop(cachedProduct.shop));
+          } else if (cachedProduct?.shop) {
+            setShop(cachedProduct.shop);
+          }
+          
+          productAPI.getRelatedProducts(id, 8)
+            .then(related => {
+              const items = related?.data || related || [];
+              setRelatedProducts(Array.isArray(items) ? items : []);
+            })
+            .catch(() => {})
+            .finally(() => setLoadingRelated(false));
+          
+          return;
+        }
         
         // Load product and related products in parallel for faster page load
         const [p, relatedRes] = await Promise.allSettled([

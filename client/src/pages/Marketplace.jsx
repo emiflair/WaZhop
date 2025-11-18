@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart } from 'react-icons/fi'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS } from '../utils/categories'
+import { prefetchProducts, prefetchProductDetail, preloadImage } from '../utils/prefetch'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MobileBottomNav from '../components/MobileBottomNav'
@@ -83,6 +84,36 @@ export default function Marketplace() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
+
+  // Smart prefetching: Load next page and first 10 product details ahead of time
+  useEffect(() => {
+    if (products.length > 0 && !loading) {
+      // Prefetch next page
+      const nextPageParams = {
+        page: page + 1,
+        limit: 24,
+        ...(sortBy ? { sort: sortBy } : {}),
+        ...(category !== 'all' && { category }),
+        ...(search && { search }),
+        ...(ngState && { state: ngState }),
+        ...(area && { area }),
+        ...(priceRange.min && { minPrice: priceRange.min }),
+        ...(priceRange.max && { maxPrice: priceRange.max })
+      };
+      prefetchProducts(nextPageParams).catch(() => {});
+
+      // Prefetch first 10 products' details and images
+      products.slice(0, 10).forEach((product, idx) => {
+        setTimeout(() => {
+          prefetchProductDetail(product._id).catch(() => {});
+          // Preload product images
+          if (product.images?.[0]?.url) {
+            preloadImage(product.images[0].url);
+          }
+        }, idx * 100); // Stagger requests to avoid overwhelming
+      });
+    }
+  }, [products, loading, page, sortBy, category, search, ngState, area, priceRange]);
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -441,10 +472,16 @@ function ProductCard({ product, onOpen }) {
   const isTrending = product.views > 50 || product.clicks > 20
   const isHot = product.clicks > 50 // Very popular
 
+  // Prefetch product detail on hover for instant navigation
+  const handleHover = () => {
+    setIsHovered(true);
+    prefetchProductDetail(product._id).catch(() => {});
+  };
+
   return (
     <div
       onClick={() => onOpen()}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={handleHover}
       onMouseLeave={() => setIsHovered(false)}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
     >

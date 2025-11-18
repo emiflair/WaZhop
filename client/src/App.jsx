@@ -8,6 +8,7 @@ import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import VersionCheck from './components/VersionCheck'
 import { useTheme } from './context/ThemeContext'
+import { prefetchProducts } from './utils/prefetch'
 
 // Loading component
 const PageLoader = () => (
@@ -87,6 +88,12 @@ function AppRoutes() {
       root.classList.remove('dark')
     }
   }, [location?.pathname, theme])
+
+  // Prefetch marketplace products on app load for instant navigation
+  useEffect(() => {
+    // Prefetch first 20 products from marketplace
+    prefetchProducts({ page: 1, limit: 24 }).catch(() => {});
+  }, [])
   // On route changes, fade out and remove splash screen inserted in index.html
   useEffect(() => {
     const el = document.getElementById('app-splash')
