@@ -152,8 +152,14 @@ export default function Checkout() {
       setStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (step === 2 && validateShippingAddress()) {
-      setStep(3);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // If total is 0 (100% discount), skip payment step and place order directly
+      if (totalAmount === 0) {
+        toast.success('🎉 Free order! Processing your order...');
+        handlePlaceOrder();
+      } else {
+        setStep(3);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -165,6 +171,7 @@ export default function Checkout() {
     try {
       // Create orders for each shop
       const orderPromises = shops.map(async (shopData) => {
+        const shopTotal = appliedCoupon ? shopData.subtotal - ((shopData.subtotal / subtotalAmount) * discountAmount) : shopData.subtotal;
         const orderData = {
           shopId: shopData.shop._id,
           items: shopData.items.map(item => ({
@@ -176,13 +183,13 @@ export default function Checkout() {
             ...shippingAddress,
             fullAddress: `${shippingAddress.street}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.country}`
           },
-          paymentMethod,
+          paymentMethod: shopTotal === 0 ? 'free' : paymentMethod,
           customerNotes,
           subtotal: shopData.subtotal,
           shippingFee: 0, // Calculate shipping if needed
           discount: appliedCoupon ? (shopData.subtotal / subtotalAmount) * discountAmount : 0,
           couponCode: appliedCoupon?.code || null,
-          total: appliedCoupon ? shopData.subtotal - ((shopData.subtotal / subtotalAmount) * discountAmount) : shopData.subtotal,
+          total: shopTotal,
           currency: shopData.shop.paymentSettings?.currency || 'NGN'
         };
 

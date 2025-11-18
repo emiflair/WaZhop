@@ -71,6 +71,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
   }
 
   // Create order
+  const finalTotal = total || (calculatedSubtotal + (shippingFee || 0));
+  const isFreeOrder = finalTotal === 0 || paymentMethod === 'free';
+  
   const order = await Order.create({
     shop: shopId,
     customer: {
@@ -84,10 +87,12 @@ exports.createOrder = asyncHandler(async (req, res) => {
     shippingFee: shippingFee || 0,
     discount: discount || 0,
     couponCode: couponCode || null,
-    total: total || (calculatedSubtotal + (shippingFee || 0)),
+    total: finalTotal,
     currency: currency || shop.paymentSettings?.currency || 'NGN',
     shippingAddress,
     paymentMethod: paymentMethod || 'whatsapp',
+    paymentStatus: isFreeOrder ? 'paid' : 'pending',
+    paidAt: isFreeOrder ? new Date() : null,
     customerNotes,
     orderSource: 'web'
   });

@@ -116,7 +116,7 @@ const orderSchema = new mongoose.Schema({
   // Payment Information
   paymentMethod: {
     type: String,
-    enum: ['whatsapp', 'flutterwave', 'paystack', 'bank_transfer', 'cash_on_delivery'],
+    enum: ['whatsapp', 'flutterwave', 'paystack', 'bank_transfer', 'cash_on_delivery', 'free'],
     default: 'whatsapp'
   },
   paymentStatus: {
