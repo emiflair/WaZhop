@@ -180,14 +180,8 @@ const shopSchema = new mongoose.Schema({
       }
     }
   },
-      // Subdomain field kept for backward compatibility but no longer used
-      subdomain: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        unique: true,
-        sparse: true
-      },
+  showWatermark: {
+    type: Boolean,
     default: true // Free plan shows watermark, Pro/Premium hides it
   },
   views: {
@@ -208,15 +202,6 @@ const shopSchema = new mongoose.Schema({
   domainVerificationToken: {
     type: String,
     default: null
-  },
-  // Subdomain for Pro/Premium plans
-  subdomain: {
-    type: String,
-    trim: true,
-    lowercase: true,
-    unique: true,
-    sparse: true, // Allow null values
-    match: [/^[a-z0-9-]+$/, 'Subdomain can only contain lowercase letters, numbers, and hyphens']
   },
   // Payment Integration (Premium plan only)
   paymentSettings: {

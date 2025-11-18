@@ -208,7 +208,8 @@ exports.validateCoupon = [
     .trim()
     .isLength({ min: 3, max: 20 })
     .withMessage('Coupon code must be between 3 and 20 characters')
-   // Subdomain validation has been removed
+    .matches(/^[A-Z0-9_-]+$/)
+    .withMessage('Coupon code can only contain uppercase letters, numbers, hyphens, and underscores'),
 
   body('discountValue')
     .isFloat({ min: 0 })
