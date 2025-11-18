@@ -113,7 +113,6 @@ export const shopAPI = {
   getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`),
   getMyShops: () => api.get('/shops/my/shops'),
   getShopBySlug: (slug) => api.get(`/shops/${slug}`),
-  getShopBySubdomain: (subdomain) => api.get(`/shops/by-subdomain/${subdomain}`),
   createShop: (data) => api.post('/shops', data),
   deleteShop: (id) => api.delete(`/shops/${id}`),
   updateShop: (data, shopId) => api.put(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`, data),
@@ -134,11 +133,10 @@ export const shopAPI = {
     });
   },
   deleteImage: (type) => api.delete(`/shops/my/image/${type}`),
-  // Domain and subdomain management
+  // Domain management
   setCustomDomain: (domain, shopId) => api.put(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`, { domain }),
   verifyCustomDomain: (shopId) => api.post(`/shops/my/domain/verify${shopId ? `?shopId=${shopId}` : ''}`),
   removeCustomDomain: (shopId) => api.delete(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`),
-  setSubdomain: (subdomain, shopId) => api.put(`/shops/my/subdomain${shopId ? `?shopId=${shopId}` : ''}`, { subdomain }),
 };
 
 // Product endpoints

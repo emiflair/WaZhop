@@ -51,13 +51,11 @@ const ShopSettings = () => {
     tiktok: ''
   });
 
-  // Domain and subdomain state
+  // Custom domain state
   const [customDomain, setCustomDomain] = useState('');
   const [domainVerified, setDomainVerified] = useState(false);
   const [domainVerificationToken, setDomainVerificationToken] = useState('');
   const [verifyingDomain, setVerifyingDomain] = useState(false);
-  const [subdomain, setSubdomain] = useState('');
-  const [subdomainSaving, setSubdomainSaving] = useState(false);
 
   // Image state
   const [logoPreview, setLogoPreview] = useState(null);
@@ -126,11 +124,10 @@ const ShopSettings = () => {
         tiktok: data.socialLinks?.tiktok || ''
       });
 
-      // Populate domain and subdomain
+      // Populate custom domain
       setCustomDomain(data.customDomain || '');
       setDomainVerified(data.domainVerified || false);
       setDomainVerificationToken(data.domainVerificationToken || '');
-      setSubdomain(data.subdomain || '');
 
       // Set image previews
       if (data.logo) setLogoPreview(data.logo);
@@ -252,24 +249,7 @@ const ShopSettings = () => {
     }
   };
 
-  const handleSetSubdomain = async () => {
-    if (!subdomain) {
-      toast.error('Please enter a subdomain');
-      return;
-    }
-
-    try {
-      setSubdomainSaving(true);
-      const response = await shopAPI.setSubdomain(subdomain, shopId);
-      toast.success(`Subdomain set! Your shop is at: ${response.url}`);
-      fetchShop();
-    } catch (error) {
-      console.error('Error setting subdomain:', error);
-      toast.error(error.response?.data?.message || 'Failed to set subdomain');
-    } finally {
-      setSubdomainSaving(false);
-    }
-  };
+  // Subdomain feature removed: shops use wazhop.ng/<slug> or custom domains.
 
   const handleLogoSelect = (e) => {
     const file = e.target.files[0];
@@ -1235,66 +1215,7 @@ const ShopSettings = () => {
             )}
           </div>
 
-          {/* Subdomain (Pro/Premium) */}
-          {(user?.plan === 'pro' || user?.plan === 'premium') && (
-            <div className="card">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <FaGlobe className="text-blue-500" />
-                Subdomain
-                <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {user?.plan === 'pro' ? 'Pro' : 'Premium'}
-                </span>
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Shop Subdomain
-                  </label>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="text"
-                      value={subdomain}
-                      onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
-                      className="input flex-1 min-w-[200px]"
-                      placeholder="myshop"
-                    />
-                    <span className="text-gray-500 whitespace-nowrap">.wazhop.ng</span>
-                    <TouchButton
-                      type="button"
-                      onClick={handleSetSubdomain}
-                      variant="primary"
-                      size="sm"
-                      disabled={subdomainSaving || !subdomain}
-                      loading={subdomainSaving}
-                    >
-                      {shop?.subdomain ? 'Update' : 'Set'} Subdomain
-                    </TouchButton>
-                  </div>
-                  {shop?.subdomain && (
-                    <p className="text-sm text-primary-600 mt-2">
-                      ✓ Your shop is accessible at:{' '}
-                      <a 
-                        href={`https://${shop.subdomain}.wazhop.ng`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium underline"
-                      >
-                        {shop.subdomain}.wazhop.ng
-                      </a>
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-500 mt-2">
-                    Only lowercase letters, numbers, and hyphens allowed
-                  </p>
-                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 flex items-start gap-1">
-                    <span>⚠️</span>
-                    <span>Subdomain requires DNS configuration on the server to work. Contact support if the link doesn't resolve.</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Subdomain feature removed: shops now use wazhop.ng/<slug> or custom domains only */}
 
           {/* Custom Domain (Premium only) */}
           {user?.plan === 'premium' && (

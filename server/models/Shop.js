@@ -180,16 +180,14 @@ const shopSchema = new mongoose.Schema({
       }
     }
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  showBranding: {
-    type: Boolean,
-    default: true
-  },
-  showWatermark: {
-    type: Boolean,
+      // Subdomain field kept for backward compatibility but no longer used
+      subdomain: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        unique: true,
+        sparse: true
+      },
     default: true // Free plan shows watermark, Pro/Premium hides it
   },
   views: {

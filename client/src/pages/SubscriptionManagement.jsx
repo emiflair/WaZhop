@@ -164,7 +164,6 @@ const SubscriptionManagement = () => {
           'Up to 2 shops',
           '10 premium themes',
           'Inventory management',
-          'Custom subdomain',
           'Priority support',
           '65GB storage'
         ];

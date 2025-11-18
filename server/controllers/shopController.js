@@ -75,7 +75,7 @@ exports.getMyShop = asyncHandler(async (req, res) => {
   });
 });
 
-// Helper used by both slug and subdomain lookup
+// Helper used for public shop lookup by slug
 const loadPublicShopWithProducts = async (criteria) => {
   const shop = await Shop.findOne({ ...criteria, isActive: true })
     .populate({
@@ -118,26 +118,7 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get shop by subdomain (public)
-// @route   GET /api/shops/by-subdomain/:subdomain
-// @access  Public
-exports.getShopBySubdomain = asyncHandler(async (req, res) => {
-  const { subdomain } = req.params;
-
-  const result = await loadPublicShopWithProducts({ subdomain });
-
-  if (!result) {
-    return res.status(404).json({
-      success: false,
-      message: 'Shop not found'
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    data: result
-  });
-});
+// Subdomain-based lookup has been removed; shops are accessed via slug or custom domains.
 
 // @desc    Update shop details
 // @route   PUT /api/shops/my/shop?shopId=xxx
@@ -933,68 +914,4 @@ exports.removeCustomDomain = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Set subdomain (Pro/Premium only)
-// @route   PUT /api/shops/my/subdomain
-// @access  Private
-exports.setSubdomain = asyncHandler(async (req, res) => {
-  const { subdomain } = req.body;
-  const { shopId } = req.query;
-
-  // Check if user has Pro or Premium plan
-  const user = await User.findById(req.user.id);
-  if (user.plan === 'free') {
-    return res.status(403).json({
-      success: false,
-      message: 'Subdomains are available on Pro and Premium plans'
-    });
-  }
-
-  // Find shop
-  let shop;
-  if (shopId) {
-    shop = await Shop.findOne({ _id: shopId, owner: req.user.id });
-  } else {
-    shop = await Shop.findOne({ owner: req.user.id, isActive: true });
-  }
-
-  if (!shop) {
-    return res.status(404).json({
-      success: false,
-      message: 'Shop not found'
-    });
-  }
-
-  // Validate subdomain format
-  const subdomainRegex = /^[a-z0-9-]+$/;
-  if (!subdomainRegex.test(subdomain)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Subdomain can only contain lowercase letters, numbers, and hyphens'
-    });
-  }
-
-  // Check if subdomain is already taken
-  const existingSubdomain = await Shop.findOne({
-    subdomain,
-    _id: { $ne: shop._id }
-  });
-
-  if (existingSubdomain) {
-    return res.status(400).json({
-      success: false,
-      message: 'This subdomain is already taken'
-    });
-  }
-
-  shop.subdomain = subdomain;
-  await shop.save();
-
-  res.status(200).json({
-    success: true,
-    message: 'Subdomain set successfully',
-    data: {
-      subdomain,
-      url: `https://${subdomain}.wazhop.ng`
-    }
-  });
-});
+// Subdomain configuration endpoint has been removed in favor of slug-based URLs and custom domains.

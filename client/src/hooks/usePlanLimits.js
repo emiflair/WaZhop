@@ -42,7 +42,6 @@ export const usePlanLimits = () => {
     
     // Domain
     canUseCustomDomain: plan === 'premium',
-    canUseSubdomain: plan !== 'free',
     
     // Branding
     canRemoveBranding: plan !== 'free',

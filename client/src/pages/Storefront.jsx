@@ -39,20 +39,9 @@ const Storefront = () => {
         setLoading(true);
         setError(null);
 
-        const host = window.location.hostname; // e.g. emy.wazhop.ng
+        if (!slug) return;
 
-        // Special-case non-store subdomains like develop, api, etc.
-        const [sub, root, tld] = host.split('.');
-        const isBaseDomain = host === 'wazhop.ng' || host === 'www.wazhop.ng';
-        const isNonStoreSubdomain = ['develop', 'api'].includes(sub);
-
-        if (!isBaseDomain && !isNonStoreSubdomain && root === 'wazhop' && tld === 'ng') {
-          // Treat as shop subdomain
-          await fetchShopBySubdomain(sub);
-        } else {
-          // Fallback to slug-based shop URL (e.g. /:slug)
-          await fetchShopBySlug(slug);
-        }
+        await fetchShopBySlug(slug);
       } finally {
         setLoading(false);
       }
@@ -64,21 +53,18 @@ const Storefront = () => {
 
   // Apply shop's theme mode (independent of dashboard theme)
   useEffect(() => {
-    if (!shop) return;
+    if (!shop?.theme?.mode) return;
 
-    // Save current theme state before applying shop theme
     const html = document.documentElement;
     const previousThemeWasDark = html.classList.contains('dark');
+    const themeMode = shop.theme.mode; // 'light' | 'dark' | 'auto'
 
     const applyShopTheme = () => {
-      const themeMode = shop.theme?.mode || 'light';
-      
       if (themeMode === 'dark') {
         html.classList.add('dark');
       } else if (themeMode === 'light') {
         html.classList.remove('dark');
       } else if (themeMode === 'auto') {
-        // Auto mode: follow system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (prefersDark) {
           html.classList.add('dark');
@@ -90,25 +76,22 @@ const Storefront = () => {
 
     applyShopTheme();
 
-    // Cleanup: restore previous theme when leaving shop page
     return () => {
-      // Restore the theme that was active before we entered this page
       if (previousThemeWasDark) {
         html.classList.add('dark');
       } else {
         html.classList.remove('dark');
       }
     };
-  }, [shop]);
+  }, [shop?.theme?.mode]);
 
   const applyShopPayload = (shopData) => {
-    setShop(shopData.shop);
-
-    const shopCurrency = shopData.shop.paymentSettings?.currency || 'NGN';
+    const shopCurrency = shopData.paymentSettings?.currency || 'NGN';
     const convertedProducts = shopData.products.map((product) =>
       convertProductPrice(product, shopCurrency)
     );
 
+    setShop(shopData.shop || shopData);
     setProducts(convertedProducts);
   };
 
@@ -120,16 +103,6 @@ const Storefront = () => {
       setError(err.response?.data?.message || 'Shop not found');
     }
   };
-
-  const fetchShopBySubdomain = async (subdomain) => {
-    try {
-      const shopData = await shopAPI.getShopBySubdomain(subdomain);
-      applyShopPayload(shopData);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Shop not found');
-    }
-  };
-
   const handleWhatsAppClick = async (product) => {
     try {
       // Check if WhatsApp number is available
