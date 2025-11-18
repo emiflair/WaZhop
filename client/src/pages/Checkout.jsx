@@ -78,7 +78,7 @@ export default function Checkout() {
   };
 
   const discountAmount = calculateDiscount();
-  const totalAmount = subtotalAmount - discountAmount;
+  const totalAmount = Math.max(0, subtotalAmount - discountAmount); // Ensure total never goes negative
 
   // Handle coupon validation
   const handleApplyCoupon = async () => {
@@ -153,8 +153,8 @@ export default function Checkout() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (step === 2 && validateShippingAddress()) {
       // If total is 0 (100% discount), skip payment step and place order directly
-      if (totalAmount === 0) {
-        toast.success('🎉 Free order! Processing your order...');
+      if (totalAmount <= 0 || (appliedCoupon && discountAmount >= subtotalAmount)) {
+        toast.success('🎉 Free order! Processing your order...', { duration: 3000 });
         handlePlaceOrder();
       } else {
         setStep(3);
