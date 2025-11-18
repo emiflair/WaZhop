@@ -50,21 +50,10 @@ const Profile = () => {
         email: user.email || '',
         whatsappNumber: user.whatsappNumber || ''
       });
+      // Set 2FA status from user object
+      setTwoFAEnabled(user.twoFactorEnabled || false);
     }
   }, [user]);
-
-  // Fetch 2FA status on mount
-  useEffect(() => {
-    const fetch2FAStatus = async () => {
-      try {
-        const response = await userAPI.get2FAStatus();
-        setTwoFAEnabled(response.data.enabled);
-      } catch (error) {
-        console.error('Error fetching 2FA status:', error);
-      }
-    };
-    fetch2FAStatus();
-  }, []);
 
   // Validate password strength
   useEffect(() => {
@@ -218,6 +207,8 @@ const Profile = () => {
       setVerificationToken('');
       setQrCode('');
       setSecret('');
+      // Update user context to reflect 2FA is now enabled
+      updateUser({ twoFactorEnabled: true });
       toast.success('Two-factor authentication enabled successfully');
     } catch (error) {
       console.error('Error verifying 2FA:', error);
@@ -247,6 +238,8 @@ const Profile = () => {
       setShow2FADisable(false);
       setDisablePassword('');
       setDisableToken('');
+      // Update user context to reflect 2FA is now disabled
+      updateUser({ twoFactorEnabled: false });
       toast.success('Two-factor authentication disabled successfully');
     } catch (error) {
       console.error('Error disabling 2FA:', error);

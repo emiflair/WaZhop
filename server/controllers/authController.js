@@ -168,13 +168,15 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
-  const { email, password } = req.body;
+  const { email, password, twoFactorToken } = req.body;
 
   // Normalize email (trim and lowercase)
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Find user with password field
-  const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('shop');
+  // Find user with password field and 2FA fields
+  const user = await User.findOne({ email: normalizedEmail })
+    .select('+password +twoFactorEnabled +twoFactorSecret')
+    .populate('shop');
 
   if (!user) {
     return res.status(401).json({
@@ -198,6 +200,34 @@ exports.login = asyncHandler(async (req, res) => {
       success: false,
       message: 'Your account has been deactivated. Please contact support.'
     });
+  }
+
+  // Check if 2FA is enabled
+  if (user.twoFactorEnabled) {
+    // If 2FA token not provided, ask for it
+    if (!twoFactorToken) {
+      return res.status(200).json({
+        success: false,
+        requires2FA: true,
+        message: 'Please enter your 2FA code'
+      });
+    }
+
+    // Verify 2FA token
+    const speakeasy = require('speakeasy');
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: twoFactorToken,
+      window: 2
+    });
+
+    if (!verified) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid 2FA code'
+      });
+    }
   }
 
   // Allow login regardless of email verification status

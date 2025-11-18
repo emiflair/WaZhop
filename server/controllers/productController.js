@@ -144,6 +144,14 @@ exports.getProduct = asyncHandler(async (req, res) => {
     });
   }
 
+  // Check if shop exists and is populated
+  if (!product.shop) {
+    return res.status(404).json({
+      success: false,
+      message: 'Product not found'
+    });
+  }
+
   // Check if shop is active (hidden if inactive)
   if (!product.shop.isActive) {
     return res.status(404).json({

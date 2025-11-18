@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaShieldAlt } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
 import MobileBottomNav from '../components/MobileBottomNav';
 
@@ -13,11 +13,13 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    twoFactorToken: ''
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({ email: '', password: '', general: '' });
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [errors, setErrors] = useState({ email: '', password: '', twoFactorToken: '', general: '' });
+  const [touched, setTouched] = useState({ email: false, password: false, twoFactorToken: false });
 
   const from = location.state?.from?.pathname || '/';
 
@@ -35,23 +37,37 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({ email: '', password: '', general: '' });
+    setErrors({ email: '', password: '', twoFactorToken: '', general: '' });
 
     const result = await login(formData);
+    
     if (result.success) {
       const target = result.user?.role === 'seller' ? (from.startsWith('/dashboard') ? from : '/dashboard') : '/';
       navigate(target, { replace: true });
     }
+    // Check if 2FA is required
+    else if (result.requires2FA) {
+      setRequires2FA(true);
+      setErrors({
+        email: '',
+        password: '',
+        twoFactorToken: '',
+        general: 'Please enter your 2FA code from Google Authenticator'
+      });
+    }
     // Inline error feedback on failure
-    if (!result.success) {
+    else if (!result.success) {
       const msg = (result.error || '').toLowerCase();
       const isCreds = /invalid email|password/i.test(result.error || '');
+      const is2FAError = /invalid 2fa|2fa code/i.test(result.error || '');
+      
       setErrors({
         email: isCreds ? 'Invalid email or password' : '',
         password: isCreds ? 'Invalid email or password' : '',
-        general: isCreds ? '' : (result.error || 'Login failed')
+        twoFactorToken: is2FAError ? result.error : '',
+        general: (isCreds || is2FAError) ? '' : (result.error || 'Login failed')
       });
-      setTouched({ email: true, password: true });
+      setTouched({ email: true, password: true, twoFactorToken: true });
     }
     
     setLoading(false);
@@ -128,6 +144,39 @@ const Login = () => {
             </Link>
           </div>
         </div>
+
+        {requires2FA && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FaShieldAlt className="text-blue-600 dark:text-blue-400" />
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100">Two-Factor Authentication</h3>
+            </div>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+              Enter the 6-digit code from your Google Authenticator app
+            </p>
+            <div>
+              <label htmlFor="twoFactorToken" className="label">2FA Code</label>
+              <input
+                id="twoFactorToken"
+                name="twoFactorToken"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength="6"
+                required
+                className={`input text-center text-2xl tracking-widest ${touched.twoFactorToken && errors.twoFactorToken ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                placeholder="000000"
+                value={formData.twoFactorToken}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                autoComplete="off"
+              />
+              {touched.twoFactorToken && errors.twoFactorToken ? (
+                <p className="text-sm text-red-600 mt-1">{errors.twoFactorToken}</p>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"

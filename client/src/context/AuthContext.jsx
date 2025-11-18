@@ -80,6 +80,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
+      
+      // Check if 2FA is required
+      if (response.requires2FA) {
+        return { success: false, requires2FA: true, error: response.message };
+      }
+
       const { token, user: loggedInUser } = response;
 
       localStorage.setItem('token', token);
