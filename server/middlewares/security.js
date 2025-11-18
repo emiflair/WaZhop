@@ -201,7 +201,15 @@ exports.helmetConfig = {
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://res.cloudinary.com'],
-      connectSrc: ["'self'", ...buildAllowedOrigins()].filter(Boolean),
+      // Allow API subdomain and wildcard shop subdomains in addition to configured origins
+      connectSrc: [
+        "'self'",
+        'https://api.wazhop.ng',
+        'https://wazhop.ng',
+        'https://www.wazhop.ng',
+        'https://*.wazhop.ng',
+        ...buildAllowedOrigins()
+      ].filter(Boolean),
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
