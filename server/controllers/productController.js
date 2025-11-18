@@ -126,6 +126,9 @@ exports.getMyProducts = asyncHandler(async (req, res) => {
 // @desc    Get single product
 // @route   GET /api/products/:id
 // @access  Public
+// @desc    Get single product by ID
+// @route   GET /api/products/:id
+// @access  Public
 exports.getProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id)
     .populate({
