@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart } from 'react-icons/fi'
 import { productAPI } from '../utils/api'
-import { CATEGORY_SUGGESTIONS } from '../utils/categories'
+import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { prefetchProducts, prefetchProductDetail, preloadImage } from '../utils/prefetch'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -233,31 +233,47 @@ export default function Marketplace() {
                   </button>
                 </div>
               </form>
-              {/* Location refinement - Native Style */}
-              <div className="mt-3 sm:mt-5 grid grid-cols-3 gap-1.5 sm:gap-3 max-w-3xl mx-auto animate-fadeIn">
-                <select 
-                  value={ngState} 
-                  onChange={(e)=>setNgState(e.target.value)} 
-                  className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
-                >
-                  <option value="">All States</option>
-                  {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                <input 
-                  className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
-                  type="text" 
-                  value={area} 
-                  placeholder="Area (e.g., V.I.)" 
-                  onChange={(e)=>setArea(e.target.value)} 
-                />
-                <button 
-                  onClick={()=>fetchProducts(true)} 
-                  className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 font-semibold rounded-lg sm:rounded-xl hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 touch-target"
-                >
-                  Apply
-                </button>
+              {/* Filters - Native Style */}
+              <div className="mt-3 sm:mt-5 max-w-3xl mx-auto animate-fadeIn">
+                {/* Row 1: Category and State */}
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-3 mb-1.5 sm:mb-3">
+                  <select 
+                    value={category} 
+                    onChange={(e)=>setCategory(e.target.value)} 
+                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
+                  >
+                    <option value="all">All Categories</option>
+                    {Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map(cat => (
+                      <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
+                    ))}
+                  </select>
+                  <select 
+                    value={ngState} 
+                    onChange={(e)=>setNgState(e.target.value)} 
+                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
+                  >
+                    <option value="">All States</option>
+                    {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Row 2: Area and Apply */}
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+                  <input 
+                    className="col-span-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
+                    type="text" 
+                    value={area} 
+                    placeholder="Area (e.g., V.I.)" 
+                    onChange={(e)=>setArea(e.target.value)} 
+                  />
+                  <button 
+                    onClick={()=>fetchProducts(true)} 
+                    className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 font-semibold rounded-lg sm:rounded-xl hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 touch-target"
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
 
               {/* Trending Searches - Native Style */}
