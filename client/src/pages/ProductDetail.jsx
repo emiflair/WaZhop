@@ -21,6 +21,7 @@ export default function ProductDetail() {
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [shopInactive, setShopInactive] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
@@ -76,8 +77,15 @@ export default function ProductDetail() {
         ]);
         
         if (p.status === 'fulfilled') {
-          const prod = p.value?.data || p.value;
+          const response = p.value;
+          const prod = response?.data || response;
           setProduct(prod);
+          
+          // Check if shop is inactive
+          if (response?.shopInactive) {
+            setShopInactive(true);
+            toast.error(response.message || 'This shop is temporarily unavailable');
+          }
           
           // Fetch full shop details (logo/profile) by slug
           if (prod?.shop?.slug) {
@@ -221,6 +229,7 @@ export default function ProductDetail() {
 
   const isOutOfStock = !product?.inStock || (product?.stock !== null && product?.stock === 0);
   const isLowStock = !isOutOfStock && product?.stock !== null && product?.stock <= (product?.lowStockThreshold || 5);
+  const isUnavailable = shopInactive || isOutOfStock;
 
   const handleOrderOnWhatsApp = async () => {
     try {
@@ -441,7 +450,12 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
-              {isOutOfStock ? (
+              {shopInactive ? (
+                <div className="space-y-2">
+                  <span className="inline-block bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded">Shop Temporarily Unavailable</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">This shop has exceeded its plan limits. Products cannot be purchased until the shop owner upgrades their plan.</p>
+                </div>
+              ) : isOutOfStock ? (
                 <span className="inline-block bg-gray-800 text-white text-sm font-semibold px-3 py-1 rounded">Out of Stock</span>
               ) : isLowStock ? (
                 <span className="inline-block bg-orange-500 text-white text-sm font-semibold px-3 py-1 rounded">Only {product.stock} left - Order soon!</span>
@@ -463,13 +477,13 @@ export default function ProductDetail() {
                     url.searchParams.append('amount', product.price);
                     window.open(url.toString(), '_blank');
                   } else { toast.error('Payment link not configured'); }
-                }} disabled={isOutOfStock} className="btn btn-primary w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <FiCreditCard size={18} className="sm:w-5 sm:h-5" /> {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
+                }} disabled={isUnavailable} className="btn btn-primary w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <FiCreditCard size={18} className="sm:w-5 sm:h-5" /> {shopInactive ? 'Shop Unavailable' : (isOutOfStock ? 'Out of Stock' : 'Buy Now')}
                 </button>
               )}
               {(!shop?.paymentSettings?.provider || shop?.paymentSettings?.allowWhatsAppNegotiation) && (
-                <button onClick={handleOrderOnWhatsApp} disabled={isOutOfStock} className="btn btn-whatsapp w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white">
-                  <IoLogoWhatsapp size={20} className="sm:w-6 sm:h-6" /> <span className="truncate">{isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp')}</span>
+                <button onClick={handleOrderOnWhatsApp} disabled={isUnavailable} className="btn btn-whatsapp w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:text-white">
+                  <IoLogoWhatsapp size={20} className="sm:w-6 sm:h-6" /> <span className="truncate">{shopInactive ? 'Shop Unavailable' : (isOutOfStock ? 'Out of Stock' : (shop?.paymentSettings?.provider ? 'Negotiate on WhatsApp' : 'Order on WhatsApp'))}</span>
                 </button>
               )}
               <button onClick={handleShareToWhatsApp} className="btn w-full flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg py-2.5 sm:py-3 border-2 border-primary-500 text-primary-600 bg-transparent hover:bg-primary-50 dark:border-primary-400 dark:text-primary-400 dark:bg-transparent dark:hover:bg-primary-900/20">

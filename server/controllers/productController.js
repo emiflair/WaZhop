@@ -157,13 +157,10 @@ exports.getProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if shop is active (hidden if inactive)
-  if (!product.shop.isActive) {
-    console.log(`❌ Product ${req.params.id} shop is inactive: ${product.shop.shopName}`);
-    return res.status(404).json({
-      success: false,
-      message: 'Product not found'
-    });
+  // Check if shop is active - if inactive, still show product but mark as unavailable
+  const isShopInactive = !product.shop.isActive;
+  if (isShopInactive) {
+    console.log(`⚠️  Product ${req.params.id} shop is inactive: ${product.shop.shopName} - showing as unavailable`);
   }
 
   // Increment view count
@@ -174,7 +171,9 @@ exports.getProduct = asyncHandler(async (req, res) => {
   
   res.status(200).json({
     success: true,
-    data: product
+    data: product,
+    shopInactive: isShopInactive,
+    message: isShopInactive ? 'This shop is temporarily unavailable due to plan limits. Products cannot be purchased at this time.' : undefined
   });
 });
 

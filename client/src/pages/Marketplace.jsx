@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart } from 'react-icons/fi'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS } from '../utils/categories'
@@ -85,13 +85,19 @@ export default function Marketplace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
-  // Smart prefetching: Load next page ONLY (removed aggressive product detail prefetching)
+  // On-scroll prefetching: Only load next page when user scrolls near bottom
   useEffect(() => {
-    if (products.length > 0 && !loading && hasMore) {
-      // Only prefetch next page if user has scrolled past halfway point
-      const shouldPrefetch = products.length >= 12;
+    if (!hasMore || loading) return;
+
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
       
-      if (shouldPrefetch) {
+      // Prefetch when user is 80% down the page
+      const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+      
+      if (scrollPercentage > 0.8 && products.length >= 12) {
         const nextPageParams = {
           page: page + 1,
           limit: 24,
@@ -104,14 +110,26 @@ export default function Marketplace() {
           ...(priceRange.max && { maxPrice: priceRange.max })
         };
         
-        // Debounce prefetch to avoid rapid calls
-        const timer = setTimeout(() => {
-          prefetchProducts(nextPageParams).catch(() => {});
-        }, 1000);
-        
-        return () => clearTimeout(timer);
+        prefetchProducts(nextPageParams).catch(() => {});
       }
-    }
+    };
+
+    // Throttle scroll event to once per 2 seconds
+    let scrollTimeout;
+    const throttledScroll = () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          handleScroll();
+          scrollTimeout = null;
+        }, 2000);
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
   }, [products, loading, page, sortBy, category, search, ngState, area, priceRange, hasMore]);
 
   const handleSearch = (e) => {
@@ -471,12 +489,30 @@ function ProductCard({ product, onOpen }) {
   const isTrending = product.views > 50 || product.clicks > 20
   const isHot = product.clicks > 50 // Very popular
 
-  // Removed hover prefetching to reduce API calls
+  // Smart prefetch: Only on long hover (user showing clear interest)
+  const hoverTimerRef = useRef(null);
+  
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    // Only prefetch if user hovers for 500ms+ (shows real interest)
+    hoverTimerRef.current = setTimeout(() => {
+      prefetchProductDetail(product._id).catch(() => {});
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+
   return (
     <div
       onClick={() => onOpen()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
     >
       {/* Image */}

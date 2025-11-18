@@ -6,7 +6,10 @@
 const cache = new Map();
 const pendingRequests = new Map();
 const lastRequestTime = new Map();
-const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 seconds between same requests
+const MIN_REQUEST_INTERVAL = 3000; // Minimum 3 seconds between same requests
+const requestQueue = [];
+let isProcessingQueue = false;
+const MAX_CONCURRENT_REQUESTS = 2; // Only 2 concurrent prefetch requests
 
 /**
  * Prefetch products from API and cache them
@@ -117,21 +120,47 @@ export async function prefetchProductDetail(productId) {
 }
 
 /**
+ * Process queued requests with concurrency control
+ */
+async function processRequestQueue() {
+  if (isProcessingQueue || requestQueue.length === 0) return;
+  
+  isProcessingQueue = true;
+  const activeBatch = [];
+  
+  while (requestQueue.length > 0 && activeBatch.length < MAX_CONCURRENT_REQUESTS) {
+    const request = requestQueue.shift();
+    activeBatch.push(request());
+  }
+  
+  await Promise.allSettled(activeBatch);
+  isProcessingQueue = false;
+  
+  // Process next batch if queue has items
+  if (requestQueue.length > 0) {
+    setTimeout(processRequestQueue, 500);
+  }
+}
+
+/**
+ * Add request to queue for controlled execution
+ * @param {Function} requestFn - Function that returns a promise
+ */
+function queueRequest(requestFn) {
+  requestQueue.push(requestFn);
+  processRequestQueue();
+}
+
+/**
  * Preload image into browser cache
  * @param {string} url - Image URL
  */
 export function preloadImage(url) {
   if (!url) return;
   
+  // Simple image preload without DOM manipulation (lighter)
   const img = new Image();
   img.src = url;
-  
-  // Add to document head for even faster loading
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.href = url;
-  link.as = 'image';
-  document.head.appendChild(link);
 }
 
 /**
