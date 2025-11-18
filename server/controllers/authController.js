@@ -241,7 +241,9 @@ exports.login = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 exports.getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id).populate('shop');
+  const user = await User.findById(req.user.id)
+    .select('+twoFactorEnabled')
+    .populate('shop');
 
   res.status(200).json({
     success: true,

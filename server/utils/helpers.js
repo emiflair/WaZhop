@@ -21,7 +21,8 @@ exports.sendTokenResponse = (user, statusCode, res) => {
       plan: user.plan,
       planExpiry: user.planExpiry,
       isAdmin: user.isAdmin,
-      shop: user.shop
+      shop: user.shop,
+      twoFactorEnabled: user.twoFactorEnabled || false
     }
   });
 };
