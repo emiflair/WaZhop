@@ -286,6 +286,11 @@ shopSchema.methods.incrementViews = async function () {
   await this.save();
 };
 
-// Indexes are already created via unique: true on slug and owner fields
+// Performance indexes for faster queries
+shopSchema.index({ slug: 1 }); // Already unique, but explicit for clarity
+shopSchema.index({ owner: 1, isActive: 1 }); // Fast owner shop lookups
+shopSchema.index({ isActive: 1, isVerified: 1 }); // Marketplace queries
+shopSchema.index({ category: 1, isActive: 1 }); // Category filtering
+shopSchema.index({ createdAt: -1 }); // Recent shops sorting
 
 module.exports = mongoose.model('Shop', shopSchema);

@@ -31,6 +31,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Marketplace = lazy(() => import('./pages/Marketplace'))
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const TwoFactorVerify = lazy(() => import('./pages/TwoFactorVerify'))
 const Checkout = lazy(() => import('./pages/Checkout'))
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'))
 const MyOrders = lazy(() => import('./pages/MyOrders'))
@@ -134,6 +135,7 @@ function AppRoutes() {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/verify-2fa" element={<TwoFactorVerify />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />

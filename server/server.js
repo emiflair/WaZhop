@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 require('dotenv').config();
 
@@ -46,6 +47,7 @@ app.set('trust proxy', 1);
 
 // Security Middleware (order matters!)
 app.use(helmet(helmetConfig)); // Security headers with CSP
+app.use(compression()); // Compress all responses (10-70% size reduction)
 app.use(requestId); // Request ID tracking
 app.use(trackIP); // IP detection and tracking
 app.use(cors(corsOptions)); // CORS with enhanced configuration
