@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * useDebounce Hook
  * Delays updating a value until after a specified delay has passed
  * Useful for search inputs to reduce API calls
+ * 
+ * On initial render, returns the value immediately to avoid blocking
+ * page load. Subsequent updates are debounced.
  * 
  * @param {*} value - The value to debounce
  * @param {number} delay - Delay in milliseconds (default: 300ms)
@@ -14,23 +17,30 @@ import { useState, useEffect } from 'react';
  * const debouncedSearchTerm = useDebounce(searchTerm, 300);
  * 
  * useEffect(() => {
- *   if (debouncedSearchTerm) {
- *     // API call here
- *     fetchResults(debouncedSearchTerm);
- *   }
+ *   // First render: runs immediately
+ *   // Subsequent changes: runs after 300ms delay
+ *   fetchResults(debouncedSearchTerm);
  * }, [debouncedSearchTerm]);
  */
 export function useDebounce(value, delay = 300) {
   const [debouncedValue, setDebouncedValue] = useState(value);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Set up the timeout to update debounced value after delay
+    // On first render, set value immediately without delay
+    // This prevents blocking the initial page load
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      setDebouncedValue(value);
+      return;
+    }
+
+    // For subsequent updates, debounce normally
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
 
     // Clean up the timeout if value changes before delay completes
-    // This ensures only the latest value triggers the update
     return () => {
       clearTimeout(handler);
     };
