@@ -36,8 +36,11 @@ export default function OtpInput({ length = 6, value = '', onChange, autoFocus =
     next[idx] = char
     commit(next)
     if (char && idx < length - 1) {
-      inputsRef.current[idx + 1]?.focus()
-      inputsRef.current[idx + 1]?.select?.()
+      // Use setTimeout to ensure focus works on iOS
+      setTimeout(() => {
+        inputsRef.current[idx + 1]?.focus()
+        inputsRef.current[idx + 1]?.select?.()
+      }, 0)
     }
   }
 
@@ -79,6 +82,7 @@ export default function OtpInput({ length = 6, value = '', onChange, autoFocus =
           key={i}
           ref={(el) => (inputsRef.current[i] = el)}
           value={digits[i]}
+          type="tel"
           inputMode="numeric"
           pattern="[0-9]*"
           maxLength={1}
@@ -86,8 +90,9 @@ export default function OtpInput({ length = 6, value = '', onChange, autoFocus =
           onChange={(e) => handleChange(i, e)}
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={(e) => handlePaste(i, e)}
+          onFocus={(e) => e.target.select()}
           aria-label={`Digit ${i + 1}`}
-          className="w-12 h-12 sm:w-14 sm:h-14 text-center text-xl sm:text-2xl rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 tracking-widest"
+          className="w-12 h-12 sm:w-14 sm:h-14 text-center text-xl sm:text-2xl rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 tracking-widest touch-manipulation"
         />
       ))}
     </div>

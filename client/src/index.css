@@ -41,6 +41,13 @@
   /* Better touch targets on mobile */
   button, a, input, select, textarea {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; /* Prevent double-tap zoom delay */
+    user-select: none; /* Prevent text selection on buttons */
+  }
+  
+  /* Allow text selection in inputs */
+  input, textarea {
+    user-select: text;
   }
 }
 

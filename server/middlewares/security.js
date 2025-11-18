@@ -26,8 +26,15 @@ exports.createRateLimiter = (options = {}) => {
     message: { success: false, message },
     skipSuccessfulRequests,
     skipFailedRequests,
-    // Key generator - use user ID if authenticated, otherwise IP
-    keyGenerator: (req) => req.user?.id || req.ip,
+    // Key generator - use combination of IP + user agent to better handle shared IPs
+    keyGenerator: (req) => {
+      if (req.user?.id) return `user_${req.user.id}`;
+      // For unauthenticated requests, combine IP with a fingerprint
+      const ip = req.clientIP || req.ip;
+      const userAgent = req.headers['user-agent'] || '';
+      const fingerprint = userAgent.slice(0, 50); // Use first 50 chars of UA
+      return `${ip}_${fingerprint}`;
+    },
     // Custom handler
     handler: (req, res) => {
       res.status(429).json({
@@ -35,21 +42,25 @@ exports.createRateLimiter = (options = {}) => {
         message,
         retryAfter: Math.ceil(windowMs / 1000)
       });
-    }
+    },
+    // Use memory store with proper headers
+    standardHeaders: true, // Return rate limit info in headers
+    legacyHeaders: false, // Disable X-RateLimit-* headers
   });
 };
 
-// Strict rate limiter for sensitive endpoints
+// Strict rate limiter for sensitive endpoints (password reset, etc.)
 exports.strictRateLimiter = exports.createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests
-  message: 'Too many attempts, please try again in 15 minutes.'
+  max: 10, // 10 requests (increased from 5)
+  message: 'Too many attempts, please try again in 15 minutes.',
+  skipSuccessfulRequests: true // Only count failed attempts
 });
 
 // Auth rate limiter (login, register, password reset)
 exports.authRateLimiter = exports.createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 requests
+  max: 20, // 20 requests (increased from 10 for shared IPs/NATs)
   message: 'Too many authentication attempts, please try again later.',
   skipSuccessfulRequests: true // Only count failed attempts
 });
