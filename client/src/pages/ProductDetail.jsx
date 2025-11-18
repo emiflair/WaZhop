@@ -109,7 +109,15 @@ export default function ProductDetail() {
         }
         setLoadingRelated(false);
       } catch (e) {
-        setError(e.userMessage || 'Failed to load product');
+        console.error('Product load error:', e);
+        // Provide more specific error messages
+        const errorMsg = e.response?.data?.message || e.userMessage || e.message || 'Failed to load product';
+        setError(errorMsg);
+        
+        // If it's a network error, suggest checking connection
+        if (!e.response && (e.message?.includes('network') || e.message?.includes('fetch'))) {
+          setError('Network error. Please check your internet connection and try again.');
+        }
       } finally {
         setLoading(false);
       }
@@ -311,9 +319,14 @@ export default function ProductDetail() {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-1 container-custom py-16 text-center">
-          <h1 className="text-2xl font-bold mb-3">Product not found</h1>
-          <p className="text-gray-600 mb-6">{error || 'This product may have been removed or is inactive.'}</p>
-          <Link to="/" className="btn btn-primary">Back to Home</Link>
+          <h1 className="text-2xl font-bold mb-3">{error?.includes('Network') ? 'Connection Error' : 'Product not found'}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'This product may have been removed or is inactive.'}</p>
+          <div className="flex gap-3 justify-center">
+            <Link to="/marketplace" className="btn btn-primary">Browse Marketplace</Link>
+            {error?.includes('Network') && (
+              <button onClick={() => window.location.reload()} className="btn btn-secondary">Try Again</button>
+            )}
+          </div>
         </div>
         <Footer />
       </div>

@@ -53,6 +53,10 @@ api.interceptors.response.use(
       if (response.data.user && response.data.data) {
         return response.data;
       }
+      // Product endpoints may include additional flags like shopInactive - return full response.data
+      if (response.data.shopInactive !== undefined || response.data.message) {
+        return response.data;
+      }
       // Other endpoints return { success, data } - extract just the data
       if (response.data.data !== undefined) {
         return response.data.data;
