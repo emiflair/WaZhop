@@ -53,6 +53,10 @@ api.interceptors.response.use(
       if (response.data.user && response.data.data) {
         return response.data;
       }
+      // Order creation returns { success, message, order } - return full response.data
+      if (response.data.order) {
+        return response.data;
+      }
       // Product endpoints may include additional flags like shopInactive - return full response.data
       if (response.data.shopInactive !== undefined || response.data.message) {
         return response.data;
@@ -244,6 +248,7 @@ export const couponAPI = {
   getStats: () => api.get('/coupons/stats'),
   validate: (code, plan) => api.post('/coupons/validate', { code, plan }),
   apply: (code, plan) => api.post('/coupons/apply', { code, plan }),
+  validateProduct: (code) => api.post('/coupons/validate-product', { code }),
   toggle: (id) => api.patch(`/coupons/${id}/toggle`),
   delete: (id) => api.delete(`/coupons/${id}`),
 };

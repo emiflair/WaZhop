@@ -15,4 +15,7 @@ router.delete('/:id', protect, isAdmin, couponController.deleteCoupon);
 router.post('/validate', protect, couponController.validateCoupon);
 router.post('/apply', protect, couponController.applyCoupon);
 
+// Product order coupon validation (no auth required for guest checkout)
+router.post('/validate-product', couponController.validateProductCoupon);
+
 module.exports = router;

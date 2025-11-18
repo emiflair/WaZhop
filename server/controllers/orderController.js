@@ -17,6 +17,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
     total,
     subtotal,
     shippingFee,
+    discount,
+    couponCode,
     currency
   } = req.body;
 
@@ -80,6 +82,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
     items: orderItems,
     subtotal: subtotal || calculatedSubtotal,
     shippingFee: shippingFee || 0,
+    discount: discount || 0,
+    couponCode: couponCode || null,
     total: total || (calculatedSubtotal + (shippingFee || 0)),
     currency: currency || shop.paymentSettings?.currency || 'NGN',
     shippingAddress,

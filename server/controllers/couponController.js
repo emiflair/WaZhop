@@ -269,6 +269,42 @@ exports.deleteCoupon = async (req, res) => {
   }
 };
 
+// Validate coupon for product orders (no plan required)
+exports.validateProductCoupon = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ message: 'Coupon code is required' });
+    }
+
+    const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+
+    if (!coupon) {
+      return res.status(404).json({ message: 'Invalid coupon code' });
+    }
+
+    // Check if coupon is valid
+    const validation = coupon.isValid();
+    if (!validation.valid) {
+      return res.status(400).json({ message: validation.message });
+    }
+
+    res.json({
+      valid: true,
+      coupon: {
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        description: coupon.description
+      }
+    });
+  } catch (error) {
+    console.error('Validate product coupon error:', error);
+    res.status(500).json({ message: 'Error validating coupon', error: error.message });
+  }
+};
+
 // Get coupon statistics
 exports.getCouponStats = async (req, res) => {
   try {
