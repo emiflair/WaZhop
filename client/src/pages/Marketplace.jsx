@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart, FiTruck, FiPackage, FiAward, FiActivity, FiCoffee } from 'react-icons/fi'
+import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaWrench, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { prefetchProducts, prefetchProductDetail, preloadImage } from '../utils/prefetch'
@@ -28,12 +29,19 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [ngState, setNgState] = useState('')
   const [area, setArea] = useState('')
-  const [popularSearches] = useState([
-    { name: 'Fashion', icon: FiShoppingCart },
-    { name: 'Electronics', icon: FiMonitor },
-    { name: 'Home Decor', icon: FiHomeIcon },
-    { name: 'Beauty', icon: FiStar },
-    { name: 'Phones', icon: FiSmartphone }
+  const [trendingCategories] = useState([
+    { name: 'Fashion', category: 'fashion', icon: FaTshirt },
+    { name: 'Electronics', category: 'electronics', icon: FiMonitor },
+    { name: 'Phones & Tablets', category: 'phones-and-tablets', icon: FiSmartphone },
+    { name: 'Beauty', category: 'beauty-and-personal-care', icon: FaSpa },
+    { name: 'Home & Furniture', category: 'home-furniture-and-appliances', icon: FaCouch },
+    { name: 'Babies & Kids', category: 'babies-and-kids', icon: FaBaby },
+    { name: 'Vehicles', category: 'vehicles', icon: FaCar },
+    { name: 'Sporting Goods', category: 'sporting-goods', icon: FaDumbbell },
+    { name: 'Pets', category: 'pets', icon: FaPaw },
+    { name: 'Food & Agriculture', category: 'food-agriculture-and-farming', icon: FaLeaf },
+    { name: 'Services', category: 'services', icon: FaBriefcase },
+    { name: 'Tools & Equipment', category: 'commercial-equipment-and-tools', icon: FaTools }
   ])
   const [recentSearches, setRecentSearches] = useState(() => {
     const saved = localStorage.getItem('recentSearches')
@@ -146,6 +154,12 @@ export default function Marketplace() {
   const quickSearch = (term) => {
     setSearch(term)
     setTimeout(() => fetchProducts(true), 100)
+  }
+
+  const selectCategory = (categoryValue) => {
+    setCategory(categoryValue)
+    setSearch('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const clearFilters = () => {
@@ -276,19 +290,19 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* Trending Searches - Native Style */}
+              {/* Trending Categories - Native Style */}
               {!search && (
                 <div className="mt-4 sm:mt-6 animate-fadeIn">
                   {/* Desktop - Centered flex wrap */}
-                  <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
-                    <span className="text-xs text-white/80 font-bold uppercase tracking-wider">Trending:</span>
-                    {popularSearches.map((item, i) => {
+                  <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
+                    <span className="text-xs text-white/80 font-bold uppercase tracking-wider self-center">Trending:</span>
+                    {trendingCategories.map((item, i) => {
                       const Icon = item.icon
                       return (
                         <button
                           key={i}
-                          onClick={() => quickSearch(item.name)}
-                          className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target"
+                          onClick={() => selectCategory(item.category)}
+                          className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target hover:scale-105 transform"
                         >
                           <Icon className="w-3.5 h-3.5" />
                           {item.name}
@@ -297,21 +311,21 @@ export default function Marketplace() {
                     })}
                   </div>
 
-                  {/* Mobile - Single line horizontal scroll with icons only */}
+                  {/* Mobile - Horizontal scroll with icons and text */}
                   <div className="sm:hidden">
-                    <div className="text-xs text-white/90 font-bold uppercase tracking-wider mb-2 text-center">Trending:</div>
-                    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-1">
-                      {popularSearches.map((item, i) => {
+                    <div className="text-xs text-white/90 font-bold uppercase tracking-wider mb-2 text-center">Trending Categories</div>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
+                      {trendingCategories.map((item, i) => {
                         const Icon = item.icon
                         return (
                           <button
                             key={i}
-                            onClick={() => quickSearch(item.name)}
-                            className="flex-shrink-0 p-2.5 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white rounded-full transition-all duration-200 border border-white/30 flex items-center justify-center touch-target shadow-sm"
+                            onClick={() => selectCategory(item.category)}
+                            className="flex-shrink-0 px-3 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-xs font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target shadow-sm"
                             aria-label={item.name}
-                            title={item.name}
                           >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-3.5 h-3.5" />
+                            <span className="whitespace-nowrap">{item.name}</span>
                           </button>
                         )
                       })}
