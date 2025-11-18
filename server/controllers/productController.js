@@ -169,6 +169,9 @@ exports.getProduct = asyncHandler(async (req, res) => {
   // Increment view count
   await product.incrementViews();
 
+  // Cache product details for 2 minutes (views still increment server-side)
+  res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=60');
+  
   res.status(200).json({
     success: true,
     data: product
@@ -674,13 +677,15 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   const total = await Product.countDocuments(query);
 
   // Fetch products with shop and owner details
+  // Only select fields needed for marketplace listing (reduces payload size)
   const products = await Product.find(query)
+    .select('name price images category subcategory tags boost shop views createdAt')
     .populate({
       path: 'shop',
-      select: 'shopName slug logo banner owner',
+      select: 'shopName slug logo owner',
       populate: {
         path: 'owner',
-        select: 'name whatsapp plan'
+        select: 'plan'
       }
     })
     .lean();

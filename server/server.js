@@ -48,6 +48,19 @@ app.set('trust proxy', 1);
 // Security Middleware (order matters!)
 app.use(helmet(helmetConfig)); // Security headers with CSP
 app.use(compression()); // Compress all responses (10-70% size reduction)
+
+// Caching headers for better performance
+app.use((req, res, next) => {
+  // Enable ETag for conditional requests
+  res.set('ETag', 'weak');
+  
+  // Cache static assets aggressively
+  if (req.url.match(/\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$/)) {
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+  next();
+});
+
 app.use(requestId); // Request ID tracking
 app.use(trackIP); // IP detection and tracking
 app.use(cors(corsOptions)); // CORS with enhanced configuration

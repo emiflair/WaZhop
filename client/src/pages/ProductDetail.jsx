@@ -40,22 +40,39 @@ export default function ProductDetail() {
     const load = async () => {
       try {
         setLoading(true);
-        const p = await productAPI.getProduct(id);
-        const prod = p?.data || p; // interceptor may return data directly
-        setProduct(prod);
-        // Fetch full shop details (logo/profile) by slug
-        if (prod?.shop?.slug) {
-          try {
-            const s = await shopAPI.getShopBySlug(prod.shop.slug);
-            setShop(s?.shop || s?.data?.shop || s);
-          } catch (e) {
-            // fallback to shop from product
+        setLoadingRelated(true);
+        
+        // Load product and related products in parallel for faster page load
+        const [p, relatedRes] = await Promise.allSettled([
+          productAPI.getProduct(id),
+          productAPI.getRelatedProducts(id, 8)
+        ]);
+        
+        if (p.status === 'fulfilled') {
+          const prod = p.value?.data || p.value;
+          setProduct(prod);
+          
+          // Fetch full shop details (logo/profile) by slug
+          if (prod?.shop?.slug) {
+            try {
+              const s = await shopAPI.getShopBySlug(prod.shop.slug);
+              setShop(s?.shop || s?.data?.shop || s);
+            } catch (e) {
+              setShop(prod.shop);
+            }
+          } else if (prod?.shop) {
             setShop(prod.shop);
           }
-        } else if (prod?.shop) {
-          // No slug but shop exists, use it directly
-          setShop(prod.shop);
+        } else {
+          throw p.reason;
         }
+        
+        // Set related products if loaded successfully
+        if (relatedRes.status === 'fulfilled') {
+          const related = relatedRes.value?.data || relatedRes.value || [];
+          setRelatedProducts(Array.isArray(related) ? related : []);
+        }
+        setLoadingRelated(false);
       } catch (e) {
         setError(e.userMessage || 'Failed to load product');
       } finally {
@@ -63,7 +80,6 @@ export default function ProductDetail() {
       }
     };
     load();
-    // reset image on id change
     setSelectedImage(0);
   }, [id]);
 
@@ -112,10 +128,16 @@ export default function ProductDetail() {
     };
   }, [shop, location]);
 
-  // fetch related products and reviews when product changes
+  // fetch reviews when product changes (related products already loaded in parallel)
   useEffect(() => {
     const fetchRelated = async () => {
       if (!product?.category) return;
+      
+      // Skip fetching related products if already loaded from initial parallel request
+      if (relatedProducts.length > 0) {
+        return;
+      }
+      
       try {
         setLoadingRelated(true);
         
@@ -262,9 +284,15 @@ export default function ProductDetail() {
     );
   }
 
+  // Preload first image for faster display
+  const firstImage = images[0]?.url || images[0]?.secure_url;
+  
   return (
     <>
       <SEO title={`${product.name} - ${shop?.shopName || 'WaZhop'}`} description={(product.description || '').slice(0, 150)} />
+      {firstImage && (
+        <link rel="preload" as="image" href={firstImage} fetchpriority="high" />
+      )}
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
 
@@ -298,7 +326,12 @@ export default function ProductDetail() {
             <div className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 h-64 sm:h-80 md:h-96 lg:h-[480px]">
               {images.length > 0 ? (
                 <>
-                  <img src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} alt={product.name} className="w-full h-full object-contain" />
+                  <img 
+                    src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain"
+                    fetchpriority={selectedImage === 0 ? "high" : "auto"}
+                  />
                   {images.length > 1 && (
                     <>
                       <button onClick={() => setSelectedImage((prev) => (prev - 1 + images.length) % images.length)} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-900/60 rounded-full p-2 hover:bg-white shadow">
@@ -458,7 +491,13 @@ export default function ProductDetail() {
                   className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className="aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden">
-                    <img src={rp.images?.[0]?.url ?? rp.images?.[0] ?? ''} alt={rp.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={rp.images?.[0]?.url ?? rp.images?.[0] ?? ''} 
+                      alt={rp.name} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                   <div className="p-3">
                     <p className="font-medium text-sm line-clamp-2 mb-1">{rp.name}</p>
@@ -524,7 +563,13 @@ export default function ProductDetail() {
                   </div>
                   {review.image?.url && (
                     <div className="mt-2">
-                      <img src={review.image.url} alt="Review" className="w-40 h-40 object-cover rounded" />
+                      <img 
+                        src={review.image.url} 
+                        alt="Review" 
+                        className="w-40 h-40 object-cover rounded"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                   )}
                   <p className="text-gray-700 dark:text-gray-200 mt-2">{review.comment}</p>
