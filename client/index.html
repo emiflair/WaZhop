@@ -48,26 +48,60 @@
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <script>
-      // Prevent flash of wrong theme and fix BFCache back/forward cases
+      // CRITICAL: Safari aggressive cache-busting - runs BEFORE any cached JS loads
       (function() {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        var BUILD_ID = '__BUILD_TIMESTAMP__'; // Will be replaced during build
+        
+        if (isSafari) {
+          // Check if we've already reloaded for this build
+          var lastBuildId = sessionStorage.getItem('wazhop_build_id');
+          
+          if (lastBuildId !== BUILD_ID) {
+            // New build detected, clear everything and reload
+            sessionStorage.setItem('wazhop_build_id', BUILD_ID);
+            
+            // Clear all storage
+            try {
+              var keys = Object.keys(sessionStorage);
+              keys.forEach(function(key) {
+                if (key !== 'wazhop_build_id') sessionStorage.removeItem(key);
+              });
+            } catch(e) {}
+            
+            // Force hard reload with cache bypass
+            window.location.href = window.location.href + '?t=' + Date.now();
+            return; // Stop execution
+          }
+        }
+        
+        // Prevent flash of wrong theme and fix BFCache back/forward cases
         function applySavedTheme() {
           try {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.classList.toggle('dark', savedTheme === 'dark');
           } catch (e) {
-            // Default to light if storage is blocked
             document.documentElement.classList.remove('dark');
           }
         }
 
-        // Initial apply on first paint
         applySavedTheme();
 
-        // Re-apply when page is restored from BFCache (e.g., browser Back)
+        // Safari BFCache handling
         window.addEventListener('pageshow', function(ev) {
           if (ev.persisted) {
             applySavedTheme();
+            // Force reload from network, not cache
+            if (isSafari && !sessionStorage.getItem('bfcache_reloaded')) {
+              sessionStorage.setItem('bfcache_reloaded', '1');
+              window.location.reload(true);
+            }
           }
+        });
+        
+        // Clear BFCache flag on navigation
+        window.addEventListener('pagehide', function() {
+          sessionStorage.removeItem('bfcache_reloaded');
         });
       })();
     </script>

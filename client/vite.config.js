@@ -7,9 +7,19 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// Plugin to inject build timestamp for Safari cache-busting
+const injectBuildTimestamp = () => {
+  return {
+    name: 'inject-build-timestamp',
+    transformIndexHtml(html) {
+      return html.replace('__BUILD_TIMESTAMP__', Date.now().toString())
+    }
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), injectBuildTimestamp()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

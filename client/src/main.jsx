@@ -22,48 +22,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Safari-specific: Detect if page is loaded from BFCache and force reload
-// Safari requires more aggressive cache-busting than Chrome
-let pageAccessedByReload = false;
-
-window.addEventListener('pageshow', (event) => {
-  // If page was restored from BFCache (back/forward cache)
-  if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-    if (!pageAccessedByReload) {
-      pageAccessedByReload = true;
-      window.location.reload();
-    }
-  }
-});
-
-// Safari-specific: Add timestamp to prevent caching
-// Store app version in sessionStorage to detect stale loads
-const APP_VERSION = '1.0.' + Date.now();
-const storedVersion = sessionStorage.getItem('app_version');
-
-if (storedVersion && storedVersion !== APP_VERSION) {
-  // Version changed, clear storage and reload
-  sessionStorage.clear();
-  localStorage.removeItem('hasReloaded'); // Clear reload flag
-  window.location.reload();
-} else {
-  sessionStorage.setItem('app_version', APP_VERSION);
-}
-
-// Detect Safari browser
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-// For Safari: Force reload once on first visit to clear cache
-if (isSafari) {
-  const hasReloadedKey = 'hasReloaded_' + window.location.pathname;
-  const hasReloaded = sessionStorage.getItem(hasReloadedKey);
-  
-  if (!hasReloaded) {
-    sessionStorage.setItem(hasReloadedKey, 'true');
-    window.location.reload();
-  }
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
