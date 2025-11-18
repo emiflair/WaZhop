@@ -899,3 +899,46 @@ exports.getBoostStatus = asyncHandler(async (req, res) => {
     }
   });
 });
+
+// @desc    Get related products (same category/subcategory)
+// @route   GET /api/products/:id/related
+// @access  Public
+exports.getRelatedProducts = asyncHandler(async (req, res) => {
+  const { limit = 8 } = req.query;
+  
+  // Get the product to find related items
+  const product = await Product.findById(req.params.id).select('category subcategory shop').lean();
+  if (!product) {
+    return res.status(404).json({ success: false, message: 'Product not found' });
+  }
+
+  // Find products in same subcategory or category, excluding current product
+  const query = {
+    _id: { $ne: product._id },
+    category: product.category
+  };
+
+  // Prefer same subcategory if available
+  if (product.subcategory) {
+    query.subcategory = product.subcategory;
+  }
+
+  // Only show products from active shops
+  const activeShops = await Shop.find({ isActive: true }).select('_id');
+  query.shop = { $in: activeShops.map(s => s._id) };
+
+  const relatedProducts = await Product.find(query)
+    .select('name price images category subcategory shop views createdAt')
+    .populate({
+      path: 'shop',
+      select: 'shopName slug logo'
+    })
+    .limit(parseInt(limit))
+    .sort({ views: -1, createdAt: -1 })
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    data: relatedProducts
+  });
+});

@@ -147,6 +147,7 @@ export const shopAPI = {
 export const productAPI = {
   getMyProducts: () => api.get('/products/my/products'),
   getProduct: (id) => api.get(`/products/${id}`),
+  getRelatedProducts: (id, limit = 8) => api.get(`/products/${id}/related?limit=${limit}`),
   getMarketplaceProducts: (params) => api.get('/products/marketplace', { params }),
   getBoostStatus: (id) => api.get(`/products/${id}/boost`),
   boostProduct: (id, data) => api.put(`/products/${id}/boost`, data),

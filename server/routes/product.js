@@ -13,7 +13,8 @@ const {
   trackProductClick,
   getMarketplaceProducts,
   boostProduct,
-  getBoostStatus
+  getBoostStatus,
+  getRelatedProducts
 } = require('../controllers/productController');
 const { protect, checkPlanLimit, requireRole } = require('../middlewares/auth');
 const { upload } = require('../config/cloudinary');
@@ -27,6 +28,7 @@ router.get('/my/products', protect, requireRole('seller'), getMyProducts);
 
 // Dynamic routes (must come after specific routes)
 router.get('/:id', getProduct);
+router.get('/:id/related', getRelatedProducts);
 router.post('/:id/click', trackProductClick);
 router.post('/', protect, requireRole('seller'), checkPlanLimit('products'), upload.array('images', 5), moderateProductContent, createProduct);
 router.put('/:id', protect, requireRole('seller'), moderateProductContent, updateProduct);
