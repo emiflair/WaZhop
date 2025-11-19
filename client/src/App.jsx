@@ -106,11 +106,12 @@ function AppRoutes() {
     const isMarketplace = path === '/'
     const isLogin = path === '/login' || path === '/register'
     const isDashboard = path.startsWith('/dashboard')
-    // Reduced timings: marketplace 500ms, dashboard 800ms, login 400ms
-    const MIN_SPLASH_MS = isDashboard ? 800 : (isMarketplace ? 500 : (isLogin ? 400 : 0))
-    
-    // Maximum splash timeout to prevent infinite loading (1.5 seconds)
-    const MAX_SPLASH_MS = 1500
+    // Updated durations for smoother startup experience:
+    // Dashboard: 2200ms, Marketplace (homepage): 3000ms, Login/Register: 1500ms, others: 0ms
+    const MIN_SPLASH_MS = isDashboard ? 2200 : (isMarketplace ? 3000 : (isLogin ? 1500 : 0))
+
+    // Maximum splash timeout to prevent over-long splash. Keep above homepage minimum.
+    const MAX_SPLASH_MS = 3500
 
     const FADE_MS = 300
     const start = (window).__SPLASH_START || (performance.now ? performance.now() : Date.now())

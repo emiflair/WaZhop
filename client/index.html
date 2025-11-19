@@ -186,7 +186,7 @@
         </div>';
         document.currentScript.insertAdjacentElement('afterend', wrap);
         
-        // FAILSAFE: Force remove splash after 2 seconds max
+        // FAILSAFE: Force remove splash after 3.6 seconds max (above homepage minimum)
         setTimeout(function() {
           if (wrap && wrap.parentNode) {
             wrap.style.transition = 'opacity 350ms ease';
@@ -196,7 +196,7 @@
               try { document.body.classList.remove('splashing'); } catch(e) {}
             }, 400);
           }
-        }, 2000);
+        }, 3600);
       })();
     </script>
     <div id="root"></div>
