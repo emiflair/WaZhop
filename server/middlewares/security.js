@@ -187,9 +187,9 @@ exports.corsOptions = {
       return callback(null, true);
     }
 
-    // Optionally allow Vercel preview URLs in non-production
-    const vercelPreviewPattern = /^https?:\/\/.*\.vercel\.app$/;
-    if (process.env.NODE_ENV !== 'production' && vercelPreviewPattern.test(origin)) {
+    // Allow Vercel URLs (both production and preview)
+    const vercelPattern = /^https?:\/\/.*\.vercel\.app$/;
+    if (vercelPattern.test(origin)) {
       return callback(null, true);
     }
 
