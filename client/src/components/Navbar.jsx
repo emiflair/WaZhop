@@ -70,16 +70,20 @@ const Navbar = () => {
             <img
               src={logoBlack}
               alt="WaZhop logo"
-              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain dark:hidden"
+              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain dark:hidden select-none pointer-events-none"
               decoding="async"
               loading="eager"
+              draggable="false"
+              onContextMenu={(e) => e.preventDefault()}
             />
             <img
               src={logoWhite}
               alt="WaZhop logo"
-              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain hidden dark:block"
+              className="h-20 md:h-16 lg:h-20 xl:h-24 w-auto object-contain hidden dark:block select-none pointer-events-none"
               decoding="async"
               loading="eager"
+              draggable="false"
+              onContextMenu={(e) => e.preventDefault()}
             />
           </Link>
 
@@ -180,30 +184,25 @@ const Navbar = () => {
           {/* Slide-out menu */}
           <div className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white dark:bg-gray-800 z-50 shadow-2xl md:hidden overflow-y-auto">
             {/* Header with Logo */}
-            <div className="h-16 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between px-6">
-              <Link to="/" className="flex items-center space-x-2" onClick={() => setIsOpen(false)}>
-                <img
-                  src={logoBlack}
-                  alt="WaZhop logo"
-                  className="h-14 w-auto dark:hidden"
-                  decoding="async"
-                  loading="eager"
-                />
-                <img
-                  src={logoWhite}
-                  alt="WaZhop logo"
-                  className="h-14 w-auto hidden dark:block"
-                  decoding="async"
-                  loading="eager"
-                />
-              </Link>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
-                aria-label="Close menu"
-              >
-                <FiX size={24} />
-              </button>
+            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+              <img
+                src={logoBlack}
+                alt="WaZhop logo"
+                className="h-10 w-auto dark:hidden select-none pointer-events-none"
+                decoding="async"
+                loading="eager"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              <img
+                src={logoWhite}
+                alt="WaZhop logo"
+                className="h-10 w-auto hidden dark:block select-none pointer-events-none"
+                decoding="async"
+                loading="eager"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+              />
             </div>
             
             <div className="px-6 py-6 space-y-2">

@@ -105,9 +105,20 @@
   }
 
   /* Responsive container with proper mobile padding */
-  .container-custom {
-    @apply container mx-auto px-2 sm:px-3 lg:px-4;
-  }
+  /* Utility classes */
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Prevent logo image saving/copying */
+img[alt*="logo" i], img[alt*="Logo" i] {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
 
   /* Mobile-first modal/sheet */
   .mobile-sheet {
