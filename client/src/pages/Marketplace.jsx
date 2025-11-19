@@ -191,39 +191,33 @@ export default function Marketplace() {
 
         {/* Discover Amazing Products Banner */}
         <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-2 sm:py-3 text-center">
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight px-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight px-4 select-none">
             <span className="inline">Discover</span>{' '}
             <span className="inline text-white/70">Amazing</span>{' '}
             <span className="inline">Products</span>
           </h2>
         </div>
 
-        {/* Hero Section - Native App Style */}
+        {/* Hero Section - Compact */}
         <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-orange-600 dark:from-primary-700 dark:via-primary-800 dark:to-orange-800 text-white overflow-hidden">
           {/* Decorative Elements */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10"></div>
           
-          <div className="app-container relative z-10 py-3 sm:py-5 md:py-6">
+          <div className="app-container relative z-10 py-2 sm:py-3 md:py-4">
             <div className="text-center">
-              {/* Badge - Hidden since we have banner above */}
-              <div className="hidden items-center px-4 py-2 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 mb-2 sm:mb-5 animate-fadeIn">
-                <FiZap className="w-4 h-4 mr-2" />
-                <span className="text-sm font-semibold">Discover Amazing Products</span>
-              </div>
-              
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-2 animate-fadeIn">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-1.5 sm:mb-2">
                 Shop from <span className="text-white/90">Verified</span> Sellers
               </h1>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 max-w-3xl mx-auto mb-3 sm:mb-4 leading-relaxed animate-fadeIn">
+              <p className="text-xs sm:text-sm md:text-base text-white/90 max-w-2xl mx-auto mb-2 sm:mb-3">
                 Thousands of products. Best deals. Instant WhatsApp checkout.
               </p>
 
               {/* Get Started CTA for guests */}
               {!isAuthenticated && (
-                <div className="mb-3 sm:mb-4 animate-fadeIn">
+                <div className="mb-2 sm:mb-3">
                   <Link
                     to="/register?role=seller"
-                    className="inline-flex items-center justify-center px-8 md:px-10 py-3 md:py-4 text-sm md:text-base font-semibold rounded-xl bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 touch-target"
+                    className="inline-flex items-center justify-center px-6 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-lg transition-all duration-200"
                   >
                     Start Selling
                   </Link>
@@ -231,14 +225,15 @@ export default function Marketplace() {
               )}
 
 
-              {/* Hero Search - Native App Style */}
-              <form onSubmit={handleSearch} className="max-w-3xl mx-auto animate-fadeIn">
+
+              {/* Search */}
+              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
                 <div className="relative">
-                  <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none z-10" />
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none z-10" />
                   <input
                     type="text"
                     placeholder="Search products, categories..."
-                    className="w-full pl-12 pr-28 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-2xl focus:ring-4 focus:ring-white/30 text-sm sm:text-base font-medium placeholder:text-gray-400"
+                    className="w-full pl-10 pr-24 py-2 sm:py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-lg focus:ring-2 focus:ring-white/30 text-base font-medium placeholder:text-gray-400"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                   />
@@ -249,20 +244,20 @@ export default function Marketplace() {
                   )}
                   <button 
                     type="submit" 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-orange-700 transition-all duration-200 shadow-lg text-sm sm:text-base touch-target"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold rounded-md hover:from-primary-700 hover:to-orange-700 transition-all duration-200 shadow-md text-xs sm:text-sm"
                   >
                     Search
                   </button>
                 </div>
               </form>
-              {/* Filters - Native Style */}
-              <div className="mt-2 sm:mt-3 max-w-3xl mx-auto animate-fadeIn">
+              {/* Filters */}
+              <div className="mt-1.5 sm:mt-2 max-w-3xl mx-auto">
                 {/* Row 1: Category and State */}
                 <div className="grid grid-cols-2 gap-1.5 sm:gap-3 mb-1.5 sm:mb-3">
                   <select 
                     value={category} 
                     onChange={(e)=>setCategory(e.target.value)} 
-                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
+                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
                   >
                     <option value="all">All Categories</option>
                     {Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map(cat => (
@@ -272,7 +267,7 @@ export default function Marketplace() {
                   <select 
                     value={ngState} 
                     onChange={(e)=>setNgState(e.target.value)} 
-                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
+                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
                   >
                     <option value="">All States</option>
                     {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
@@ -283,7 +278,7 @@ export default function Marketplace() {
                 {/* Row 2: Area and Apply */}
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                   <input 
-                    className="col-span-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
+                    className="col-span-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
                     type="text" 
                     value={area} 
                     placeholder="Area (e.g., V.I.)" 
@@ -298,9 +293,9 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* Trending Categories - Native Style */}
+              {/* Trending Categories */}
               {!searchInput && (
-                <div className="mt-2 sm:mt-3 animate-fadeIn">
+                <div className="mt-1.5 sm:mt-2">
                   {/* Desktop - Centered flex wrap */}
                   <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
                     <span className="text-xs text-white/80 font-bold uppercase tracking-wider self-center">Trending:</span>
@@ -553,9 +548,9 @@ function ProductCard({ product, onOpen }) {
       onMouseLeave={handleMouseLeave}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
     >
-      {/* Image */}
+      {/* Image - larger focus */}
       <div 
-        className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900"
+        className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-900"
       >
         <img
           src={image}
@@ -653,15 +648,15 @@ function ProductCard({ product, onOpen }) {
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-3 sm:p-4">
-        <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.5rem]">
+      {/* Content - compact */}
+      <div className="p-3 sm:p-3">
+        <h3 className="font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 mb-1.5 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
           {product.name}
         </h3>
 
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1.5">
           <div className="flex-1">
-            <div className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400">
+            <div className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400">
               ₦{product.price?.toLocaleString()}
             </div>
             {product.comparePrice && product.comparePrice > product.price && (
@@ -681,8 +676,8 @@ function ProductCard({ product, onOpen }) {
           )}
         </div>
 
-        {/* Shop Info */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
+        {/* Shop Info - tighter */}
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-1.5 mt-1.5">
           <FiShoppingBag className="shrink-0 w-3.5 h-3.5" />
           <span className="truncate font-medium">{product.shop?.shopName || 'Shop'}</span>
           {(product.shop?.owner?.plan === 'pro' || product.shop?.owner?.plan === 'premium') && (
@@ -692,13 +687,13 @@ function ProductCard({ product, onOpen }) {
           )}
         </div>
 
-        {/* Price am Button */}
+        {/* Price am Button - compact */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onOpen();
           }}
-          className="mt-3 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
+          className="mt-2 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
         >
           Price am
         </button>
