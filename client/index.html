@@ -77,6 +77,15 @@
           }
         }
         
+        // Clean up cache_bust parameter from URL after page loads
+        if (window.location.search.includes('cache_bust=')) {
+          // Use replaceState to remove the parameter without reloading
+          if (window.history && window.history.replaceState) {
+            var cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, cleanUrl);
+          }
+        }
+        
         // Prevent flash of wrong theme and fix BFCache back/forward cases
         function applySavedTheme() {
           try {
