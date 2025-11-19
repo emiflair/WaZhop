@@ -13,7 +13,8 @@ const SEO = ({
 }) => {
   const siteUrl = 'https://wazhop.ng'; // Update with actual domain
   const fullUrl = url || window.location.href;
-  const defaultImage = `${siteUrl}/og-image.png`; // Add default OG image
+  // Use existing generated apple-touch-icon as a safe Open Graph fallback
+  const defaultImage = `${siteUrl}/apple-touch-icon.png?v=4`;
   const ogImage = image || defaultImage;
 
   return (
