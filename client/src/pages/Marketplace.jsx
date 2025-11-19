@@ -548,9 +548,9 @@ function ProductCard({ product, onOpen }) {
       onMouseLeave={handleMouseLeave}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
     >
-      {/* Image - larger focus */}
+      {/* Image */}
       <div 
-        className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-900"
+        className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900"
       >
         <img
           src={image}
