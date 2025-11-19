@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Create your WhatsApp shop in minutes. Customize, share, and sell smarter." />
+    <link rel="canonical" href="https://wazhop.ng/" />
     
     <!-- Prevent caching of HTML page -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -32,14 +33,40 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "WaZhop",
+      "alternateName": "WaZhop - WhatsApp Shop Builder",
       "url": "https://wazhop.ng",
-      "logo": "https://wazhop.ng/apple-touch-icon.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://wazhop.ng/apple-touch-icon.png",
+        "width": 180,
+        "height": 180
+      },
       "description": "Create your WhatsApp shop in minutes. Customize, share, and sell smarter.",
       "foundingDate": "2024",
+      "sameAs": [
+        "https://twitter.com/wazhop"
+      ],
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Support",
-        "url": "https://wazhop.ng/contact"
+        "url": "https://wazhop.ng/contact",
+        "areaServed": "NG",
+        "availableLanguage": "en"
+      }
+    }
+    </script>
+    
+    <!-- WebSite Schema for Search Box -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "WaZhop",
+      "url": "https://wazhop.ng",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://wazhop.ng/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     }
     </script>
