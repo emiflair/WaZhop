@@ -478,10 +478,11 @@ export default function Marketplace() {
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
-                  {products.map(product => (
+                  {products.map((product, index) => (
                     <ProductCard 
                       key={product._id} 
-                      product={product} 
+                      product={product}
+                      index={index}
                       onOpen={() => navigate(`/product/${product._id}`, { 
                         state: { fromMarketplace: true }
                       })}
@@ -513,10 +514,13 @@ export default function Marketplace() {
   )
 }
 
-function ProductCard({ product, onOpen }) {
+function ProductCard({ product, onOpen, index = 0 }) {
   const image = product.images?.[0]?.url || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
   const [isHovered, setIsHovered] = useState(false)
+  
+  // Eager load first 10 products (above the fold), lazy load the rest
+  const shouldEagerLoad = index < 10
   
   // Trending logic: high views/clicks in last 24h
   const isTrending = product.views > 50 || product.clicks > 20
@@ -556,7 +560,8 @@ function ProductCard({ product, onOpen }) {
           src={image}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          loading="lazy"
+          loading={shouldEagerLoad ? "eager" : "lazy"}
+          fetchpriority={shouldEagerLoad ? "high" : "auto"}
         />
         
         {/* WaZhop Watermark for Free Users Only */}
