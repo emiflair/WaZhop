@@ -729,7 +729,7 @@ const Profile = () => {
                       </div>
                     )}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2">
-                      <p className="text-xs text-gray-600 mb-2">Can't scan? Enter this code manually:</p>
+                      <p className="text-xs text-gray-600 mb-2">Can&apos;t scan? Enter this code manually:</p>
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono text-gray-900 break-all flex-1">{secret}</code>
                         <button

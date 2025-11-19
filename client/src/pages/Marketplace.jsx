@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiHome as FiHomeIcon, FiShoppingCart, FiTruck, FiPackage, FiAward, FiActivity, FiCoffee } from 'react-icons/fi'
-import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaWrench, FaBriefcase } from 'react-icons/fa'
+import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor } from 'react-icons/fi'
+import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
-import { prefetchProducts, prefetchProductDetail, preloadImage } from '../utils/prefetch'
+import { prefetchProducts, prefetchProductDetail } from '../utils/prefetch'
 import { useDebounce } from '../hooks/useDebounce'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -561,7 +561,7 @@ function ProductCard({ product, onOpen, index = 0 }) {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading={shouldEagerLoad ? "eager" : "lazy"}
-          fetchpriority={shouldEagerLoad ? "high" : "auto"}
+          fetchPriority={shouldEagerLoad ? "high" : "auto"}
         />
         
         {/* WaZhop Watermark for Free Users Only */}
