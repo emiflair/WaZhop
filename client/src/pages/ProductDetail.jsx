@@ -1,11 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
-import { getCategoryLabel, toLabel } from '../utils/categories';
 import StarRating from '../components/StarRating';
 import { getCachedData } from '../utils/prefetch';
 import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2 } from 'react-icons/fi';
@@ -38,11 +37,24 @@ export default function ProductDetail() {
     imageFile: null,
   });
 
+  const fetchRelatedProducts = useCallback(async (productId) => {
+    try {
+      setLoadingRelated(true);
+      const relatedRes = await productAPI.getRelatedProducts(productId, 8);
+      const related = relatedRes?.data || relatedRes || [];
+      setRelatedProducts(Array.isArray(related) ? related : []);
+    } catch {
+      setRelatedProducts([]);
+    } finally {
+      setLoadingRelated(false);
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        setLoadingRelated(true);
+        setError(null);
         
         // Check if product is already cached from prefetching
         const cachedProduct = getCachedData(`product_${id}`);
@@ -59,55 +71,37 @@ export default function ProductDetail() {
             setShop(cachedProduct.shop);
           }
           
-          productAPI.getRelatedProducts(id, 8)
-            .then(related => {
-              const items = related?.data || related || [];
-              setRelatedProducts(Array.isArray(items) ? items : []);
-            })
-            .catch(() => {})
-            .finally(() => setLoadingRelated(false));
+          fetchRelatedProducts(id).catch(() => {});
           
           return;
         }
         
-        // Load product and related products in parallel for faster page load
-        const [p, relatedRes] = await Promise.allSettled([
-          productAPI.getProduct(id),
-          productAPI.getRelatedProducts(id, 8)
-        ]);
+        // Load product details first so UI can render immediately
+        const response = await productAPI.getProduct(id);
+        const prod = response?.data || response;
+        setProduct(prod);
+        setLoading(false);
         
-        if (p.status === 'fulfilled') {
-          const response = p.value;
-          const prod = response?.data || response;
-          setProduct(prod);
-          
-          // Check if shop is inactive
-          if (response?.shopInactive) {
-            setShopInactive(true);
-            toast.error(response.message || 'This shop is temporarily unavailable');
-          }
-          
-          // Fetch full shop details (logo/profile) by slug
-          if (prod?.shop?.slug) {
-            try {
-              const s = await shopAPI.getShopBySlug(prod.shop.slug);
-              setShop(s?.shop || s?.data?.shop || s);
-            } catch (e) {
-              setShop(prod.shop);
-            }
-          } else if (prod?.shop) {
+        // Check if shop is inactive
+        if (response?.shopInactive) {
+          setShopInactive(true);
+          toast.error(response.message || 'This shop is temporarily unavailable');
+        }
+        
+        // Fetch full shop details (logo/profile) by slug
+        if (prod?.shop?.slug) {
+          try {
+            const s = await shopAPI.getShopBySlug(prod.shop.slug);
+            setShop(s?.shop || s?.data?.shop || s);
+          } catch (e) {
             setShop(prod.shop);
           }
-        } else {
-          throw p.reason;
+        } else if (prod?.shop) {
+          setShop(prod.shop);
         }
-        
-        // Set related products if loaded successfully
-        if (relatedRes.status === 'fulfilled') {
-          const related = relatedRes.value?.data || relatedRes.value || [];
-          setRelatedProducts(Array.isArray(related) ? related : []);
-        }
-        setLoadingRelated(false);
+
+        // Fetch related products without blocking main content
+        fetchRelatedProducts(id).catch(() => {});
       } catch (e) {
         console.error('Product load error:', e);
         // Provide more specific error messages
@@ -118,13 +112,13 @@ export default function ProductDetail() {
         if (!e.response && (e.message?.includes('network') || e.message?.includes('fetch'))) {
           setError('Network error. Please check your internet connection and try again.');
         }
-      } finally {
         setLoading(false);
+        setLoadingRelated(false);
       }
     };
     load();
     setSelectedImage(0);
-  }, [id]);
+  }, [fetchRelatedProducts, id]);
 
   // Theme handling: Respect marketplace theme when coming from marketplace
   // Apply shop theme only when coming from shop's storefront
@@ -340,7 +334,7 @@ export default function ProductDetail() {
     <>
       <SEO title={`${product.name} - ${shop?.shopName || 'WaZhop'}`} description={(product.description || '').slice(0, 150)} />
       {firstImage && (
-        <link rel="preload" as="image" href={firstImage} fetchpriority="high" />
+        <link rel="preload" as="image" href={firstImage} fetchPriority="high" />
       )}
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
@@ -379,7 +373,7 @@ export default function ProductDetail() {
                     src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} 
                     alt={product.name} 
                     className="w-full h-full object-contain"
-                    fetchpriority={selectedImage === 0 ? "high" : "auto"}
+                    fetchPriority={selectedImage === 0 ? "high" : "auto"}
                   />
                   {images.length > 1 && (
                     <>

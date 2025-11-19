@@ -37,7 +37,9 @@ const Dashboard = () => {
       if (params.get('upgrade') === 'seller') {
         setShowUpgradeModal(true);
       }
-    } catch {}
+    } catch (e) {
+      // Ignore URL parse errors
+    }
   }, []);
 
   const fetchDashboardData = async () => {
