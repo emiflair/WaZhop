@@ -95,21 +95,28 @@ function AppRoutes() {
   // On route changes, fade out and remove splash screen inserted in index.html
   useEffect(() => {
     const el = document.getElementById('app-splash')
-    if (!el) return
+    if (!el) {
+      // Splash already removed or doesn't exist, ensure body class is clean
+      document.body.classList.remove('splashing')
+      return
+    }
 
     // Configure splash duration based on page type
     const path = location?.pathname || window.location.pathname
     const isMarketplace = path === '/'
     const isLogin = path === '/login' || path === '/register'
     const isDashboard = path.startsWith('/dashboard')
-    // Dashboard gets long splash (1600ms), marketplace gets medium (1000ms), login/register get short (900ms), others remove immediately
-    const MIN_SPLASH_MS = isDashboard ? 1600 : (isMarketplace ? 1000 : (isLogin ? 900 : 0))
+    // Reduced timings: marketplace 500ms, dashboard 800ms, login 400ms
+    const MIN_SPLASH_MS = isDashboard ? 800 : (isMarketplace ? 500 : (isLogin ? 400 : 0))
+    
+    // Maximum splash timeout to prevent infinite loading (1.5 seconds)
+    const MAX_SPLASH_MS = 1500
 
-    const FADE_MS = 350
+    const FADE_MS = 300
     const start = (window).__SPLASH_START || (performance.now ? performance.now() : Date.now())
     const now = performance.now ? performance.now() : Date.now()
     const elapsed = Math.max(0, now - start)
-    const wait = Math.max(0, MIN_SPLASH_MS - elapsed)
+    const wait = Math.min(Math.max(0, MIN_SPLASH_MS - elapsed), MAX_SPLASH_MS)
 
     const timer = setTimeout(() => {
       el.style.transition = `opacity ${FADE_MS}ms ease`

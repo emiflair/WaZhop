@@ -69,9 +69,11 @@
               });
             } catch(e) {}
             
-            // Force hard reload with cache bypass
-            window.location.href = window.location.href + '?t=' + Date.now();
-            return; // Stop execution
+            // Force hard reload with cache bypass (only if not already reloading)
+            if (!window.location.search.includes('cache_bust=')) {
+              window.location.href = window.location.href.split('?')[0] + '?cache_bust=' + Date.now();
+              return; // Stop execution
+            }
           }
         }
         
@@ -129,6 +131,18 @@
           <div class="splash-spinner" role="progressbar" aria-label="Loading" aria-valuetext="Loading"></div>\
         </div>';
         document.currentScript.insertAdjacentElement('afterend', wrap);
+        
+        // FAILSAFE: Force remove splash after 2 seconds max
+        setTimeout(function() {
+          if (wrap && wrap.parentNode) {
+            wrap.style.transition = 'opacity 350ms ease';
+            wrap.style.opacity = '0';
+            setTimeout(function() {
+              try { wrap.remove(); } catch(e) {}
+              try { document.body.classList.remove('splashing'); } catch(e) {}
+            }, 400);
+          }
+        }, 2000);
       })();
     </script>
     <div id="root"></div>

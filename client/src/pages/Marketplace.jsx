@@ -399,7 +399,7 @@ export default function Marketplace() {
               </select>
 
               {/* Clear Filters */}
-              {(category !== 'all' || search || priceRange.min || priceRange.max || ngState || area) && (
+              {(category !== 'all' || searchInput || priceRange.min || priceRange.max || ngState || area) && (
                 <button onClick={clearFilters} className="btn btn-outline text-sm flex items-center gap-2">
                   <FiX /> Clear
                 </button>
