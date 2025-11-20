@@ -1,4 +1,3 @@
-const streamifier = require('streamifier');
 const Shop = require('../models/Shop');
 const cache = require('../utils/cache');
 const Product = require('../models/Product');
@@ -6,6 +5,10 @@ const User = require('../models/User');
 const { asyncHandler, generateSlug } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
 const { FREE_THEME, PRO_THEMES } = require('../config/themePresets');
+const {
+  uploadImageSync,
+  deleteImageFromCloudinary
+} = require('../utils/imageProcessor');
 
 // Helper function to check storage limits
 const checkStorageLimit = async (userId, newFileSize) => {
@@ -37,25 +40,7 @@ const updateStorageUsage = async (userId, sizeDelta) => {
   });
 };
 
-// Helper function to upload to Cloudinary from buffer
-const uploadFromBuffer = (buffer, folder) => new Promise((resolve, reject) => {
-  const stream = cloudinary.uploader.upload_stream(
-    {
-      folder: folder,
-      resource_type: 'image',
-      transformation: [
-        { width: 1000, height: 1000, crop: 'limit' },
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
-    },
-    (error, result) => {
-      if (error) reject(error);
-      else resolve(result);
-    }
-  );
-  streamifier.createReadStream(buffer).pipe(stream);
-});
+// Helper functions removed - now using imageProcessor utility
 
 // @desc    Get current user's shop
 // @route   GET /api/shops/my/shop
@@ -417,8 +402,8 @@ exports.uploadLogo = asyncHandler(async (req, res) => {
       const oldImage = await cloudinary.api.resource(shop.logo.publicId);
       oldImageSize = oldImage.bytes || 0;
 
-      // Delete old logo from Cloudinary
-      await cloudinary.uploader.destroy(shop.logo.publicId);
+      // Delete old logo from Cloudinary (with retry)
+      await deleteImageFromCloudinary(shop.logo.publicId);
 
       // Subtract old image size from storage
       await updateStorageUsage(req.user.id, -oldImageSize);
@@ -427,8 +412,8 @@ exports.uploadLogo = asyncHandler(async (req, res) => {
     }
   }
 
-  // Upload new logo
-  const result = await uploadFromBuffer(req.file.buffer, 'wazhop/logos');
+  // Upload new logo (optimized for branding)
+  const result = await uploadImageSync(req.file.buffer, 'wazhop/logos', 'branding');
 
   // Add new image size to storage
   await updateStorageUsage(req.user.id, req.file.size);
@@ -485,8 +470,8 @@ exports.uploadBanner = asyncHandler(async (req, res) => {
       const oldImage = await cloudinary.api.resource(shop.banner.publicId);
       oldImageSize = oldImage.bytes || 0;
 
-      // Delete old banner from Cloudinary
-      await cloudinary.uploader.destroy(shop.banner.publicId);
+      // Delete old banner from Cloudinary (with retry)
+      await deleteImageFromCloudinary(shop.banner.publicId);
 
       // Subtract old image size from storage
       await updateStorageUsage(req.user.id, -oldImageSize);
@@ -495,8 +480,8 @@ exports.uploadBanner = asyncHandler(async (req, res) => {
     }
   }
 
-  // Upload new banner
-  const result = await uploadFromBuffer(req.file.buffer, 'wazhop/banners');
+  // Upload new banner (optimized for branding)
+  const result = await uploadImageSync(req.file.buffer, 'wazhop/banners', 'branding');
 
   // Add new image size to storage
   await updateStorageUsage(req.user.id, req.file.size);
@@ -544,8 +529,8 @@ exports.deleteImage = asyncHandler(async (req, res) => {
       const cloudinaryImage = await cloudinary.api.resource(shop[type].publicId);
       const imageSize = cloudinaryImage.bytes || 0;
 
-      // Delete from Cloudinary
-      await cloudinary.uploader.destroy(shop[type].publicId);
+      // Delete from Cloudinary (with retry)
+      await deleteImageFromCloudinary(shop[type].publicId);
 
       // Reduce storage usage
       await updateStorageUsage(req.user.id, -imageSize);
@@ -733,8 +718,8 @@ exports.deleteShop = asyncHandler(async (req, res) => {
         const cloudinaryImage = await cloudinary.api.resource(image.publicId);
         totalFreedStorage += cloudinaryImage.bytes || 0;
 
-        // Delete from Cloudinary
-        await cloudinary.uploader.destroy(image.publicId);
+        // Delete from Cloudinary (with retry)
+        await deleteImageFromCloudinary(image.publicId);
       } catch (error) {
         console.error(`Error deleting product image ${image.publicId}:`, error);
       }
@@ -746,7 +731,7 @@ exports.deleteShop = asyncHandler(async (req, res) => {
     try {
       const logoImage = await cloudinary.api.resource(shop.logo.publicId);
       totalFreedStorage += logoImage.bytes || 0;
-      await cloudinary.uploader.destroy(shop.logo.publicId);
+      await deleteImageFromCloudinary(shop.logo.publicId);
     } catch (error) {
       console.error('Error deleting shop logo:', error);
     }
@@ -756,7 +741,7 @@ exports.deleteShop = asyncHandler(async (req, res) => {
     try {
       const bannerImage = await cloudinary.api.resource(shop.banner.publicId);
       totalFreedStorage += bannerImage.bytes || 0;
-      await cloudinary.uploader.destroy(shop.banner.publicId);
+      await deleteImageFromCloudinary(shop.banner.publicId);
     } catch (error) {
       console.error('Error deleting shop banner:', error);
     }

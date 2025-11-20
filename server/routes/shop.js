@@ -28,6 +28,10 @@ const {
   checkPremiumTemplateAccess
 } = require('../middlewares/planLimits');
 const { cacheMiddleware, CACHE_TTL } = require('../utils/cache');
+const {
+  validateImage,
+  imageUploadRateLimiter
+} = require('../middlewares/imageOptimization');
 
 // Protected routes (must come before dynamic routes)
 router.get('/my/shop', protect, requireRole('seller'), getMyShop);
@@ -37,8 +41,8 @@ router.delete('/:id', protect, requireRole('seller'), deleteShop);
 router.get('/themes', protect, requireRole('seller'), getAvailableThemes);
 router.put('/my/shop', protect, requireRole('seller'), moderateText, updateShop);
 router.put('/my/theme', protect, requireRole('seller'), checkThemeCustomizationAccess, updateTheme);
-router.post('/my/logo', protect, requireRole('seller'), checkStorageAccess, upload.single('logo'), uploadLogo);
-router.post('/my/banner', protect, requireRole('seller'), checkStorageAccess, upload.single('banner'), uploadBanner);
+router.post('/my/logo', protect, requireRole('seller'), checkStorageAccess, imageUploadRateLimiter, upload.single('logo'), validateImage, uploadLogo);
+router.post('/my/banner', protect, requireRole('seller'), checkStorageAccess, imageUploadRateLimiter, upload.single('banner'), validateImage, uploadBanner);
 router.delete('/my/image/:type', protect, requireRole('seller'), deleteImage);
 
 // Custom domain routes

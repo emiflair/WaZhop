@@ -1,4 +1,3 @@
-const streamifier = require('streamifier');
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
@@ -6,26 +5,11 @@ const Review = require('../models/Review');
 const { asyncHandler, paginate, paginationMeta } = require('../utils/helpers');
 const cache = require('../utils/cache');
 const { cloudinary } = require('../config/cloudinary');
-
-// Helper function to upload to Cloudinary from buffer
-const uploadFromBuffer = (buffer, folder) => new Promise((resolve, reject) => {
-  const stream = cloudinary.uploader.upload_stream(
-    {
-      folder: folder,
-      resource_type: 'image',
-      transformation: [
-        { width: 1200, height: 1200, crop: 'limit' },
-        { quality: 'auto' },
-        { fetch_format: 'auto' }
-      ]
-    },
-    (error, result) => {
-      if (error) reject(error);
-      else resolve(result);
-    }
-  );
-  streamifier.createReadStream(buffer).pipe(stream);
-});
+const {
+  uploadImageSync,
+  uploadImageBatch,
+  deleteImageFromCloudinary
+} = require('../utils/imageProcessor');
 
 // Helper function to check storage limit before upload
 const checkStorageLimit = async (userId, newFileSize) => {
@@ -222,14 +206,19 @@ exports.createProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Upload images if provided
+  // Upload images if provided (using optimized processing)
   const images = [];
   if (req.files && req.files.length > 0) {
     // Check if Cloudinary is configured
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {
+        // Use optimized image processor with compression
         for (let i = 0; i < req.files.length; i++) {
-          const result = await uploadFromBuffer(req.files[i].buffer, 'wazhop/products');
+          const result = await uploadImageSync(
+            req.files[i].buffer,
+            'wazhop/products',
+            'product' // Apply product-specific compression
+          );
           images.push({
             url: result.secure_url,
             publicId: result.public_id,
@@ -237,10 +226,10 @@ exports.createProduct = asyncHandler(async (req, res) => {
           });
         }
       } catch (error) {
-        console.error('Cloudinary upload error:', error);
+        console.error('Image upload error:', error);
         return res.status(500).json({
           success: false,
-          message: 'Failed to upload images. Please try again.'
+          message: error.message || 'Failed to upload images. Please try again.'
         });
       }
     } else {
@@ -446,10 +435,10 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     });
   }
 
-  // Upload new images
+  // Upload new images (optimized with compression)
   const newImages = [];
   for (const file of req.files) {
-    const result = await uploadFromBuffer(file.buffer, 'wazhop/products');
+    const result = await uploadImageSync(file.buffer, 'wazhop/products', 'product');
     newImages.push({
       url: result.secure_url,
       publicId: result.public_id,
@@ -511,8 +500,8 @@ exports.deleteProductImage = asyncHandler(async (req, res) => {
     const cloudinaryImage = await cloudinary.api.resource(imageToDelete.publicId);
     imageSize = cloudinaryImage.bytes || 0;
 
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(imageToDelete.publicId);
+    // Delete from Cloudinary (with retry logic)
+    await deleteImageFromCloudinary(imageToDelete.publicId);
 
     // Reduce storage usage
     await updateStorageUsage(req.user.id, -imageSize);
