@@ -3,21 +3,51 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { Toaster } from 'react-hot-toast'
+import performanceMonitor from './utils/performanceMonitor'
 
-// Clear old caches on app load to ensure users get fresh updates
-if ('caches' in window) {
-  caches.keys().then(names => {
-    names.forEach(name => {
-      caches.delete(name);
-    });
-  });
+// Initialize performance monitoring
+if (import.meta.env.PROD) {
+  performanceMonitor.init();
 }
 
-// Unregister any service workers (in case they were previously registered)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => {
-      registration.unregister();
+// Register service worker for offline support and caching
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('✅ Service Worker registered:', registration.scope);
+        
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // Check every hour
+        
+        // Handle service worker updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New service worker available, prompt user to refresh
+              if (confirm('A new version is available! Refresh to update?')) {
+                newWorker.postMessage({ type: 'skipWaiting' });
+                window.location.reload();
+              }
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.warn('Service Worker registration failed:', error);
+      });
+    
+    // Handle controller change (new service worker activated)
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
     });
   });
 }

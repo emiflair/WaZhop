@@ -1,9 +1,13 @@
 import axios from 'axios';
 import { parseApiError, logError } from './errorHandler';
+import cacheManager, { CACHE_NAMESPACES, CACHE_TTL } from './cacheManager';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 console.log('🔌 API URL:', API_URL); // Debug log
+
+// Request deduplication map
+const pendingRequests = new Map();
 
 // Create axios instance
 const api = axios.create({
@@ -13,13 +17,47 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add token
+/**
+ * Generate unique key for request deduplication
+ */
+function getRequestKey(config) {
+  return `${config.method}-${config.url}-${JSON.stringify(config.params || {})}`;
+}
+
+// Request interceptor to add token and handle deduplication
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Request deduplication for GET requests
+    if (config.method === 'get') {
+      const requestKey = getRequestKey(config);
+      
+      // If same request is already pending, return that promise
+      if (pendingRequests.has(requestKey)) {
+        const controller = new AbortController();
+        config.signal = controller.signal;
+        
+        // Return the pending promise instead of making a new request
+        return pendingRequests.get(requestKey).then(
+          (response) => {
+            // Simulate axios response structure
+            return Promise.reject({
+              config,
+              response,
+              _isDeduplicated: true
+            });
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -28,9 +66,15 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for error handling and caching
 api.interceptors.response.use(
   (response) => {
+    // Clean up pending request
+    if (response.config.method === 'get') {
+      const requestKey = getRequestKey(response.config);
+      pendingRequests.delete(requestKey);
+    }
+    
     // Don't process 304 responses - they have no data
     if (response.status === 304) {
       console.warn('⚠️ Received 304 response, no data:', response.config.url);
@@ -41,6 +85,31 @@ api.interceptors.response.use(
     if (!response.data) {
       console.warn('⚠️ No response.data:', response.config.url);
       return response;
+    }
+    
+    // Cache GET responses
+    if (response.config.method === 'get' && response.status === 200) {
+      const url = response.config.url;
+      let namespace = CACHE_NAMESPACES.API;
+      let ttl = CACHE_TTL.MEDIUM;
+      
+      // Determine cache namespace and TTL based on endpoint
+      if (url.includes('/products/marketplace')) {
+        namespace = CACHE_NAMESPACES.MARKETPLACE;
+        ttl = CACHE_TTL.MEDIUM;
+      } else if (url.includes('/products/')) {
+        namespace = CACHE_NAMESPACES.PRODUCTS;
+        ttl = CACHE_TTL.LONG;
+      } else if (url.includes('/shops/')) {
+        namespace = CACHE_NAMESPACES.SHOP;
+        ttl = CACHE_TTL.LONG;
+      } else if (url.includes('/auth/me')) {
+        namespace = CACHE_NAMESPACES.USER;
+        ttl = CACHE_TTL.SHORT;
+      }
+      
+      const cacheKey = `${url}-${JSON.stringify(response.config.params || {})}`;
+      cacheManager.set(cacheKey, response.data, ttl, namespace);
     }
     
     // Handle standard API response format { success: true, data: {...} }
@@ -71,6 +140,17 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    // Handle deduplicated requests
+    if (error._isDeduplicated) {
+      return error.response;
+    }
+    
+    // Clean up pending request on error
+    if (error.config?.method === 'get') {
+      const requestKey = getRequestKey(error.config);
+      pendingRequests.delete(requestKey);
+    }
+    
     // Log all API errors
     logError(error, {
       context: 'API Response',
