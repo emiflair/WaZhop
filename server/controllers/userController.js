@@ -519,7 +519,7 @@ exports.switchToSeller = asyncHandler(async (req, res) => {
   user.role = 'seller';
   user.whatsapp = whatsappNumber;
   user.plan = plan;
-  
+
   // Set plan expiry for paid plans
   if (plan === 'pro' || plan === 'premium') {
     user.planExpiry = calculatePlanExpiry(1); // 1 month

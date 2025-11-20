@@ -27,10 +27,11 @@ const {
   checkThemeCustomizationAccess,
   checkPremiumTemplateAccess
 } = require('../middlewares/planLimits');
+const { cacheMiddleware, CACHE_TTL } = require('../utils/cache');
 
 // Protected routes (must come before dynamic routes)
 router.get('/my/shop', protect, requireRole('seller'), getMyShop);
-router.get('/my/shops', protect, requireRole('seller'), getMyShops);
+router.get('/my/shops', protect, requireRole('seller'), cacheMiddleware('user-shops', CACHE_TTL.USER_SHOPS), getMyShops);
 router.post('/', protect, requireRole('seller'), checkShopLimit, moderateText, createShop);
 router.delete('/:id', protect, requireRole('seller'), deleteShop);
 router.get('/themes', protect, requireRole('seller'), getAvailableThemes);
@@ -45,7 +46,7 @@ router.put('/my/domain', protect, requireRole('seller'), checkCustomDomainAccess
 router.post('/my/domain/verify', protect, requireRole('seller'), checkCustomDomainAccess, verifyCustomDomain);
 router.delete('/my/domain', protect, requireRole('seller'), removeCustomDomain);
 
-// Public route (dynamic route must come last)
-router.get('/:slug', getShopBySlug);
+// Public route (dynamic route must come last) - cached for performance
+router.get('/:slug', cacheMiddleware('shop-page', CACHE_TTL.SHOP_PAGE), getShopBySlug);
 
 module.exports = router;

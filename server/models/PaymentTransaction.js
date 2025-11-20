@@ -98,7 +98,7 @@ paymentTransactionSchema.index({ type: 1, status: 1, createdAt: -1 });
 paymentTransactionSchema.index({ status: 1, initiatedAt: 1 }); // For finding abandoned payments
 
 // Virtual for duration
-paymentTransactionSchema.virtual('duration').get(function() {
+paymentTransactionSchema.virtual('duration').get(function () {
   if (this.completedAt) {
     return this.completedAt - this.initiatedAt;
   }
@@ -106,35 +106,35 @@ paymentTransactionSchema.virtual('duration').get(function() {
 });
 
 // Method to mark as abandoned if not completed within time limit
-paymentTransactionSchema.statics.markAbandonedPayments = async function(minutesThreshold = 30) {
+paymentTransactionSchema.statics.markAbandonedPayments = async function (minutesThreshold = 30) {
   const cutoffTime = new Date(Date.now() - minutesThreshold * 60 * 1000);
-  
+
   const result = await this.updateMany(
     {
       status: 'initiated',
       initiatedAt: { $lt: cutoffTime }
     },
     {
-      $set: { 
+      $set: {
         status: 'abandoned',
         errorMessage: `Payment not completed within ${minutesThreshold} minutes`
       }
     }
   );
-  
+
   return result;
 };
 
 // Get payment analytics
-paymentTransactionSchema.statics.getAnalytics = async function(userId = null, days = 30) {
+paymentTransactionSchema.statics.getAnalytics = async function (userId = null, days = 30) {
   const match = {
     createdAt: { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
   };
-  
+
   if (userId) {
     match.user = new mongoose.Types.ObjectId(userId);
   }
-  
+
   return this.aggregate([
     { $match: match },
     {

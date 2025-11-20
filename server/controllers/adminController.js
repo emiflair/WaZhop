@@ -357,7 +357,9 @@ exports.deleteShop = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/products
 // @access  Admin only
 exports.getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, search, category } = req.query;
+  const {
+    page = 1, limit = 20, search, category
+  } = req.query;
 
   const query = {};
 
@@ -424,7 +426,9 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/orders
 // @access  Admin only
 exports.getAllOrders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, search, status } = req.query;
+  const {
+    page = 1, limit = 20, search, status
+  } = req.query;
 
   const query = {};
 
@@ -513,19 +517,19 @@ exports.getAnalytics = asyncHandler(async (req, res) => {
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
   const users = await User.find({ createdAt: { $gte: sixMonthsAgo } });
-  
+
   // Group users by month
   const userGrowth = [];
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
+
   for (let i = 5; i >= 0; i--) {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
     const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
     const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    
-    const count = users.filter(u => u.createdAt >= monthStart && u.createdAt <= monthEnd).length;
-    
+
+    const count = users.filter((u) => u.createdAt >= monthStart && u.createdAt <= monthEnd).length;
+
     userGrowth.push({
       month: monthNames[date.getMonth()],
       users: count
@@ -547,7 +551,7 @@ exports.getAnalytics = asyncHandler(async (req, res) => {
       const ordersCount = await Order.countDocuments({ shop: shop._id, status: 'completed' });
       const orders = await Order.find({ shop: shop._id, status: 'completed' });
       const revenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      
+
       return {
         _id: shop._id,
         name: shop.shopName,
@@ -592,16 +596,16 @@ exports.getAnalytics = asyncHandler(async (req, res) => {
   const lastMonthRevenue = lastMonthOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
   // Calculate percentage changes
-  const userGrowthPercent = lastMonthUsers > 0 
+  const userGrowthPercent = lastMonthUsers > 0
     ? ((currentMonthUsers - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
     : 0;
-  const shopGrowthPercent = lastMonthShops > 0 
+  const shopGrowthPercent = lastMonthShops > 0
     ? ((currentMonthShops - lastMonthShops) / lastMonthShops * 100).toFixed(1)
     : 0;
-  const productGrowthPercent = lastMonthProducts > 0 
+  const productGrowthPercent = lastMonthProducts > 0
     ? ((currentMonthProducts - lastMonthProducts) / lastMonthProducts * 100).toFixed(1)
     : 0;
-  const revenueGrowthPercent = lastMonthRevenue > 0 
+  const revenueGrowthPercent = lastMonthRevenue > 0
     ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1)
     : 0;
 
@@ -656,14 +660,14 @@ exports.getRevenue = asyncHandler(async (req, res) => {
     date.setMonth(date.getMonth() - i);
     const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
     const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    
+
     const monthOrders = await Order.find({
       createdAt: { $gte: monthStart, $lte: monthEnd },
       status: 'completed'
     });
-    
+
     const amount = monthOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    
+
     monthlyRevenue.push({
       month: monthNames[date.getMonth()],
       amount
@@ -675,11 +679,11 @@ exports.getRevenue = asyncHandler(async (req, res) => {
     plan: { $in: ['pro', 'premium'] },
     lastBillingDate: { $exists: true }
   })
-  .select('name email plan billingPeriod lastBillingDate')
-  .sort({ lastBillingDate: -1 })
-  .limit(20);
+    .select('name email plan billingPeriod lastBillingDate')
+    .sort({ lastBillingDate: -1 })
+    .limit(20);
 
-  const subscriptions = paidUsers.map(user => {
+  const subscriptions = paidUsers.map((user) => {
     // Calculate amount based on plan and billing period
     const prices = {
       'pro-monthly': 9000,
@@ -688,7 +692,7 @@ exports.getRevenue = asyncHandler(async (req, res) => {
       'premium-yearly': 151200
     };
     const priceKey = `${user.plan}-${user.billingPeriod || 'monthly'}`;
-    
+
     return {
       _id: user._id,
       user: {

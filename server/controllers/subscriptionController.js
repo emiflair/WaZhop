@@ -1,9 +1,9 @@
+const axios = require('axios');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
 const Coupon = require('../models/Coupon');
 const { asyncHandler } = require('../utils/helpers');
 const { sendEmail } = require('../utils/notify');
-const axios = require('axios');
 
 // Plan pricing (in days)
 const PLAN_DURATIONS = {
@@ -324,7 +324,9 @@ exports.getSubscriptionStatus = asyncHandler(async (req, res) => {
 // @route   POST /api/subscription/verify-payment
 // @access  Private
 exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
-  const { transactionId, txRef, plan, billingPeriod, couponCode } = req.body;
+  const {
+    transactionId, txRef, plan, billingPeriod, couponCode
+  } = req.body;
 
   if (!transactionId || !txRef) {
     return res.status(400).json({
@@ -485,7 +487,7 @@ exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
   // Verify payment with Flutterwave for paid upgrades
   try {
     const flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY;
-    
+
     if (!flutterwaveSecretKey) {
       console.error('Flutterwave secret key not configured');
       return res.status(500).json({
@@ -620,10 +622,9 @@ exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
         discountApplied
       }
     });
-
   } catch (error) {
     console.error('Payment verification error:', error.response?.data || error.message);
-    
+
     if (error.response?.status === 404) {
       return res.status(404).json({
         success: false,
@@ -659,11 +660,11 @@ exports.checkExpiredSubscriptions = async () => {
       if (user.autoRenew) {
         const billingPeriod = user.billingPeriod || 'monthly';
         const maxAttempts = 3;
-        
+
         // Check if we've already tried 3 times
         if (user.renewalAttempts >= maxAttempts) {
           console.log(`[Subscription] Max renewal attempts (${maxAttempts}) reached for ${user.email}. Downgrading to free.`);
-          
+
           // Downgrade after 3 failed attempts
           user.plan = 'free';
           user.planExpiry = null;
@@ -671,9 +672,9 @@ exports.checkExpiredSubscriptions = async () => {
           user.autoRenew = false;
           user.renewalAttempts = 0;
           user.renewalFailureReason = `Auto-renewal failed after ${maxAttempts} attempts`;
-          
+
           await user.save();
-          
+
           // Enforce free plan limits
           try {
             const { enforceFreePlanForUser } = require('../utils/planEnforcement');
@@ -681,7 +682,7 @@ exports.checkExpiredSubscriptions = async () => {
           } catch (e) {
             console.warn('[Subscription] Enforcement error (non-fatal):', e.message);
           }
-          
+
           // Send email notification about downgrade
           const downgradeEmailHtml = `
             <h2>WaZhop Subscription Downgraded</h2>
@@ -699,7 +700,7 @@ exports.checkExpiredSubscriptions = async () => {
             <p>Thank you for using WaZhop!</p>
             <p>Best regards,<br>WaZhop Team</p>
           `;
-          
+
           try {
             await sendEmail({
               to: user.email,
@@ -710,14 +711,14 @@ exports.checkExpiredSubscriptions = async () => {
           } catch (emailError) {
             console.error(`[Subscription] Failed to send downgrade email to ${user.email}:`, emailError.message);
           }
-          
+
           console.log(`[Subscription] User ${user.email} downgraded to free after failed renewal attempts`);
           continue;
         }
 
         // Attempt auto-renewal payment
         console.log(`[Subscription] Auto-renewal attempt ${user.renewalAttempts + 1}/${maxAttempts} for ${user.email} (${user.plan} - ${billingPeriod})`);
-        
+
         try {
           // Calculate renewal amount
           const planPrices = {
@@ -738,27 +739,27 @@ exports.checkExpiredSubscriptions = async () => {
           // 1. Use Flutterwave's recurring payment feature with saved cards
           // 2. Send email reminder to user to renew manually
           // 3. Use a different payment gateway that supports auto-charging
-          
+
           // For now, we'll send reminder and give grace period
           console.log(`[Subscription] Would charge ${amount} NGN for ${user.email}`);
-          
+
           // Increment attempt counter
           user.renewalAttempts += 1;
           user.lastRenewalAttempt = now;
           user.renewalFailureReason = 'Manual payment required - check email for renewal link';
-          
+
           // Give 7-day grace period before next attempt
           const gracePeriod = 7; // days
           user.planExpiry = new Date(user.planExpiry);
           user.planExpiry.setDate(user.planExpiry.getDate() + gracePeriod);
-          
+
           await user.save();
-          
+
           // Send email reminder for manual renewal
           const periodText = billingPeriod === 'yearly' ? 'yearly' : 'monthly';
           const planText = user.plan.charAt(0).toUpperCase() + user.plan.slice(1);
           const daysRemaining = Math.ceil((user.planExpiry - now) / (1000 * 60 * 60 * 24));
-          
+
           const emailHtml = `
             <h2>WaZhop Subscription Renewal Required</h2>
             <p>Hi ${user.name || 'there'},</p>
@@ -771,7 +772,7 @@ exports.checkExpiredSubscriptions = async () => {
             <p style="color: #ef4444; margin-top: 20px;"><strong>Important:</strong> If you don't renew within ${daysRemaining} days or after ${maxAttempts - user.renewalAttempts} more attempts, your account will be downgraded to the Free plan.</p>
             <p>Best regards,<br>WaZhop Team</p>
           `;
-          
+
           try {
             await sendEmail({
               to: user.email,
@@ -782,17 +783,16 @@ exports.checkExpiredSubscriptions = async () => {
           } catch (emailError) {
             console.error(`[Subscription] Failed to send renewal email to ${user.email}:`, emailError.message);
           }
-          
+
           console.log(`[Subscription] Grace period extended for ${user.email}. Attempt ${user.renewalAttempts}/${maxAttempts}`);
-          
         } catch (error) {
           console.error(`[Subscription] Renewal error for ${user.email}:`, error.message);
-          
+
           // Increment attempt counter on error
           user.renewalAttempts += 1;
           user.lastRenewalAttempt = now;
           user.renewalFailureReason = error.message;
-          
+
           await user.save();
         }
       } else {

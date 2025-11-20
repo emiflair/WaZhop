@@ -444,7 +444,7 @@ userSchema.index({ email: 1 }); // Already unique, explicit for clarity
 userSchema.index({ role: 1, emailVerified: 1 }); // Admin/seller queries
 userSchema.index({ emailVerificationToken: 1 }, { sparse: true }); // Verification lookups
 userSchema.index({ passwordResetToken: 1 }, { sparse: true }); // Password reset lookups
-userSchema.index({ 'referralCode': 1 }, { sparse: true }); // Referral code lookups
+userSchema.index({ referralCode: 1 }, { sparse: true }); // Referral code lookups
 
 // Enforce unique phone for users who provided whatsapp (sparse/partial)
 // Note: existing duplicates will cause index creation to fail; handle via migration if needed.

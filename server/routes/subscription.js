@@ -16,6 +16,7 @@ router.use(protect);
 // Subscription routes
 router.post('/upgrade', upgradePlan);
 router.post('/verify-payment', require('../controllers/subscriptionController').verifyPaymentAndUpgrade);
+
 router.post('/renew', renewPlan);
 router.patch('/auto-renew', toggleAutoRenew);
 router.post('/cancel', cancelSubscription);

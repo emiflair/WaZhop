@@ -15,7 +15,7 @@ const addRenewalTracking = async () => {
     console.log('✅ Connected to MongoDB');
 
     console.log('📝 Adding renewal tracking fields to users...');
-    
+
     const result = await User.updateMany(
       {
         // Update all users that don't have these fields

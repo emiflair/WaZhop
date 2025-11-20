@@ -37,12 +37,22 @@ exports.createOrder = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Shop not found' });
   }
 
-  // Verify products and calculate totals
+  // Verify products and calculate totals - BATCH QUERY (prevents N+1)
+  const productIds = items.map((item) => item.productId);
+  const products = await Product.find({ _id: { $in: productIds } }).lean();
+
+  if (products.length !== items.length) {
+    return res.status(404).json({ success: false, message: 'One or more products not found' });
+  }
+
+  // Create product lookup map for O(1) access
+  const productMap = new Map(products.map((p) => [p._id.toString(), p]));
+
   let calculatedSubtotal = 0;
   const orderItems = [];
 
   for (const item of items) {
-    const product = await Product.findById(item.productId);
+    const product = productMap.get(item.productId.toString());
     if (!product) {
       return res.status(404).json({ success: false, message: `Product ${item.productId} not found` });
     }
@@ -73,7 +83,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
   // Create order
   const finalTotal = total || (calculatedSubtotal + (shippingFee || 0));
   const isFreeOrder = finalTotal === 0 || paymentMethod === 'free';
-  
+
   const order = await Order.create({
     shop: shopId,
     customer: {
@@ -97,13 +107,21 @@ exports.createOrder = asyncHandler(async (req, res) => {
     orderSource: 'web'
   });
 
-  // Update product inventory
-  for (const item of orderItems) {
-    const product = await Product.findById(item.product);
-    if (product.inventory && product.inventory.trackQuantity) {
-      product.inventory.quantity -= item.quantity;
-      await product.save();
-    }
+  // Update product inventory - BULK WRITE (prevents N+1)
+  const bulkInventoryUpdates = orderItems
+    .filter((item) => {
+      const product = productMap.get(item.product.toString());
+      return product && product.inventory && product.inventory.trackQuantity;
+    })
+    .map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { 'inventory.quantity': -item.quantity } }
+      }
+    }));
+
+  if (bulkInventoryUpdates.length > 0) {
+    await Product.bulkWrite(bulkInventoryUpdates);
   }
 
   // Send confirmation email
@@ -308,13 +326,24 @@ exports.cancelOrder = asyncHandler(async (req, res) => {
   order.status = 'cancelled';
   order.cancelledAt = new Date();
 
-  // Restore inventory
-  for (const item of order.items) {
-    const product = await Product.findById(item.product);
-    if (product && product.inventory && product.inventory.trackQuantity) {
-      product.inventory.quantity += item.quantity;
-      await product.save();
-    }
+  // Restore inventory - BULK WRITE (prevents N+1)
+  const productIds = order.items.map((item) => item.product);
+  const productsToRestore = await Product.find({
+    _id: { $in: productIds },
+    'inventory.trackQuantity': true
+  }).select('_id').lean();
+
+  const bulkRestoreUpdates = order.items
+    .filter((item) => productsToRestore.some((p) => p._id.toString() === item.product.toString()))
+    .map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { 'inventory.quantity': item.quantity } }
+      }
+    }));
+
+  if (bulkRestoreUpdates.length > 0) {
+    await Product.bulkWrite(bulkRestoreUpdates);
   }
 
   await order.save();

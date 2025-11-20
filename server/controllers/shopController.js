@@ -1,5 +1,6 @@
 const streamifier = require('streamifier');
 const Shop = require('../models/Shop');
+const cache = require('../utils/cache');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { asyncHandler, generateSlug } = require('../utils/helpers');
@@ -607,17 +608,39 @@ exports.getAvailableThemes = asyncHandler(async (req, res) => {
 // @route   GET /api/shops/my/shops
 // @access  Private
 exports.getMyShops = asyncHandler(async (req, res) => {
-  const shops = await Shop.find({ owner: req.user.id }).sort({ createdAt: -1 });
+  // Add pagination support (users typically have 1-3 shops, but good practice)
+  const { page = 1, limit = 20 } = req.query;
 
-  // Count active and inactive shops
-  const activeShops = shops.filter((shop) => shop.isActive).length;
-  const inactiveShops = shops.filter((shop) => !shop.isActive).length;
+  const shops = await Shop.find({ owner: req.user.id })
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .lean(); // Use .lean() for better performance (returns plain JS objects)
+
+  const totalShops = await Shop.countDocuments({ owner: req.user.id });
+
+  // Count active and inactive shops (use aggregation for efficiency)
+  const statusCounts = await Shop.aggregate([
+    { $match: { owner: req.user._id } },
+    {
+      $group: {
+        _id: '$isActive',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const activeShops = statusCounts.find((s) => s._id === true)?.count || 0;
+  const inactiveShops = statusCounts.find((s) => s._id === false)?.count || 0;
 
   res.status(200).json({
     success: true,
     data: {
       shops,
       count: shops.length,
+      total: totalShops,
+      page: Number(page),
+      pages: Math.ceil(totalShops / limit),
       activeCount: activeShops,
       inactiveCount: inactiveShops,
       maxShops: req.user.getPlanLimits().maxShops
@@ -672,6 +695,10 @@ exports.createShop = asyncHandler(async (req, res) => {
       font: 'inter'
     }
   });
+
+  // Invalidate user's shop list cache
+  await cache.invalidateCache('user-shops', req.user.id);
+  await cache.invalidateCache('marketplace', '*'); // New shop affects marketplace
 
   res.status(201).json({
     success: true,

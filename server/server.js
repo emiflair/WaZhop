@@ -40,7 +40,14 @@ const healthRoutes = require('./routes/health');
 // Import cron jobs
 const { startSubscriptionCron } = require('./utils/subscriptionCron');
 
+// Import cache manager
+const cache = require('./utils/cache');
+const { enableQueryLogging } = require('./middlewares/queryMonitor');
+
 const app = express();
+
+// Initialize Redis cache
+cache.initRedis();
 
 // Trust proxy (important for Railway, Vercel, etc.)
 app.set('trust proxy', 1);
@@ -53,7 +60,7 @@ app.use(compression()); // Compress all responses (10-70% size reduction)
 app.use((req, res, next) => {
   // Enable ETag for conditional requests
   res.set('ETag', 'weak');
-  
+
   // Cache static assets aggressively
   if (req.url.match(/\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$/)) {
     res.set('Cache-Control', 'public, max-age=31536000, immutable');
@@ -82,11 +89,26 @@ if (process.env.NODE_ENV === 'production') {
 // Rate limiting - apply to all API routes
 app.use('/api/', apiRateLimiter);
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
+// MongoDB Connection with optimized pool settings for scale
+mongoose.connect(process.env.MONGODB_URI, {
+  maxPoolSize: 50, // Max connections in pool (increased from default 5)
+  minPoolSize: 10, // Min idle connections maintained
+  maxIdleTimeMS: 30000, // Close idle connections after 30s
+  serverSelectionTimeoutMS: 5000, // Timeout for server selection
+  socketTimeoutMS: 45000, // Socket timeout for operations
+  family: 4, // Use IPv4, skip trying IPv6
+  retryWrites: true, // Retry write operations on failure
+  retryReads: true // Retry read operations on failure
+})
   .then(() => {
     console.log('✅ MongoDB Connected Successfully');
-    logger.info('MongoDB connected successfully');
+    logger.info('MongoDB connected with optimized pool settings', {
+      maxPoolSize: 50,
+      minPoolSize: 10
+    });
+
+    // Enable query logging in development
+    enableQueryLogging(mongoose);
 
     // Start subscription cron job after DB connection
     startSubscriptionCron();
@@ -96,6 +118,33 @@ mongoose.connect(process.env.MONGODB_URI)
     logger.error('MongoDB connection failed', { error: err.message });
     process.exit(1);
   });
+
+// MongoDB Connection Pool Monitoring
+mongoose.connection.on('connected', () => {
+  logger.info('Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  logger.error('Mongoose connection error', { error: err.message });
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('Mongoose disconnected from MongoDB');
+});
+
+// Log connection pool stats every 5 minutes (development only)
+if (process.env.NODE_ENV === 'development') {
+  setInterval(() => {
+    const poolStats = mongoose.connection.client?.topology?.s?.pool;
+    if (poolStats) {
+      logger.info('MongoDB Pool Stats', {
+        availableConnections: poolStats.availableConnectionCount || 0,
+        totalConnections: poolStats.totalConnectionCount || 0,
+        waitQueueSize: poolStats.waitQueueSize || 0
+      });
+    }
+  }, 300000); // Every 5 minutes
+}
 
 // Routes
 app.use('/api/health', healthRoutes);
@@ -171,10 +220,14 @@ const gracefulShutdown = (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
   logger.info(`${signal} received. Shutting down gracefully...`);
 
-  server.close(() => {
+  server.close(async () => {
     console.log('✅ HTTP server closed');
     logger.info('HTTP server closed');
 
+    // Close Redis connection
+    await cache.closeRedis();
+
+    // Close MongoDB connection
     mongoose.connection.close(false).then(() => {
       console.log('✅ MongoDB connection closed');
       logger.info('MongoDB connection closed');

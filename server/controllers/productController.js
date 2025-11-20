@@ -4,6 +4,7 @@ const Shop = require('../models/Shop');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { asyncHandler, paginate, paginationMeta } = require('../utils/helpers');
+const cache = require('../utils/cache');
 const { cloudinary } = require('../config/cloudinary');
 
 // Helper function to upload to Cloudinary from buffer
@@ -168,7 +169,7 @@ exports.getProduct = asyncHandler(async (req, res) => {
 
   // Cache product details for 2 minutes (views still increment server-side)
   res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=60');
-  
+
   res.status(200).json({
     success: true,
     data: product,
@@ -271,6 +272,11 @@ exports.createProduct = asyncHandler(async (req, res) => {
     locationState: normState,
     locationArea: normArea
   });
+
+  // Invalidate relevant caches
+  await cache.invalidateCache('marketplace', '*'); // New product affects marketplace
+  await cache.invalidateCache('shop-products', shop._id.toString());
+  await cache.invalidateCache('shop-page', shop.slug);
 
   res.status(201).json({
     success: true,
@@ -905,7 +911,7 @@ exports.getBoostStatus = asyncHandler(async (req, res) => {
 // @access  Public
 exports.getRelatedProducts = asyncHandler(async (req, res) => {
   const { limit = 8 } = req.query;
-  
+
   // Get the product to find related items
   const product = await Product.findById(req.params.id).select('category subcategory shop').lean();
   if (!product) {
@@ -925,7 +931,7 @@ exports.getRelatedProducts = asyncHandler(async (req, res) => {
 
   // Only show products from active shops
   const activeShops = await Shop.find({ isActive: true }).select('_id');
-  query.shop = { $in: activeShops.map(s => s._id) };
+  query.shop = { $in: activeShops.map((s) => s._id) };
 
   const relatedProducts = await Product.find(query)
     .select('name price images category subcategory shop views createdAt inStock stock comparePrice')
