@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
 const Review = require('../models/Review');
-const { asyncHandler, paginate, paginationMeta } = require('../utils/helpers');
+const { asyncHandler, paginate, paginationMeta, generateSlug } = require('../utils/helpers');
 const cache = require('../utils/cache');
 const { cloudinary } = require('../config/cloudinary');
 const {
@@ -178,11 +178,32 @@ exports.createProduct = asyncHandler(async (req, res) => {
     shop = await Shop.findOne({ owner: req.user.id, isActive: true });
   }
 
+  // Auto-create shop if user doesn't have one (first product)
   if (!shop) {
-    return res.status(404).json({
-      success: false,
-      message: 'Shop not found or you do not own this shop'
+    console.log(`🏪 Auto-creating first shop for user ${req.user.id}`);
+    
+    const user = await User.findById(req.user.id);
+    const baseSlug = generateSlug(user.name);
+    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+    shop = await Shop.create({
+      owner: user._id,
+      shopName: `${user.name}'s Shop`,
+      slug: uniqueSlug,
+      description: 'Welcome to my shop!',
+      theme: {
+        primaryColor: '#000000',
+        accentColor: '#FFD700',
+        layout: 'grid',
+        font: 'inter'
+      }
     });
+
+    // Update user's shop reference
+    user.shop = shop._id;
+    await user.save();
+
+    console.log(`✅ First shop created: ${shop.shopName} (${shop.slug})`);
   }
 
   // Check if shop is active

@@ -69,7 +69,8 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
-  // Create user
+  // Create user - NO automatic shop creation
+  // Shop will be created automatically when user adds their first product
   const user = await User.create({
     name,
     email: normalizedEmail,
@@ -78,30 +79,8 @@ exports.register = asyncHandler(async (req, res) => {
     role,
     plan: 'free',
     referredBy: referrerId,
-    shop: undefined // IMPORTANT: Explicitly set shop to undefined for all new users
+    shop: undefined // Shop will be created on first product addition
   });
-
-  // Create default shop only for sellers
-  if (role === 'seller') {
-    const baseSlug = generateSlug(name);
-    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
-
-    const shop = await Shop.create({
-      owner: user._id,
-      shopName: `${name}'s Shop`,
-      slug: uniqueSlug,
-      description: 'Welcome to my shop!',
-      theme: {
-        primaryColor: '#000000',
-        accentColor: '#FFD700',
-        layout: 'grid',
-        font: 'inter'
-      }
-    });
-
-    user.shop = shop._id;
-    await user.save();
-  }
 
   // Respect platform security setting for email verification
   const settings = await PlatformSettings.getSettings();
@@ -358,29 +337,10 @@ exports.upgradeToSeller = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });
   }
 
-  // Update user
+  // Update user to seller - NO automatic shop creation
+  // Shop will be created when they add their first product
   user.role = 'seller';
   user.whatsapp = normalized;
-  await user.save();
-
-  // Create default shop
-  const baseSlug = generateSlug(user.name);
-  const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
-
-  const shop = await Shop.create({
-    owner: user._id,
-    shopName: `${user.name}'s Shop`,
-    slug: uniqueSlug,
-    description: 'Welcome to my shop!',
-    theme: {
-      primaryColor: '#000000',
-      accentColor: '#FFD700',
-      layout: 'grid',
-      font: 'inter'
-    }
-  });
-
-  user.shop = shop._id;
   await user.save();
 
   // Handle referral if provided
