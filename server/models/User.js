@@ -436,7 +436,7 @@ userSchema.pre('deleteMany', async function (next) {
 });
 
 // Performance indexes for faster queries
-userSchema.index({ email: 1 }); // Already unique, explicit for clarity
+// Note: email already has unique index from field definition, no need to duplicate
 userSchema.index({ role: 1, emailVerified: 1 }); // Admin/seller queries
 userSchema.index({ emailVerificationToken: 1 }, { sparse: true }); // Verification lookups
 userSchema.index({ passwordResetToken: 1 }, { sparse: true }); // Password reset lookups
