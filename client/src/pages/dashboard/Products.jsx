@@ -276,11 +276,11 @@ const Products = () => {
   };
 
   const updateBulkProduct = (id, field, value) => {
-    setBulkProducts(bulkProducts.map(p => p.id === id ? { ...p, [field]: value } : p));
+    setBulkProducts(prevProducts => prevProducts.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
   const removeBulkProduct = (id) => {
-    setBulkProducts(bulkProducts.filter(p => p.id !== id));
+    setBulkProducts(prevProducts => prevProducts.filter(p => p.id !== id));
   };
 
   const handleBulkSubmit = async () => {
