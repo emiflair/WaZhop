@@ -72,7 +72,8 @@ export const AuthProvider = ({ children }) => {
       return { success: true, pendingVerification: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
-      return { success: false, error: message };
+      const errors = error.response?.data?.errors || [];
+      return { success: false, error: message, errors };
     }
   };
 
@@ -96,16 +97,17 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
+      const errors = error.response?.data?.errors || [];
       const requiresVerification = error.response?.data?.requiresVerification;
       const email = error.response?.data?.email;
       
       // If email verification is required, store email for verification flow
       if (requiresVerification && email) {
         localStorage.setItem('pendingVerifyEmail', email);
-        return { success: false, error: message, requiresVerification: true };
+        return { success: false, error: message, requiresVerification: true, errors };
       }
       
-      return { success: false, error: message };
+      return { success: false, error: message, errors };
     }
   };
 
