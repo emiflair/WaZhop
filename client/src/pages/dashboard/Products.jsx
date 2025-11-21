@@ -296,30 +296,44 @@ const Products = () => {
       }
 
       const promises = validProducts.map(async (bulkProduct) => {
-        const productData = {
-          name: bulkProduct.name,
-          description: bulkProduct.description || bulkProduct.name,
-          price: parseFloat(bulkProduct.price),
-          category: bulkProduct.category,
-          subcategory: bulkProduct.subcategory || null,
-          tags: [],
-          inStock: true,
-          locationState: user?.shopDetails?.locationState || 'Lagos',
-          locationArea: user?.shopDetails?.locationArea || ''
-        };
-        
-        return productAPI.createProduct(productData, [bulkProduct.image]);
+        try {
+          const productData = {
+            name: bulkProduct.name,
+            description: bulkProduct.description || bulkProduct.name,
+            price: parseFloat(bulkProduct.price),
+            category: bulkProduct.category,
+            subcategory: bulkProduct.subcategory || null,
+            tags: [],
+            inStock: true,
+            locationState: user?.shopDetails?.locationState || 'Lagos',
+            locationArea: user?.shopDetails?.locationArea || ''
+          };
+          
+          return await productAPI.createProduct(productData, [bulkProduct.image]);
+        } catch (err) {
+          console.error(`Failed to create product "${bulkProduct.name}":`, err);
+          return { error: true, message: err.response?.data?.message || err.message, name: bulkProduct.name };
+        }
       });
 
-      await Promise.all(promises);
-      toast.success(`${validProducts.length} product(s) created successfully!`);
+      const results = await Promise.all(promises);
+      const failures = results.filter(r => r?.error);
+      const successes = results.filter(r => !r?.error);
       
-      setBulkProducts([]);
-      setBulkUploadMode(false);
-      setShowModal(false);
-      fetchProducts();
+      if (failures.length > 0) {
+        const failedNames = failures.map(f => f.name).join(', ');
+        toast.error(`${failures.length} product(s) failed: ${failedNames}. ${failures[0]?.message || ''}`);
+      }
+      
+      if (successes.length > 0) {
+        toast.success(`${successes.length} product(s) created successfully!`);
+        setBulkProducts([]);
+        setBulkUploadMode(false);
+        setShowModal(false);
+        fetchProducts();
+      }
     } catch (error) {
-      toast.error('Some products failed to create. Please try again.');
+      toast.error('Bulk upload failed. Please try again.');
       console.error(error);
     } finally {
       setUploading(false);
