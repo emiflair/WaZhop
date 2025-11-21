@@ -55,6 +55,15 @@ exports.getMyShop = asyncHandler(async (req, res) => {
     });
   }
 
+  // CRITICAL SECURITY CHECK: Verify shop ownership
+  if (shop.owner.toString() !== req.user.id.toString()) {
+    console.error(`🚨 SECURITY ALERT: User ${req.user.id} attempted to access shop ${shop._id} owned by ${shop.owner}`);
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied: You do not own this shop'
+    });
+  }
+
   res.status(200).json({
     success: true,
     data: shop
