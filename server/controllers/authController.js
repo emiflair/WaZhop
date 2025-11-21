@@ -27,7 +27,7 @@ exports.register = asyncHandler(async (req, res) => {
   }
 
   const {
-    name, email, password, whatsapp, role: roleInput
+    name, email, password, whatsapp, role: roleInput, referralCode
   } = req.body;
   const role = (roleInput === 'seller' ? 'seller' : 'buyer');
 
@@ -56,6 +56,19 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
+  // Handle referral code if provided
+  let referrerId = null;
+  if (referralCode && referralCode.trim()) {
+    try {
+      const referrer = await User.findOne({ referralCode: referralCode.trim().toUpperCase() });
+      if (referrer) {
+        referrerId = referrer._id;
+      }
+    } catch (err) {
+      console.warn('Failed to process referral code during registration:', err);
+    }
+  }
+
   // Create user
   const user = await User.create({
     name,
@@ -63,7 +76,9 @@ exports.register = asyncHandler(async (req, res) => {
     password,
     whatsapp: role === 'seller' ? normalizedWhatsApp : undefined,
     role,
-    plan: 'free'
+    plan: 'free',
+    referredBy: referrerId,
+    shop: undefined // IMPORTANT: Explicitly set shop to undefined for all new users
   });
 
   // Create default shop only for sellers
@@ -85,9 +100,8 @@ exports.register = asyncHandler(async (req, res) => {
     });
 
     user.shop = shop._id;
+    await user.save();
   }
-
-  await user.save();
 
   // Respect platform security setting for email verification
   const settings = await PlatformSettings.getSettings();
@@ -176,7 +190,18 @@ exports.login = asyncHandler(async (req, res) => {
   // Find user with password field and 2FA fields
   const user = await User.findOne({ email: normalizedEmail })
     .select('+password +twoFactorEnabled +twoFactorSecret')
-    .populate('shop');
+    .populate({
+      path: 'shop',
+      match: { owner: { $exists: true } } // Only populate if shop has an owner
+    });
+
+  // Security check after population
+  if (user && user.shop && user.shop.owner && user.shop.owner.toString() !== user._id.toString()) {
+    console.error(`🚨 SECURITY ALERT during login: User ${user._id} had shop ${user.shop._id} which belongs to ${user.shop.owner}`);
+    user.shop = null;
+    // Fix the database
+    await User.findByIdAndUpdate(user._id, { $unset: { shop: 1 } });
+  }
 
   if (!user) {
     return res.status(401).json({
@@ -250,7 +275,18 @@ exports.login = asyncHandler(async (req, res) => {
 exports.getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id)
     .select('+twoFactorEnabled')
-    .populate('shop');
+    .populate({
+      path: 'shop',
+      match: { owner: req.user.id } // CRITICAL FIX: Only populate shop if user owns it
+    });
+
+  // Additional safety check: If shop is populated but doesn't belong to user, remove it
+  if (user.shop && user.shop.owner && user.shop.owner.toString() !== req.user.id.toString()) {
+    console.error(`🚨 SECURITY ALERT: User ${req.user.id} had shop ${user.shop._id} which belongs to ${user.shop.owner}`);
+    user.shop = null;
+    // Fix the database
+    await User.findByIdAndUpdate(req.user.id, { $unset: { shop: 1 } });
+  }
 
   res.status(200).json({
     success: true,
