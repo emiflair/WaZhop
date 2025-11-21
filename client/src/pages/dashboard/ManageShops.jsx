@@ -38,11 +38,23 @@ const ManageShops = () => {
     try {
       setLoading(true);
       const data = await shopAPI.getMyShops();
-      // API returns { shops, count, total, ... } directly (axios interceptor extracts data.data)
-      setShops(Array.isArray(data.shops) ? data.shops : []);
+      console.log('📦 Raw API response:', data);
+      
+      // Handle multiple response formats
+      if (data && Array.isArray(data.shops)) {
+        setShops(data.shops);
+      } else if (Array.isArray(data)) {
+        setShops(data);
+      } else if (data && data.data && Array.isArray(data.data.shops)) {
+        setShops(data.data.shops);
+      } else {
+        console.warn('Unexpected response format:', data);
+        setShops([]);
+      }
     } catch (error) {
       console.error('Error fetching shops:', error);
-      toast.error('Failed to load shops');
+      console.error('Error details:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to load shops');
     } finally {
       setLoading(false);
     }

@@ -84,14 +84,22 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       const productsData = await productAPI.getMyProducts();
-      setProducts(productsData);
-      setFilteredProducts(productsData);
+      console.log('📦 Products API response:', productsData);
+      
+      // Handle response format
+      const productsArray = Array.isArray(productsData) ? productsData : 
+                           Array.isArray(productsData?.data) ? productsData.data : [];
+      
+      setProducts(productsArray);
+      setFilteredProducts(productsArray);
     } catch (error) {
+      console.error('Error loading products:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      
       // Don't show error toast if shop doesn't exist (buyer account)
       if (error.response?.status !== 404) {
-        toast.error('Failed to load products');
+        toast.error(error.response?.data?.message || 'Failed to load products');
       }
-      console.error(error);
     } finally {
       setLoading(false);
     }
