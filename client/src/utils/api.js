@@ -87,29 +87,34 @@ api.interceptors.response.use(
       return response;
     }
     
-    // Cache GET responses
+    // Cache ONLY public endpoints (marketplace, public product/shop views)
     if (response.config.method === 'get' && response.status === 200) {
       const url = response.config.url;
+      let shouldCache = false;
       let namespace = CACHE_NAMESPACES.API;
       let ttl = CACHE_TTL.MEDIUM;
       
-      // Determine cache namespace and TTL based on endpoint
+      // Only cache public, non-authenticated endpoints
       if (url.includes('/products/marketplace')) {
+        shouldCache = true;
         namespace = CACHE_NAMESPACES.MARKETPLACE;
         ttl = CACHE_TTL.MEDIUM;
-      } else if (url.includes('/products/')) {
+      } else if (url.match(/\/products\/[a-f0-9]{24}$/)) {
+        // Cache individual public product view (GET /products/:id)
+        shouldCache = true;
         namespace = CACHE_NAMESPACES.PRODUCTS;
         ttl = CACHE_TTL.LONG;
-      } else if (url.includes('/shops/')) {
+      } else if (url.match(/\/shops\/[a-z0-9-]+$/) && !url.includes('/my/')) {
+        // Cache public shop view by slug (GET /shops/:slug)
+        shouldCache = true;
         namespace = CACHE_NAMESPACES.SHOP;
         ttl = CACHE_TTL.LONG;
-      } else if (url.includes('/auth/me')) {
-        namespace = CACHE_NAMESPACES.USER;
-        ttl = CACHE_TTL.SHORT;
       }
       
-      const cacheKey = `${url}-${JSON.stringify(response.config.params || {})}`;
-      cacheManager.set(cacheKey, response.data, ttl, namespace);
+      if (shouldCache) {
+        const cacheKey = `${url}-${JSON.stringify(response.config.params || {})}`;
+        cacheManager.set(cacheKey, response.data, ttl, namespace);
+      }
     }
     
     // Handle standard API response format { success: true, data: {...} }
