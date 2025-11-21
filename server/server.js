@@ -34,6 +34,7 @@ const orderRoutes = require('./routes/order');
 const subscriptionRoutes = require('./routes/subscription');
 const couponRoutes = require('./routes/coupon');
 const adminRoutes = require('./routes/admin');
+const adminMigrationRoutes = require('./routes/admin-migration');
 const settingsRoutes = require('./routes/settings');
 const healthRoutes = require('./routes/health');
 
@@ -158,6 +159,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/migrations', adminMigrationRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/whatsapp', require('./routes/whatsapp'));
 
