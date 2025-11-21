@@ -38,7 +38,8 @@ const ManageShops = () => {
     try {
       setLoading(true);
       const data = await shopAPI.getMyShops();
-      setShops(data.shops || []);
+      // API returns { shops, count, total, ... } directly (axios interceptor extracts data.data)
+      setShops(Array.isArray(data.shops) ? data.shops : []);
     } catch (error) {
       console.error('Error fetching shops:', error);
       toast.error('Failed to load shops');
