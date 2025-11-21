@@ -117,31 +117,8 @@ api.interceptors.response.use(
       }
     }
     
-    // Handle standard API response format { success: true, data: {...} }
-    if (response.data.success === true) {
-      // Auth endpoints return { success, token, user } - return full response.data
-      if (response.data.token && response.data.user) {
-        return response.data;
-      }
-      // Upgrade/downgrade endpoints return { success, user, data } - return full response.data
-      if (response.data.user && response.data.data) {
-        return response.data;
-      }
-      // Order creation returns { success, message, order } - return full response.data
-      if (response.data.order) {
-        return response.data;
-      }
-      // Product endpoints may include additional flags like shopInactive - return full response.data
-      if (response.data.shopInactive !== undefined || response.data.message) {
-        return response.data;
-      }
-      // Other endpoints return { success, data } - extract just the data
-      if (response.data.data !== undefined) {
-        return response.data.data;
-      }
-    }
-    
-    // For non-standard responses (direct data objects), return as-is
+    // Simplified response handling - always return full response.data
+    // Components will handle their own data extraction
     return response.data;
   },
   (error) => {
@@ -216,8 +193,8 @@ export const authAPI = {
 
 // Shop endpoints
 export const shopAPI = {
-  getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`),
-  getMyShops: () => api.get('/shops/my/shops'),
+  getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}&_t=${Date.now()}`),
+  getMyShops: () => api.get(`/shops/my/shops?_t=${Date.now()}`),
   getShopBySlug: (slug) => api.get(`/shops/${slug}`),
   createShop: (data) => api.post('/shops', data),
   deleteShop: (id) => api.delete(`/shops/${id}`),
@@ -247,7 +224,7 @@ export const shopAPI = {
 
 // Product endpoints
 export const productAPI = {
-  getMyProducts: () => api.get('/products/my/products'),
+  getMyProducts: () => api.get(`/products/my/products?_t=${Date.now()}`),
   getProduct: (id) => api.get(`/products/${id}`),
   getRelatedProducts: (id, limit = 8) => api.get(`/products/${id}/related?limit=${limit}`),
   getMarketplaceProducts: (params) => api.get('/products/marketplace', { params }),

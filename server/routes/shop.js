@@ -33,9 +33,9 @@ const {
   imageUploadRateLimiter
 } = require('../middlewares/imageOptimization');
 
-// Protected routes (must come before dynamic routes)
+// Protected routes (must come before dynamic routes) - NO CACHING for user-specific data
 router.get('/my/shop', protect, requireRole('seller'), getMyShop);
-router.get('/my/shops', protect, requireRole('seller'), cacheMiddleware('user-shops', CACHE_TTL.USER_SHOPS), getMyShops);
+router.get('/my/shops', protect, requireRole('seller'), getMyShops);
 router.post('/', protect, requireRole('seller'), checkShopLimit, moderateText, createShop);
 router.delete('/:id', protect, requireRole('seller'), deleteShop);
 router.get('/themes', protect, requireRole('seller'), getAvailableThemes);

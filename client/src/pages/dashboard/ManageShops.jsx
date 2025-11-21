@@ -37,20 +37,12 @@ const ManageShops = () => {
   const fetchShops = async () => {
     try {
       setLoading(true);
-      const data = await shopAPI.getMyShops();
-      console.log('📦 Raw API response:', data);
-      
-      // Handle multiple response formats
-      if (data && Array.isArray(data.shops)) {
-        setShops(data.shops);
-      } else if (Array.isArray(data)) {
-        setShops(data);
-      } else if (data && data.data && Array.isArray(data.data.shops)) {
-        setShops(data.data.shops);
-      } else {
-        console.warn('Unexpected response format:', data);
-        setShops([]);
-      }
+      const response = await shopAPI.getMyShops();
+      console.log('📦 Full API response:', response);
+      // Handle response format: response.data.shops or response.shops
+      const shops = response?.data?.shops || response?.shops || [];
+      console.log('✅ Extracted shops:', shops.length);
+      setShops(shops);
     } catch (error) {
       console.error('Error fetching shops:', error);
       console.error('Error details:', error.response?.data || error.message);

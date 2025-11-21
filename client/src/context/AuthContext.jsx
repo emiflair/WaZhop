@@ -26,7 +26,9 @@ export const AuthProvider = ({ children }) => {
       if (token && savedUser) {
         try {
           // Verify token is still valid
-          const userData = await authAPI.getMe();
+          const response = await authAPI.getMe();
+          // Extract user from response.data since API returns { success: true, data: user }
+          const userData = response?.data || response;
           setUser(userData);
           setIsAuthenticated(true);
         } catch (error) {

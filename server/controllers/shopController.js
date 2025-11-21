@@ -675,6 +675,14 @@ exports.createShop = asyncHandler(async (req, res) => {
     shopName, description, category, location
   } = req.body;
 
+  // Validate required fields
+  if (!shopName || shopName.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      message: 'Shop name is required'
+    });
+  }
+
   // Check how many shops user already has
   const existingShops = await Shop.countDocuments({ owner: req.user.id });
   const planLimits = req.user.getPlanLimits();
@@ -689,8 +697,8 @@ exports.createShop = asyncHandler(async (req, res) => {
     });
   }
 
-  // Generate unique slug from shop name
-  const baseSlug = generateSlug(shopName || `${req.user.name}'s Shop ${existingShops + 1}`);
+  // Generate unique slug from shop name (shopName is guaranteed to exist due to validation)
+  const baseSlug = generateSlug(shopName.trim());
   const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
   // Determine branding visibility based on user plan
@@ -700,7 +708,7 @@ exports.createShop = asyncHandler(async (req, res) => {
   // Create shop
   const shop = await Shop.create({
     owner: req.user.id,
-    shopName: shopName || `${req.user.name}'s Shop ${existingShops + 1}`,
+    shopName: shopName.trim(),
     slug: uniqueSlug,
     description: description || 'Welcome to my shop!',
     category: category || 'other',

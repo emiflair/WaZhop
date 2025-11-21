@@ -83,15 +83,13 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const productsData = await productAPI.getMyProducts();
-      console.log('📦 Products API response:', productsData);
-      
-      // Handle response format
-      const productsArray = Array.isArray(productsData) ? productsData : 
-                           Array.isArray(productsData?.data) ? productsData.data : [];
-      
-      setProducts(productsArray);
-      setFilteredProducts(productsArray);
+      const response = await productAPI.getMyProducts();
+      console.log('📦 Full products response:', response);
+      // Handle response format: response.data or response.data.data
+      const products = response?.data?.data || response?.data || [];
+      console.log('✅ Extracted products:', products.length);
+      setProducts(products);
+      setFilteredProducts(products);
     } catch (error) {
       console.error('Error loading products:', error);
       console.error('Error details:', error.response?.data || error.message);
