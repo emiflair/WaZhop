@@ -37,8 +37,12 @@ const ManageShops = () => {
   const fetchShops = async () => {
     try {
       setLoading(true);
-      const data = await shopAPI.getMyShops();
-      setShops(data.shops || []);
+      const response = await shopAPI.getMyShops();
+      console.log('📦 Full API response:', response);
+      // Handle response format: response.data.shops or response.shops
+      const shops = response?.data?.shops || response?.shops || [];
+      console.log('✅ Extracted shops:', shops.length);
+      setShops(shops);
     } catch (error) {
       console.error('Error fetching shops:', error);
       toast.error('Failed to load shops');

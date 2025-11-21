@@ -29,7 +29,7 @@ const {
 // Public routes - cached for performance
 router.get('/marketplace', cacheMiddleware('marketplace', CACHE_TTL.MARKETPLACE_LISTINGS), getMarketplaceProducts);
 
-// Protected routes - place specific routes before dynamic :id routes
+// Protected routes - place specific routes before dynamic :id routes - NO CACHING
 router.get('/my/products', protect, requireRole('seller'), getMyProducts);
 
 // Dynamic routes (must come after specific routes) - cached

@@ -83,9 +83,13 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const productsData = await productAPI.getMyProducts();
-      setProducts(productsData);
-      setFilteredProducts(productsData);
+      const response = await productAPI.getMyProducts();
+      console.log('📦 Full products response:', response);
+      // Handle response format: response.data or response.data.data
+      const products = response?.data?.data || response?.data || [];
+      console.log('✅ Extracted products:', products.length);
+      setProducts(products);
+      setFilteredProducts(products);
     } catch (error) {
       // Don't show error toast if shop doesn't exist (buyer account)
       if (error.response?.status !== 404) {
