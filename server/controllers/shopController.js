@@ -46,14 +46,19 @@ const updateStorageUsage = async (userId, sizeDelta) => {
 // @route   GET /api/shops/my/shop
 // @access  Private
 exports.getMyShop = asyncHandler(async (req, res) => {
+  console.log(`🔍 getMyShop - User: ${req.user.email} (ID: ${req.user.id})`);
+  
   const shop = await Shop.findOne({ owner: req.user.id }).populate('products');
 
   if (!shop) {
+    console.log(`   ❌ No shop found for user ${req.user.email}`);
     return res.status(404).json({
       success: false,
       message: 'Shop not found'
     });
   }
+
+  console.log(`   ✅ Found shop: "${shop.shopName}" (${shop.slug}), owner: ${shop.owner}`);
 
   // CRITICAL SECURITY CHECK: Verify shop ownership
   if (shop.owner.toString() !== req.user.id.toString()) {
