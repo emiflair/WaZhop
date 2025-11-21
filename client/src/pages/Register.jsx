@@ -106,7 +106,9 @@ const Register = () => {
       name: formData.name,
       email: formData.email,
       password: formData.password,
-      ...(formData.role === 'seller' && formData.whatsapp ? { whatsapp: formData.whatsapp } : {}),
+      ...(formData.role === 'seller' && formData.whatsapp ? { 
+        whatsapp: `+234${formData.whatsapp.replace(/^\+?234/, '')}` 
+      } : {}),
     };
 
     const result = await register(payload);
