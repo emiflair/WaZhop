@@ -69,8 +69,7 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
-  // Create user - NO automatic shop creation
-  // Shop will be created automatically when user adds their first product
+  // Create user
   const user = await User.create({
     name,
     email: normalizedEmail,
@@ -78,9 +77,32 @@ exports.register = asyncHandler(async (req, res) => {
     whatsapp: role === 'seller' ? normalizedWhatsApp : undefined,
     role,
     plan: 'free',
-    referredBy: referrerId,
-    shop: undefined // Shop will be created on first product addition
+    referredBy: referrerId
   });
+
+  // Automatically create default shop for sellers
+  if (role === 'seller') {
+    const shopName = `${name}'s Shop`;
+    const baseSlug = generateSlug(shopName);
+    const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+    await Shop.create({
+      owner: user._id,
+      shopName: shopName,
+      slug: uniqueSlug,
+      description: 'Welcome to my shop!',
+      category: 'other',
+      location: '',
+      showWatermark: true,
+      isActive: true,
+      theme: {
+        primaryColor: '#000000',
+        accentColor: '#FFD700',
+        layout: 'grid',
+        font: 'inter'
+      }
+    });
+  }
 
   // Respect platform security setting for email verification
   const settings = await PlatformSettings.getSettings();
