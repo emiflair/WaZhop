@@ -65,8 +65,10 @@ export default function Marketplace() {
         ...(priceRange.min && { minPrice: priceRange.min }),
         ...(priceRange.max && { maxPrice: priceRange.max })
       }
-      const list = await productAPI.getMarketplaceProducts(params)
-      const items = Array.isArray(list) ? list : []
+      const response = await productAPI.getMarketplaceProducts(params)
+      console.log('📦 Marketplace API response:', response)
+      // Handle response format: response.data or direct array
+      const items = response?.data || (Array.isArray(response) ? response : [])
       if (reset) {
         setProducts(items)
         setPage(1)
