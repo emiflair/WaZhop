@@ -17,7 +17,6 @@ const shopSchema = new mongoose.Schema({
   slug: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true,
     match: [/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens']
@@ -287,7 +286,7 @@ shopSchema.methods.incrementViews = async function () {
 };
 
 // Performance indexes for faster queries
-shopSchema.index({ slug: 1 }); // Already unique, but explicit for clarity
+shopSchema.index({ slug: 1 }, { unique: true }); // Unique slug index
 shopSchema.index({ owner: 1, isActive: 1 }); // Fast owner shop lookups
 shopSchema.index({ isActive: 1, isVerified: 1 }); // Marketplace queries
 shopSchema.index({ category: 1, isActive: 1 }); // Category filtering

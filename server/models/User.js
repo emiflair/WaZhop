@@ -47,8 +47,7 @@ const userSchema = new mongoose.Schema({
   // Email verification token + expiry
   emailVerificationToken: {
     type: String,
-    default: null,
-    index: true
+    default: null
   },
   emailVerificationExpires: {
     type: Date,
@@ -66,8 +65,7 @@ const userSchema = new mongoose.Schema({
   // Password reset token + expiry
   passwordResetToken: {
     type: String,
-    default: null,
-    index: true
+    default: null
   },
   passwordResetExpires: {
     type: Date,
@@ -128,9 +126,7 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   referralCode: {
-    type: String,
-    unique: true,
-    sparse: true
+    type: String
   },
   referredBy: {
     type: mongoose.Schema.Types.ObjectId,
