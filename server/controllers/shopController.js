@@ -640,7 +640,7 @@ exports.getMyShops = asyncHandler(async (req, res) => {
   // Count active and inactive shops (use aggregation for efficiency)
   const mongoose = require('mongoose');
   const statusCounts = await Shop.aggregate([
-    { $match: { owner: mongoose.Types.ObjectId(req.user.id) } },
+    { $match: { owner: new mongoose.Types.ObjectId(req.user.id) } },
     {
       $group: {
         _id: '$isActive',
