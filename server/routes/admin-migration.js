@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middlewares/auth');
+const { protect, isAdmin } = require('../middlewares/auth');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
 
 // @desc    Diagnose shop ownership issues (admin only)
 // @route   GET /api/admin/migrations/diagnose-shops
 // @access  Private/Admin
-router.get('/diagnose-shops', protect, authorize('admin'), async (req, res) => {
+router.get('/diagnose-shops', protect, isAdmin, async (req, res) => {
   try {
     const shops = await Shop.find().lean();
     const usersWithShops = await User.find({ shop: { $exists: true, $ne: null } }).lean();
@@ -75,7 +75,7 @@ router.get('/diagnose-shops', protect, authorize('admin'), async (req, res) => {
 // @desc    Fix user shop references (admin only)
 // @route   POST /api/admin/migrations/fix-shop-references
 // @access  Private/Admin
-router.post('/fix-shop-references', protect, authorize('admin'), async (req, res) => {
+router.post('/fix-shop-references', protect, isAdmin, async (req, res) => {
   try {
     const usersWithShops = await User.find({ shop: { $exists: true, $ne: null } });
     
