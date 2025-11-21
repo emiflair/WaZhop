@@ -605,17 +605,37 @@ exports.getMyShops = asyncHandler(async (req, res) => {
   // Add pagination support (users typically have 1-3 shops, but good practice)
   const { page = 1, limit = 20 } = req.query;
 
+  console.log(`🔍 getMyShops - User ID: ${req.user.id}, Type: ${typeof req.user.id}`);
+  
   const shops = await Shop.find({ owner: req.user.id })
     .sort({ createdAt: -1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)
     .lean(); // Use .lean() for better performance (returns plain JS objects)
 
+  console.log(`📊 Found ${shops.length} shops for user ${req.user.id}`);
+  console.log(`📋 Shop details:`, shops.map(s => ({ 
+    shopName: s.shopName, 
+    slug: s.slug, 
+    owner: s.owner, 
+    ownerType: typeof s.owner 
+  })));
+
+  // CRITICAL SECURITY CHECK: Filter out any shops that don't belong to this user
+  const validShops = shops.filter(shop => {
+    const isValid = shop.owner.toString() === req.user.id.toString();
+    if (!isValid) {
+      console.error(`🚨 SECURITY ALERT in getMyShops: User ${req.user.id} query returned shop ${shop._id} owned by ${shop.owner}`);
+    }
+    return isValid;
+  });
+
   const totalShops = await Shop.countDocuments({ owner: req.user.id });
 
   // Count active and inactive shops (use aggregation for efficiency)
+  const mongoose = require('mongoose');
   const statusCounts = await Shop.aggregate([
-    { $match: { owner: req.user._id } },
+    { $match: { owner: mongoose.Types.ObjectId(req.user.id) } },
     {
       $group: {
         _id: '$isActive',
@@ -630,8 +650,8 @@ exports.getMyShops = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: {
-      shops,
-      count: shops.length,
+      shops: validShops, // Return only validated shops
+      count: validShops.length,
       total: totalShops,
       page: Number(page),
       pages: Math.ceil(totalShops / limit),
