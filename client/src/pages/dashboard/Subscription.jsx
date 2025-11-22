@@ -65,12 +65,17 @@ const Subscription = () => {
       setLoading(true);
       const productsData = await productAPI.getMyProducts();
       const shopsData = await shopAPI.getMyShops();
-      setProducts(productsData);
+      
+      // Handle response format: productsData.data or productsData (array)
+      const userProducts = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+      setProducts(userProducts);
+      
       // Handle response format: shopsData.data.shops or shopsData.shops
       const userShops = shopsData?.data?.shops || shopsData?.shops || [];
       setShops(userShops);
-      if (Array.isArray(productsData) && productsData.length > 0) {
-        setBoostProductId(productsData[0]._id);
+      
+      if (userProducts.length > 0) {
+        setBoostProductId(userProducts[0]._id);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
