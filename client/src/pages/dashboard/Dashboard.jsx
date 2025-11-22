@@ -313,14 +313,15 @@ const Dashboard = () => {
             {shop && shop.slug ? (
               <button
                 onClick={() => openShopInBrowser(shop.slug)}
-                className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
+                className="btn btn-outline text-center text-sm sm:text-base touch-manipulation flex items-center justify-center gap-2"
               >
                 View Shop
+                <FiExternalLink size={16} />
               </button>
             ) : (
               <Link 
                 to="/dashboard/shop" 
-                className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
+                className="btn btn-outline text-center text-sm sm:text-base touch-manipulation"
               >
                 Create Shop
               </Link>
