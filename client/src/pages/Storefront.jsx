@@ -97,9 +97,13 @@ const Storefront = () => {
 
   const fetchShopBySlug = async (slugParam) => {
     try {
+      console.log('🔍 Fetching shop with slug:', slugParam);
       const shopData = await shopAPI.getShopBySlug(slugParam);
+      console.log('✅ Shop data received:', shopData);
       applyShopPayload(shopData);
     } catch (err) {
+      console.error('❌ Error fetching shop:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Shop not found');
     }
   };

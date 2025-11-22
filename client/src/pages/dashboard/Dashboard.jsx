@@ -78,7 +78,9 @@ const Dashboard = () => {
 
   // Open shop link in browser (not within PWA)
   const openShopInBrowser = (slug) => {
+    console.log('🏪 Opening shop with slug:', slug);
     const url = `${window.location.origin}/${slug}`;
+    console.log('🔗 Shop URL:', url);
     
     // Check if running as PWA (standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -300,8 +302,19 @@ const Dashboard = () => {
             <Link to="/dashboard/shop" className="btn btn-outline text-center text-sm sm:text-base touch-manipulation">
               Customize Shop
             </Link>
-            <button 
-              onClick={() => shop && openShopInBrowser(shop.slug)}
+            <button
+              onClick={() => {
+                if (!shop) {
+                  alert('No shop data available');
+                  return;
+                }
+                if (!shop.slug) {
+                  alert('Shop slug is missing. Please contact support.');
+                  console.error('Shop data:', shop);
+                  return;
+                }
+                openShopInBrowser(shop.slug);
+              }}
               className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
             >
               View Shop
