@@ -120,14 +120,31 @@ const loadPublicShopWithProducts = async (criteria) => {
 exports.getShopBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
+  console.log(`🔍 Looking for shop with slug: "${slug}"`);
+
   const result = await loadPublicShopWithProducts({ slug });
 
   if (!result) {
+    console.log(`❌ Shop not found for slug: "${slug}"`);
+    
+    // Check if shop exists with different status
+    const anyShop = await Shop.findOne({ slug }).select('_id shopName isActive owner');
+    if (anyShop) {
+      console.log(`⚠️  Shop exists but couldn't be loaded:`, {
+        id: anyShop._id,
+        name: anyShop.shopName,
+        isActive: anyShop.isActive,
+        owner: anyShop.owner
+      });
+    }
+    
     return res.status(404).json({
       success: false,
       message: 'Shop not found'
     });
   }
+
+  console.log(`✅ Shop found: "${result.shop.shopName}" with ${result.products.length} products`);
 
   res.status(200).json({
     success: true,
