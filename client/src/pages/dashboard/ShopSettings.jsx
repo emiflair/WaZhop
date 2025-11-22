@@ -93,45 +93,48 @@ const ShopSettings = () => {
   const fetchShop = async () => {
     try {
       setLoading(true);
-      const data = await shopAPI.getMyShop(shopId);
-      setShop(data);
+      const response = await shopAPI.getMyShop(shopId);
+      
+      // Extract shop data from response (handle both response.data and direct response)
+      const shopData = response?.data || response;
+      setShop(shopData);
       
       // Populate form - map backend field names to form field names
       setFormData({
-        name: data.shopName || '',
-        description: data.description || '',
-        slug: data.slug || '',
-        category: data.category || '',
-        location: data.location || '',
+        name: shopData.shopName || '',
+        description: shopData.description || '',
+        slug: shopData.slug || '',
+        category: shopData.category || '',
+        location: shopData.location || '',
         theme: {
-          mode: data.theme?.mode || 'light'
+          mode: shopData.theme?.mode || 'light'
         }
       });
 
       // Populate theme
       setTheme({
-        primaryColor: data.theme?.primaryColor || '#f97316',
-        accentColor: data.theme?.accentColor || '#3b82f6',
-        layout: data.theme?.layout || 'grid',
-        fontFamily: data.theme?.font || 'inter'
+        primaryColor: shopData.theme?.primaryColor || '#f97316',
+        accentColor: shopData.theme?.accentColor || '#3b82f6',
+        layout: shopData.theme?.layout || 'grid',
+        fontFamily: shopData.theme?.font || 'inter'
       });
 
       // Populate social links
       setSocialLinks({
-        instagram: data.socialLinks?.instagram || '',
-        facebook: data.socialLinks?.facebook || '',
-        twitter: data.socialLinks?.twitter || '',
-        tiktok: data.socialLinks?.tiktok || ''
+        instagram: shopData.socialLinks?.instagram || '',
+        facebook: shopData.socialLinks?.facebook || '',
+        twitter: shopData.socialLinks?.twitter || '',
+        tiktok: shopData.socialLinks?.tiktok || ''
       });
 
       // Populate custom domain
-      setCustomDomain(data.customDomain || '');
-      setDomainVerified(data.domainVerified || false);
-      setDomainVerificationToken(data.domainVerificationToken || '');
+      setCustomDomain(shopData.customDomain || '');
+      setDomainVerified(shopData.domainVerified || false);
+      setDomainVerificationToken(shopData.domainVerificationToken || '');
 
       // Set image previews
-      if (data.logo) setLogoPreview(data.logo);
-      if (data.banner) setBannerPreview(data.banner);
+      if (shopData.logo) setLogoPreview(shopData.logo);
+      if (shopData.banner) setBannerPreview(shopData.banner);
 
     } catch (error) {
       console.error('Error fetching shop:', error);

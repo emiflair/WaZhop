@@ -44,24 +44,29 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [shopData, shopsData, productsData] = await Promise.all([
-        shopAPI.getMyShop(),
+      const [shopsData, productsData] = await Promise.all([
         shopAPI.getMyShops(),
         productAPI.getMyProducts(),
       ]);
 
-      setShop(shopData);
-      setShops(shopsData.shops || []);
+      // Extract nested data from API response
+      const userShops = shopsData?.data?.shops || shopsData?.shops || [];
+      setShops(userShops);
+      
+      // Use the first active shop as the primary shop for dashboard display
+      const primaryShop = userShops.find(s => s.isActive) || userShops[0] || null;
+      setShop(primaryShop);
 
       // Calculate stats
-      const activeCount = productsData.filter((p) => p.isActive).length;
-      const totalViews = productsData.reduce((sum, p) => sum + p.views, 0);
-      const totalClicks = productsData.reduce((sum, p) => sum + p.clicks, 0);
+      const userProducts = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+      const activeCount = userProducts.filter((p) => p.isActive).length;
+      const totalViews = userProducts.reduce((sum, p) => sum + p.views, 0);
+      const totalClicks = userProducts.reduce((sum, p) => sum + p.clicks, 0);
 
       setStats({
-        totalProducts: productsData.length,
+        totalProducts: userProducts.length,
         activeProducts: activeCount,
-        views: totalViews + (shopData.views || 0),
+        views: totalViews + (primaryShop?.views || 0),
         clicks: totalClicks,
       });
     } catch (error) {
@@ -78,7 +83,9 @@ const Dashboard = () => {
 
   // Open shop link in browser (not within PWA)
   const openShopInBrowser = (slug) => {
+    console.log('🏪 Opening shop with slug:', slug);
     const url = `${window.location.origin}/${slug}`;
+    console.log('🔗 Shop URL:', url);
     
     // Check if running as PWA (standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -300,12 +307,22 @@ const Dashboard = () => {
             <Link to="/dashboard/shop" className="btn btn-outline text-center text-sm sm:text-base touch-manipulation">
               Customize Shop
             </Link>
-            <button 
-              onClick={() => shop && openShopInBrowser(shop.slug)}
-              className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
-            >
-              View Shop
-            </button>
+            {shop && shop.slug ? (
+              <button
+                onClick={() => openShopInBrowser(shop.slug)}
+                className="btn btn-outline text-center text-sm sm:text-base touch-manipulation flex items-center justify-center gap-2"
+              >
+                View Shop
+                <FiExternalLink size={16} />
+              </button>
+            ) : (
+              <Link 
+                to="/dashboard/shops" 
+                className="btn btn-outline text-center text-sm sm:text-base touch-manipulation"
+              >
+                Create Shop
+              </Link>
+            )}
           </div>
         </div>
 

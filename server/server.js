@@ -41,14 +41,9 @@ const healthRoutes = require('./routes/health');
 // Import cron jobs
 const { startSubscriptionCron } = require('./utils/subscriptionCron');
 
-// Import cache manager
-const cache = require('./utils/cache');
 const { enableQueryLogging } = require('./middlewares/queryMonitor');
 
 const app = express();
-
-// Initialize Redis cache
-cache.initRedis();
 
 // Trust proxy (important for Railway, Vercel, etc.)
 app.set('trust proxy', 1);

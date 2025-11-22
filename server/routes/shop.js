@@ -27,13 +27,12 @@ const {
   checkThemeCustomizationAccess,
   checkPremiumTemplateAccess
 } = require('../middlewares/planLimits');
-const { cacheMiddleware, CACHE_TTL } = require('../utils/cache');
 const {
   validateImage,
   imageUploadRateLimiter
 } = require('../middlewares/imageOptimization');
 
-// Protected routes (must come before dynamic routes) - NO CACHING for user-specific data
+// Protected routes (must come before dynamic routes)
 router.get('/my/shop', protect, requireRole('seller'), getMyShop);
 router.get('/my/shops', protect, requireRole('seller'), getMyShops);
 router.post('/', protect, requireRole('seller'), checkShopLimit, moderateText, createShop);
@@ -50,7 +49,7 @@ router.put('/my/domain', protect, requireRole('seller'), checkCustomDomainAccess
 router.post('/my/domain/verify', protect, requireRole('seller'), checkCustomDomainAccess, verifyCustomDomain);
 router.delete('/my/domain', protect, requireRole('seller'), removeCustomDomain);
 
-// Public route (dynamic route must come last) - cached for performance
-router.get('/:slug', cacheMiddleware('shop-page', CACHE_TTL.SHOP_PAGE), getShopBySlug);
+// Public route (dynamic route must come last)
+router.get('/:slug', getShopBySlug);
 
 module.exports = router;

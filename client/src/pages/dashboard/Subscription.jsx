@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, productAPI, shopAPI } from '../../utils/api';
@@ -65,10 +65,17 @@ const Subscription = () => {
       setLoading(true);
       const productsData = await productAPI.getMyProducts();
       const shopsData = await shopAPI.getMyShops();
-      setProducts(productsData);
-      setShops(shopsData.shops || []);
-      if (Array.isArray(productsData) && productsData.length > 0) {
-        setBoostProductId(productsData[0]._id);
+      
+      // Handle response format: productsData.data or productsData (array)
+      const userProducts = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+      setProducts(userProducts);
+      
+      // Handle response format: shopsData.data.shops or shopsData.shops
+      const userShops = shopsData?.data?.shops || shopsData?.shops || [];
+      setShops(userShops);
+      
+      if (userProducts.length > 0) {
+        setBoostProductId(userProducts[0]._id);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -924,7 +931,7 @@ const Subscription = () => {
               {products.length === 0 ? (
                 <div className="space-y-3">
                   <p className="text-gray-700 dark:text-gray-300">You don’t have any products yet.</p>
-                  <a href="/dashboard/products" className="btn btn-primary inline-block">Add a Product</a>
+                  <Link to="/dashboard/products" className="btn btn-primary inline-block">Add a Product</Link>
                 </div>
               ) : (
                 <div className="space-y-4">

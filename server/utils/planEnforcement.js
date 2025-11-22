@@ -106,11 +106,15 @@ async function enforceFreePlanForUser(userId, options = {}) {
     await user.save();
   } else {
     // Restrictive mode: keep data but enforce limits by deactivating extras
+    // ALWAYS keep the primary (first) shop active, even on free plan
     if (!primaryShop.isActive) {
       primaryShop.isActive = true;
+      primaryShop.showBranding = true;
+      primaryShop.showWatermark = true;
       await primaryShop.save();
     }
-    // Deactivate all other shops
+    
+    // Deactivate all other shops (only if user has multiple shops)
     if (otherShops.length) {
       await Shop.updateMany(
         { _id: { $in: otherShops.map((s) => s._id) } },
@@ -119,8 +123,11 @@ async function enforceFreePlanForUser(userId, options = {}) {
       stats.deactivatedShops = otherShops.length;
     }
 
-    // Ensure branding on all shops
-    await Shop.updateMany({ owner: userId }, { $set: { showBranding: true, showWatermark: true } });
+    // Ensure branding on primary shop for free plan
+    await Shop.updateOne(
+      { _id: primaryShop._id },
+      { $set: { showBranding: true, showWatermark: true } }
+    );
   }
 
   return stats;

@@ -19,22 +19,21 @@ const {
 const { protect, checkPlanLimit, requireRole } = require('../middlewares/auth');
 const { upload } = require('../config/cloudinary');
 const { moderateProductContent } = require('../middlewares/contentModeration');
-const { cacheMiddleware, CACHE_TTL } = require('../utils/cache');
 const {
   validateImage,
   imageUploadRateLimiter,
   limitConcurrentUploads
 } = require('../middlewares/imageOptimization');
 
-// Public routes - cached for performance
-router.get('/marketplace', cacheMiddleware('marketplace', CACHE_TTL.MARKETPLACE_LISTINGS), getMarketplaceProducts);
+// Public routes
+router.get('/marketplace', getMarketplaceProducts);
 
-// Protected routes - place specific routes before dynamic :id routes - NO CACHING
+// Protected routes - place specific routes before dynamic :id routes
 router.get('/my/products', protect, requireRole('seller'), getMyProducts);
 
-// Dynamic routes (must come after specific routes) - cached
-router.get('/:id', cacheMiddleware('product-detail', CACHE_TTL.PRODUCT_DETAIL), getProduct);
-router.get('/:id/related', cacheMiddleware('product-related', CACHE_TTL.PRODUCT_DETAIL), getRelatedProducts);
+// Dynamic routes (must come after specific routes)
+router.get('/:id', getProduct);
+router.get('/:id/related', getRelatedProducts);
 router.post('/:id/click', trackProductClick);
 router.post('/', protect, requireRole('seller'), checkPlanLimit('products'), imageUploadRateLimiter, upload.array('images', 5), limitConcurrentUploads, validateImage, moderateProductContent, createProduct);
 router.put('/:id', protect, requireRole('seller'), moderateProductContent, updateProduct);

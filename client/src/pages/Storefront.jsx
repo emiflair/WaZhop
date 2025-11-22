@@ -97,9 +97,18 @@ const Storefront = () => {
 
   const fetchShopBySlug = async (slugParam) => {
     try {
-      const shopData = await shopAPI.getShopBySlug(slugParam);
+      console.log('🔍 Fetching shop with slug:', slugParam);
+      const response = await shopAPI.getShopBySlug(slugParam);
+      console.log('✅ Full API response:', response);
+      
+      // Extract the data object from {success: true, data: {shop, products}}
+      const shopData = response.data || response;
+      console.log('✅ Shop data extracted:', shopData);
+      
       applyShopPayload(shopData);
     } catch (err) {
+      console.error('❌ Error fetching shop:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.message || 'Shop not found');
     }
   };

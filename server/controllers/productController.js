@@ -3,7 +3,6 @@ const Shop = require('../models/Shop');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { asyncHandler, paginate, paginationMeta, generateSlug } = require('../utils/helpers');
-const cache = require('../utils/cache');
 const { cloudinary } = require('../config/cloudinary');
 const {
   uploadImageSync,
@@ -282,11 +281,6 @@ exports.createProduct = asyncHandler(async (req, res) => {
     locationState: normState,
     locationArea: normArea
   });
-
-  // Invalidate relevant caches
-  await cache.invalidateCache('marketplace', '*'); // New product affects marketplace
-  await cache.invalidateCache('shop-products', shop._id.toString());
-  await cache.invalidateCache('shop-page', shop.slug);
 
   res.status(201).json({
     success: true,

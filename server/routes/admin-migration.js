@@ -133,4 +133,63 @@ router.post('/fix-shop-references', protect, isAdmin, async (req, res) => {
   }
 });
 
+// @desc    Reactivate primary shops for all users (admin only)
+// @route   POST /api/admin/migrations/reactivate-primary-shops
+// @access  Private/Admin
+router.post('/reactivate-primary-shops', protect, isAdmin, async (req, res) => {
+  try {
+    const users = await User.find({});
+    let reactivatedCount = 0;
+    let skippedCount = 0;
+    const details = [];
+
+    // Process all users
+    await Promise.all(users.map(async (user) => {
+      // Get user's shops sorted by creation date (oldest first = primary)
+      const shops = await Shop.find({ owner: user._id }).sort({ createdAt: 1 });
+
+      if (shops.length === 0) {
+        skippedCount++;
+        return;
+      }
+
+      const [primaryShop] = shops;
+
+      // Check if primary shop is inactive
+      if (!primaryShop.isActive) {
+        primaryShop.isActive = true;
+        primaryShop.showBranding = user.plan === 'free';
+        primaryShop.showWatermark = user.plan === 'free';
+        await primaryShop.save();
+        
+        reactivatedCount++;
+        details.push({
+          userEmail: user.email,
+          shopName: primaryShop.shopName,
+          shopSlug: primaryShop.slug,
+          action: 'reactivated'
+        });
+      } else {
+        skippedCount++;
+      }
+    }));
+
+    res.json({
+      success: true,
+      summary: {
+        totalUsers: users.length,
+        reactivated: reactivatedCount,
+        alreadyActive: skippedCount
+      },
+      details: details.slice(0, 50) // Limit details to first 50 for response size
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Migration failed',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

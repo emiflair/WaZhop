@@ -38,4 +38,7 @@ router.get('/revenue', adminController.getRevenue);
 // System activity
 router.get('/activity', adminController.getSystemActivity);
 
+// Debug: Check user shop status
+router.get('/debug/user-shop/:email', adminController.debugUserShop);
+
 module.exports = router;
