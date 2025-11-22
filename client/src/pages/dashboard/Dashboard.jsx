@@ -44,22 +44,17 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch shop data with error handling
-      let shopData = null;
-      try {
-        shopData = await shopAPI.getMyShop();
-      } catch (shopError) {
-        console.log('No shop found, user needs to create one');
-        shopData = null;
-      }
-
       const [shopsData, productsData] = await Promise.all([
         shopAPI.getMyShops(),
         productAPI.getMyProducts(),
       ]);
 
-      setShop(shopData);
-      setShops(shopsData.shops || []);
+      const userShops = shopsData.shops || [];
+      setShops(userShops);
+      
+      // Use the first active shop as the primary shop for dashboard display
+      const primaryShop = userShops.find(s => s.isActive) || userShops[0] || null;
+      setShop(primaryShop);
 
       // Calculate stats
       const activeCount = productsData.filter((p) => p.isActive).length;
@@ -69,7 +64,7 @@ const Dashboard = () => {
       setStats({
         totalProducts: productsData.length,
         activeProducts: activeCount,
-        views: totalViews + (shopData?.views || 0),
+        views: totalViews + (primaryShop?.views || 0),
         clicks: totalClicks,
       });
     } catch (error) {
