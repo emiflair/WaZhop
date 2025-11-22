@@ -66,7 +66,9 @@ const Subscription = () => {
       const productsData = await productAPI.getMyProducts();
       const shopsData = await shopAPI.getMyShops();
       setProducts(productsData);
-      setShops(shopsData.shops || []);
+      // Handle response format: shopsData.data.shops or shopsData.shops
+      const userShops = shopsData?.data?.shops || shopsData?.shops || [];
+      setShops(userShops);
       if (Array.isArray(productsData) && productsData.length > 0) {
         setBoostProductId(productsData[0]._id);
       }
