@@ -6,7 +6,6 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
 import StarRating from '../components/StarRating';
-import { getCachedData } from '../utils/prefetch';
 import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2 } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import toast from 'react-hot-toast';
@@ -56,52 +55,34 @@ export default function ProductDetail() {
         setLoading(true);
         setError(null);
         
-        // Check if product is already cached from prefetching
-        const cachedProduct = getCachedData(`product_${id}`);
-        if (cachedProduct) {
-          setProduct(cachedProduct);
+        // Fetch product directly
+        productAPI.getProduct(id).then(async (result) => {
+          const productData = result.data || result;
+          setProduct(productData);
           setLoading(false);
           
-          // Load shop and related products in background
-          if (cachedProduct?.shop?.slug) {
-            shopAPI.getShopBySlug(cachedProduct.shop.slug)
+          // Load shop if available
+          if (productData?.shop?.slug) {
+            shopAPI.getShopBySlug(productData.shop.slug)
               .then(s => setShop(s?.shop || s?.data?.shop || s))
-              .catch(() => setShop(cachedProduct.shop));
-          } else if (cachedProduct?.shop) {
-            setShop(cachedProduct.shop);
+              .catch(() => setShop(productData.shop));
+          } else if (productData?.shop) {
+            setShop(productData.shop);
           }
           
+          
+          // Check if shop is inactive
+          if (result?.shopInactive) {
+            setShopInactive(true);
+            toast.error(result.message || 'This shop is temporarily unavailable');
+          }
+          
+          // Fetch related products without blocking main content
           fetchRelatedProducts(id).catch(() => {});
-          
-          return;
-        }
-        
-        // Load product details first so UI can render immediately
-        const response = await productAPI.getProduct(id);
-        const prod = response?.data || response;
-        setProduct(prod);
-        setLoading(false);
-        
-        // Check if shop is inactive
-        if (response?.shopInactive) {
-          setShopInactive(true);
-          toast.error(response.message || 'This shop is temporarily unavailable');
-        }
-        
-        // Fetch full shop details (logo/profile) by slug
-        if (prod?.shop?.slug) {
-          try {
-            const s = await shopAPI.getShopBySlug(prod.shop.slug);
-            setShop(s?.shop || s?.data?.shop || s);
-          } catch (e) {
-            setShop(prod.shop);
-          }
-        } else if (prod?.shop) {
-          setShop(prod.shop);
-        }
-
-        // Fetch related products without blocking main content
-        fetchRelatedProducts(id).catch(() => {});
+        }).catch(error => {
+          setError(error.response?.data?.message || 'Product not found');
+          setLoading(false);
+        });
       } catch (e) {
         console.error('Product load error:', e);
         // Provide more specific error messages

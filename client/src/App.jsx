@@ -8,7 +8,6 @@ import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import VersionCheck from './components/VersionCheck'
 import { useTheme } from './context/ThemeContext'
-import { prefetchProducts } from './utils/prefetch'
 // v2.0.1 - Free upgrade support
 
 // Loading component

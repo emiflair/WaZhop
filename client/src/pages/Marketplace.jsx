@@ -3,7 +3,6 @@ import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, Fi
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
-import { prefetchProducts, prefetchProductDetail } from '../utils/prefetch'
 import { useDebounce } from '../hooks/useDebounce'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -121,8 +120,6 @@ export default function Marketplace() {
           ...(priceRange.min && { minPrice: priceRange.min }),
           ...(priceRange.max && { maxPrice: priceRange.max })
         };
-        
-        prefetchProducts(nextPageParams).catch(() => {});
       }
     };
 
@@ -533,10 +530,6 @@ function ProductCard({ product, onOpen, index = 0 }) {
   
   const handleMouseEnter = () => {
     setIsHovered(true);
-    // Only prefetch if user hovers for 500ms+ (shows real interest)
-    hoverTimerRef.current = setTimeout(() => {
-      prefetchProductDetail(product._id).catch(() => {});
-    }, 500);
   };
 
   const handleMouseLeave = () => {

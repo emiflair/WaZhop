@@ -1,5 +1,4 @@
 const Shop = require('../models/Shop');
-const cache = require('../utils/cache');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { asyncHandler, generateSlug } = require('../utils/helpers');
@@ -747,10 +746,6 @@ exports.createShop = asyncHandler(async (req, res) => {
       font: 'inter'
     }
   });
-
-  // Invalidate user's shop list cache
-  await cache.invalidateCache('user-shops', req.user.id);
-  await cache.invalidateCache('marketplace', '*'); // New shop affects marketplace
 
   res.status(201).json({
     success: true,

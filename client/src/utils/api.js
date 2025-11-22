@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { parseApiError, logError } from './errorHandler';
-import cacheManager, { CACHE_NAMESPACES, CACHE_TTL } from './cacheManager';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -66,7 +65,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling and caching
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
     // Clean up pending request
@@ -87,38 +86,7 @@ api.interceptors.response.use(
       return response;
     }
     
-    // Cache ONLY public endpoints (marketplace, public product/shop views)
-    if (response.config.method === 'get' && response.status === 200) {
-      const url = response.config.url;
-      let shouldCache = false;
-      let namespace = CACHE_NAMESPACES.API;
-      let ttl = CACHE_TTL.MEDIUM;
-      
-      // Only cache public, non-authenticated endpoints
-      if (url.includes('/products/marketplace')) {
-        shouldCache = true;
-        namespace = CACHE_NAMESPACES.MARKETPLACE;
-        ttl = CACHE_TTL.MEDIUM;
-      } else if (url.match(/\/products\/[a-f0-9]{24}$/)) {
-        // Cache individual public product view (GET /products/:id)
-        shouldCache = true;
-        namespace = CACHE_NAMESPACES.PRODUCTS;
-        ttl = CACHE_TTL.LONG;
-      } else if (url.match(/\/shops\/[a-z0-9-]+$/) && !url.includes('/my/')) {
-        // Cache public shop view by slug (GET /shops/:slug)
-        shouldCache = true;
-        namespace = CACHE_NAMESPACES.SHOP;
-        ttl = CACHE_TTL.LONG;
-      }
-      
-      if (shouldCache) {
-        const cacheKey = `${url}-${JSON.stringify(response.config.params || {})}`;
-        cacheManager.set(cacheKey, response.data, ttl, namespace);
-      }
-    }
-    
-    // Simplified response handling - always return full response.data
-    // Components will handle their own data extraction
+    // Return full response.data - components will handle their own data extraction
     return response.data;
   },
   (error) => {
