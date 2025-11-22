@@ -59,6 +59,10 @@ const Products = () => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]); // Track existing images with IDs
   const [uploading, setUploading] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [showVariants, setShowVariants] = useState(false);
+  const [newVariantName, setNewVariantName] = useState('');
+  const [newVariantOption, setNewVariantOption] = useState({ value: '', price: '', stock: '' });
 
   // Categories are free-form; suggestions come from CATEGORY_SUGGESTIONS
 
@@ -218,6 +222,7 @@ const Products = () => {
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
+        variants: variants.length > 0 ? variants : undefined,
       };
 
       // Normalize category: lowercase slug and fallback to 'other'
@@ -358,6 +363,15 @@ const Products = () => {
       setImagePreviews([]);
     }
     setImages([]); // Clear new images (only show existing)
+    
+    // Load variants if they exist
+    if (product.variants && product.variants.length > 0) {
+      setVariants(product.variants);
+      setShowVariants(true);
+    } else {
+      setVariants([]);
+      setShowVariants(false);
+    }
     
     setShowModal(true);
   };
@@ -543,6 +557,10 @@ const Products = () => {
     setQuickAddMode(false);
     setBulkUploadMode(false);
     setBulkProducts([]);
+    setVariants([]);
+    setShowVariants(false);
+    setNewVariantName('');
+    setNewVariantOption({ value: '', price: '', stock: '' });
   };
 
   const getPlanLimits = () => {
@@ -1460,6 +1478,163 @@ const Products = () => {
                       placeholder="leather, women, handbag"
                     />
                   </div>
+                </div>
+
+                {/* Product Variants (Size, Color, etc.) */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <label className="label text-sm sm:text-base mb-0">Product Variants (Optional)</label>
+                      <p className="text-xs text-gray-500 mt-1">Add sizes, colors, or other variants</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowVariants(!showVariants)}
+                      className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      {showVariants ? 'Hide' : 'Add Variants'}
+                    </button>
+                  </div>
+
+                  {showVariants && (
+                    <div className="space-y-4">
+                      {/* Add New Variant Type */}
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                            Variant Type (e.g., Size, Color)
+                          </label>
+                          <input
+                            type="text"
+                            value={newVariantName}
+                            onChange={(e) => setNewVariantName(e.target.value)}
+                            className="input text-sm w-full"
+                            placeholder="Size"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                              Option *
+                            </label>
+                            <input
+                              type="text"
+                              value={newVariantOption.value}
+                              onChange={(e) => setNewVariantOption({ ...newVariantOption, value: e.target.value })}
+                              className="input text-sm"
+                              placeholder="Small"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                              Extra Price (₦)
+                            </label>
+                            <input
+                              type="number"
+                              value={newVariantOption.price}
+                              onChange={(e) => setNewVariantOption({ ...newVariantOption, price: e.target.value })}
+                              className="input text-sm"
+                              placeholder="0"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                              Stock
+                            </label>
+                            <input
+                              type="number"
+                              value={newVariantOption.stock}
+                              onChange={(e) => setNewVariantOption({ ...newVariantOption, stock: e.target.value })}
+                              className="input text-sm"
+                              placeholder="10"
+                              min="0"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newVariantName && newVariantOption.value) {
+                              const existingVariant = variants.find(v => v.name === newVariantName);
+                              if (existingVariant) {
+                                setVariants(variants.map(v => 
+                                  v.name === newVariantName
+                                    ? { ...v, options: [...v.options, { 
+                                        value: newVariantOption.value,
+                                        price: parseFloat(newVariantOption.price) || 0,
+                                        stock: parseInt(newVariantOption.stock) || null
+                                      }]}
+                                    : v
+                                ));
+                              } else {
+                                setVariants([...variants, {
+                                  name: newVariantName,
+                                  options: [{ 
+                                    value: newVariantOption.value,
+                                    price: parseFloat(newVariantOption.price) || 0,
+                                    stock: parseInt(newVariantOption.stock) || null
+                                  }]
+                                }]);
+                              }
+                              setNewVariantOption({ value: '', price: '', stock: '' });
+                              toast.success('Variant option added');
+                            }
+                          }}
+                          className="btn btn-sm btn-outline w-full"
+                        >
+                          <FiPlus className="mr-1" size={14} /> Add Option
+                        </button>
+                      </div>
+
+                      {/* Display Existing Variants */}
+                      {variants.length > 0 && (
+                        <div className="space-y-3">
+                          {variants.map((variant, vIndex) => (
+                            <div key={vIndex} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                  {variant.name}
+                                </h4>
+                                <button
+                                  type="button"
+                                  onClick={() => setVariants(variants.filter((_, i) => i !== vIndex))}
+                                  className="text-xs text-red-600 hover:text-red-700"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                              <div className="space-y-1">
+                                {variant.options.map((option, oIndex) => (
+                                  <div key={oIndex} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+                                    <span className="text-gray-700 dark:text-gray-300">{option.value}</span>
+                                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                      {option.price > 0 && <span>+₦{option.price}</span>}
+                                      {option.stock && <span>Stock: {option.stock}</span>}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updated = [...variants];
+                                          updated[vIndex].options = updated[vIndex].options.filter((_, i) => i !== oIndex);
+                                          if (updated[vIndex].options.length === 0) {
+                                            updated.splice(vIndex, 1);
+                                          }
+                                          setVariants(updated);
+                                        }}
+                                        className="text-red-600 hover:text-red-700 ml-2"
+                                      >
+                                        <FiX size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Location Targeting */}
