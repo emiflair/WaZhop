@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, productAPI, shopAPI } from '../../utils/api';
@@ -931,7 +931,7 @@ const Subscription = () => {
               {products.length === 0 ? (
                 <div className="space-y-3">
                   <p className="text-gray-700 dark:text-gray-300">You don’t have any products yet.</p>
-                  <a href="/dashboard/products" className="btn btn-primary inline-block">Add a Product</a>
+                  <Link to="/dashboard/products" className="btn btn-primary inline-block">Add a Product</Link>
                 </div>
               ) : (
                 <div className="space-y-4">
