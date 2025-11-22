@@ -718,3 +718,55 @@ exports.getRevenue = asyncHandler(async (req, res) => {
     }
   });
 });
+
+// @desc    Debug user shop status
+// @route   GET /api/admin/debug/user-shop/:email
+// @access  Admin only
+exports.debugUserShop = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+
+  // Find user
+  const user = await User.findOne({ email }).lean();
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Find all shops owned by this user
+  const shops = await Shop.find({ owner: user._id }).lean();
+
+  const shopDetails = shops.map((shop, index) => ({
+    index: index + 1,
+    isPrimary: index === 0,
+    name: shop.shopName,
+    slug: shop.slug,
+    url: `https://wazhop.ng/${shop.slug}`,
+    isActive: shop.isActive,
+    created: shop.createdAt,
+    productsCount: 0 // Can add product count if needed
+  }));
+
+  const primaryShopInactive = shops.length > 0 && !shops[0].isActive;
+
+  res.json({
+    success: true,
+    data: {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        plan: user.plan,
+        shopReference: user.shop || null
+      },
+      shops: shopDetails,
+      totalShops: shops.length,
+      primaryShopInactive,
+      issue: primaryShopInactive ? 'Primary shop is inactive - this causes "Shop Not Found" error' : null,
+      fix: primaryShopInactive ? 'Run POST /api/admin/migrations/reactivate-primary-shops to fix' : null
+    }
+  });
+});
