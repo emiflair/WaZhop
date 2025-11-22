@@ -49,7 +49,8 @@ const Dashboard = () => {
         productAPI.getMyProducts(),
       ]);
 
-      const userShops = shopsData.shops || [];
+      // Extract nested data from API response
+      const userShops = shopsData?.data?.shops || shopsData?.shops || [];
       setShops(userShops);
       
       // Use the first active shop as the primary shop for dashboard display
@@ -57,12 +58,13 @@ const Dashboard = () => {
       setShop(primaryShop);
 
       // Calculate stats
-      const activeCount = productsData.filter((p) => p.isActive).length;
-      const totalViews = productsData.reduce((sum, p) => sum + p.views, 0);
-      const totalClicks = productsData.reduce((sum, p) => sum + p.clicks, 0);
+      const userProducts = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+      const activeCount = userProducts.filter((p) => p.isActive).length;
+      const totalViews = userProducts.reduce((sum, p) => sum + p.views, 0);
+      const totalClicks = userProducts.reduce((sum, p) => sum + p.clicks, 0);
 
       setStats({
-        totalProducts: productsData.length,
+        totalProducts: userProducts.length,
         activeProducts: activeCount,
         views: totalViews + (primaryShop?.views || 0),
         clicks: totalClicks,
