@@ -130,7 +130,67 @@ const Products = () => {
     setFilteredProducts(filtered);
   };
 
-  const handleImageSelect = (e) => {
+  // Compress image before upload
+  const compressImage = async (file, maxSizeMB = 1) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions (max 1920px width, maintain aspect ratio)
+          const maxWidth = 1920;
+          const maxHeight = 1920;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Try different quality levels to hit target size
+          let quality = 0.9;
+          const tryCompress = () => {
+            canvas.toBlob(
+              (blob) => {
+                const sizeMB = blob.size / 1024 / 1024;
+                if (sizeMB > maxSizeMB && quality > 0.5) {
+                  quality -= 0.1;
+                  tryCompress();
+                } else {
+                  // Convert blob to file
+                  const compressedFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                  });
+                  resolve(compressedFile);
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+          tryCompress();
+        };
+      };
+    });
+  };
+
+  const handleImageSelect = async (e) => {
     const files = Array.from(e.target.files);
     
     // Check total images (existing + new)
@@ -142,17 +202,31 @@ const Products = () => {
 
     // Only allow up to 5 in total
     const remaining = 5 - imagePreviews.length;
-    const toAdd = files.slice(0, Math.max(0, remaining));
-    setImages([...images, ...toAdd]);
+    const filesToAdd = files.slice(0, Math.max(0, remaining));
+    
+    // Compress images before adding
+    toast.loading('Compressing images...', { id: 'compress' });
+    try {
+      const compressedFiles = await Promise.all(
+        filesToAdd.map(file => compressImage(file, 1)) // Max 1MB per image
+      );
+      
+      setImages([...images, ...compressedFiles]);
 
-    // Create previews
-    toAdd.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+      // Create previews
+      compressedFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews((prev) => [...prev, reader.result]);
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      toast.success(`${compressedFiles.length} image(s) compressed and ready`, { id: 'compress' });
+    } catch (error) {
+      toast.error('Failed to compress images', { id: 'compress' });
+      console.error('Compression error:', error);
+    }
   };
 
   const removeImage = async (index) => {
@@ -267,23 +341,34 @@ const Products = () => {
     }
   };
 
-  const handleBulkImageUpload = (e) => {
+  const handleBulkImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Create a product entry for each image
-    const newBulkProducts = files.map((file, index) => ({
-      id: `bulk-${Date.now()}-${index}`,
-      name: '',
-      price: '',
-      category: '',
-      subcategory: '',
-      image: file,
-      imagePreview: URL.createObjectURL(file)
-    }));
+    // Compress images before creating product entries
+    toast.loading('Compressing images...', { id: 'bulk-compress' });
+    try {
+      const compressedFiles = await Promise.all(
+        files.map(file => compressImage(file, 1))
+      );
 
-    setBulkProducts([...bulkProducts, ...newBulkProducts]);
-    toast.success(`${files.length} image(s) added. Fill in details below.`);
+      // Create a product entry for each image
+      const newBulkProducts = compressedFiles.map((file, index) => ({
+        id: `bulk-${Date.now()}-${index}`,
+        name: '',
+        price: '',
+        category: '',
+        subcategory: '',
+        image: file,
+        imagePreview: URL.createObjectURL(file)
+      }));
+
+      setBulkProducts([...bulkProducts, ...newBulkProducts]);
+      toast.success(`${compressedFiles.length} image(s) compressed and ready`, { id: 'bulk-compress' });
+    } catch (error) {
+      toast.error('Failed to compress images', { id: 'bulk-compress' });
+      console.error('Bulk compression error:', error);
+    }
   };
 
   const updateBulkProduct = (id, field, value) => {

@@ -16,8 +16,8 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
   };
 
   const getDiscountPercentage = () => {
-    if (product.compareAtPrice && product.compareAtPrice > product.price) {
-      return Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100);
+    if (product.comparePrice && product.comparePrice > product.price) {
+      return Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100);
     }
     return 0;
   };
@@ -148,9 +148,9 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
           <span className="text-2xl font-bold" style={{ color: colors?.primary }}>
             {formatPrice(product.price)}
           </span>
-          {product.compareAtPrice && product.compareAtPrice > product.price && (
+          {product.comparePrice && product.comparePrice > product.price && (
             <span className="text-sm line-through opacity-50" style={{ color: colors?.text }}>
-              {formatPrice(product.compareAtPrice)}
+              {formatPrice(product.comparePrice)}
             </span>
           )}
         </div>
