@@ -136,6 +136,11 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
 
   console.log(`✅ Shop found: "${result.shop.shopName}" with ${result.products.length} products`);
 
+  // Prevent caching to ensure fresh shop/product data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   res.status(200).json({
     success: true,
     data: result

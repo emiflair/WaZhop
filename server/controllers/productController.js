@@ -150,8 +150,10 @@ exports.getProduct = asyncHandler(async (req, res) => {
   // Increment view count
   await product.incrementViews();
 
-  // Cache product details for 2 minutes (views still increment server-side)
-  res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=60');
+  // Prevent caching to ensure fresh product data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   res.status(200).json({
     success: true,
@@ -822,6 +824,11 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
     })
   );
 
+  // Prevent caching of marketplace data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   res.status(200).json({
     success: true,
     data: enriched,
