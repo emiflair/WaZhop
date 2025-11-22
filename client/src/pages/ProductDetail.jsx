@@ -40,9 +40,12 @@ export default function ProductDetail() {
     try {
       setLoadingRelated(true);
       const relatedRes = await productAPI.getRelatedProducts(productId, 8);
-      const related = relatedRes?.data || relatedRes || [];
+      console.log('📦 Related products response:', relatedRes);
+      const related = relatedRes?.data?.data || relatedRes?.data || relatedRes || [];
+      console.log('✅ Related products extracted:', related);
       setRelatedProducts(Array.isArray(related) ? related : []);
-    } catch {
+    } catch (error) {
+      console.error('❌ Failed to fetch related products:', error);
       setRelatedProducts([]);
     } finally {
       setLoadingRelated(false);
@@ -146,50 +149,8 @@ export default function ProductDetail() {
     };
   }, [shop, location]);
 
-  // fetch reviews when product changes (related products already loaded in parallel)
+  // Fetch reviews when product changes
   useEffect(() => {
-    const fetchRelated = async () => {
-      if (!product?.category) return;
-      
-      // Skip fetching related products if already loaded from initial parallel request
-      if (relatedProducts.length > 0) {
-        return;
-      }
-      
-      try {
-        setLoadingRelated(true);
-        
-        // First, try to get products from same subcategory (most relevant)
-        let items = [];
-        if (product.subcategory) {
-          const subcatList = await productAPI.getMarketplaceProducts({ 
-            category: product.category, 
-            subcategory: product.subcategory,
-            limit: 12 
-          });
-          items = Array.isArray(subcatList) ? subcatList : [];
-        }
-        
-        // If not enough from subcategory, fill with same category products
-        if (items.length < 8) {
-          const catList = await productAPI.getMarketplaceProducts({ 
-            category: product.category, 
-            limit: 12 
-          });
-          const catItems = Array.isArray(catList) ? catList : [];
-          // Merge without duplicates
-          const existingIds = new Set(items.map(p => p._id));
-          const additionalItems = catItems.filter(p => !existingIds.has(p._id));
-          items = [...items, ...additionalItems];
-        }
-        
-        setRelatedProducts(items.filter((p) => p._id !== product._id).slice(0, 8));
-      } catch {
-        setRelatedProducts([]);
-      } finally {
-        setLoadingRelated(false);
-      }
-    };
     const fetchReviews = async () => {
       if (!product?._id) return;
       try {
@@ -202,9 +163,8 @@ export default function ProductDetail() {
         // ignore
       }
     };
-    fetchRelated();
     fetchReviews();
-  }, [product?._id, product?.category, reviewPage]);
+  }, [product?._id, reviewPage]);
 
   const images = useMemo(() => (Array.isArray(product?.images) ? product.images : []), [product]);
   const currency = shop?.paymentSettings?.currency || 'NGN';
