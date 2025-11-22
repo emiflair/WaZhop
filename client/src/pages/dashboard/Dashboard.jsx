@@ -315,7 +315,7 @@ const Dashboard = () => {
               </button>
             ) : (
               <Link 
-                to="/dashboard/shop" 
+                to="/dashboard/shops" 
                 className="btn btn-outline text-center text-sm sm:text-base touch-manipulation"
               >
                 Create Shop
