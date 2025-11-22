@@ -39,7 +39,7 @@ export default function ProductDetail() {
   const fetchRelatedProducts = useCallback(async (productId) => {
     try {
       setLoadingRelated(true);
-      const relatedRes = await productAPI.getRelatedProducts(productId, 8);
+      const relatedRes = await productAPI.getRelatedProducts(productId, 6);
       console.log('📦 Related products response:', relatedRes);
       const related = relatedRes?.data?.data || relatedRes?.data || relatedRes || [];
       console.log('✅ Related products extracted:', related);
@@ -501,7 +501,7 @@ export default function ProductDetail() {
           ) : !Array.isArray(relatedProducts) || relatedProducts.length === 0 ? (
             <p className="text-gray-500">No related products found.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               {relatedProducts.map((rp) => (
                 <Link 
                   key={rp._id} 

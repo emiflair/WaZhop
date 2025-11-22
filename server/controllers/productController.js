@@ -228,25 +228,27 @@ exports.createProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Upload images if provided (using optimized processing)
+  // Upload images if provided (using optimized parallel processing)
   const images = [];
   if (req.files && req.files.length > 0) {
     // Check if Cloudinary is configured
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {
-        // Use optimized image processor with compression
-        for (let i = 0; i < req.files.length; i++) {
-          const result = await uploadImageSync(
-            req.files[i].buffer,
+        // Use parallel upload for faster processing
+        const uploadPromises = req.files.map((file, i) => 
+          uploadImageSync(
+            file.buffer,
             'wazhop/products',
             'product' // Apply product-specific compression
-          );
-          images.push({
+          ).then(result => ({
             url: result.secure_url,
             publicId: result.public_id,
             isPrimary: i === 0 // First image is primary
-          });
-        }
+          }))
+        );
+        
+        const uploadedImages = await Promise.all(uploadPromises);
+        images.push(...uploadedImages);
       } catch (error) {
         console.error('Image upload error:', error);
         return res.status(500).json({
@@ -284,9 +286,19 @@ exports.createProduct = asyncHandler(async (req, res) => {
     locationArea: normArea
   });
 
+  // Send minimal response for faster UI update
   res.status(201).json({
     success: true,
-    data: product,
+    data: {
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      comparePrice: product.comparePrice,
+      images: product.images,
+      inStock: product.inStock,
+      category: product.category,
+      createdAt: product.createdAt
+    },
     message: 'Product created successfully'
   });
 });
@@ -921,7 +933,7 @@ exports.getBoostStatus = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id/related
 // @access  Public
 exports.getRelatedProducts = asyncHandler(async (req, res) => {
-  const { limit = 8 } = req.query;
+  const { limit = 6 } = req.query;
 
   // Get the product to find related items
   const product = await Product.findById(req.params.id).select('category subcategory shop').lean();

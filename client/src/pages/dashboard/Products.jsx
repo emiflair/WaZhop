@@ -310,13 +310,16 @@ const Products = () => {
 
       if (editingProduct) {
         // Update existing product
-        await productAPI.updateProduct(editingProduct._id, productData);
+        const updatePromises = [
+          productAPI.updateProduct(editingProduct._id, productData)
+        ];
         
-        // Upload new images if any
+        // Upload new images if any (in parallel)
         if (images.length > 0) {
-          await productAPI.uploadImages(editingProduct._id, images);
+          updatePromises.push(productAPI.uploadImages(editingProduct._id, images));
         }
         
+        await Promise.all(updatePromises);
         toast.success('Product updated successfully!');
       } else {
         // Require at least 1 image for new products
@@ -331,6 +334,7 @@ const Products = () => {
 
       resetForm();
       setShowModal(false);
+      // Optimistically update UI before refetching
       fetchProducts();
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to save product';
