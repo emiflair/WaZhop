@@ -20,13 +20,33 @@ export const CATEGORIES_WITH_SUBCATEGORIES = {
     label: 'Beauty & Personal Care',
     subcategories: [
       'bath-and-body',
+      'body-lotions',
+      'deodorants',
+      'face-masks',
+      'face-wash',
+      'facial-care',
+      'foot-care',
       'fragrances',
       'hair-care',
+      'hair-color',
+      'hair-extensions',
+      'hair-styling',
+      'hand-care',
+      'lip-care',
       'makeup',
+      'manicure-pedicure',
       'mens-grooming',
+      'nail-care',
       'oral-care',
+      'perfumes',
+      'razors-and-shavers',
+      'shampoo-and-conditioner',
+      'shaving-products',
       'skincare',
-      'tools-and-accessories'
+      'soaps',
+      'sunscreen',
+      'tools-and-accessories',
+      'wigs-and-hairpieces'
     ]
   },
   'commercial-equipment-and-tools': {
@@ -48,18 +68,34 @@ export const CATEGORIES_WITH_SUBCATEGORIES = {
   'electronics': {
     label: 'Electronics',
     subcategories: [
+      'air-conditioners',
       'audio-and-speakers',
+      'bluetooth-devices',
+      'cables-and-adapters',
       'cameras-and-photography',
+      'chargers-and-batteries',
+      'computer-accessories',
       'computers-and-laptops',
+      'drones',
       'gaming-consoles',
       'headphones-and-earbuds',
+      'home-automation',
       'home-theater',
+      'keyboards-and-mice',
+      'microphones',
+      'monitors',
       'networking-equipment',
+      'power-banks',
       'printers-and-scanners',
       'projectors',
+      'routers',
+      'security-cameras',
       'smart-home-devices',
       'storage-devices',
       'tv-and-video',
+      'usb-devices',
+      'video-game-accessories',
+      'webcams',
       'wearable-technology'
     ]
   },
@@ -67,10 +103,39 @@ export const CATEGORIES_WITH_SUBCATEGORIES = {
     label: 'Fashion',
     subcategories: [
       'bags',
+      'belts',
       'clothing',
       'clothing-accessories',
+      'dresses',
+      'ethnic-wear',
+      'eyewear',
+      'gloves',
+      'hats-and-caps',
+      'innerwear',
+      'jackets-and-coats',
+      'jeans',
       'jewelry',
+      'kaftans',
+      'lingerie',
+      'native-wear',
+      'scarves',
+      'shirts-and-tops',
       'shoes',
+      'shorts',
+      'skirts',
+      'sleepwear',
+      'socks',
+      'sportswear',
+      'suits',
+      'sunglasses',
+      'sweaters',
+      'swimwear',
+      'ties',
+      'traditional-attire',
+      'trousers',
+      'tshirts',
+      'underwear',
+      'uniforms',
       'watches',
       'wedding-wear-and-accessories'
     ]
@@ -81,16 +146,32 @@ export const CATEGORIES_WITH_SUBCATEGORIES = {
       'agricultural-products',
       'bakery-items',
       'beverages',
+      'canned-foods',
       'cereals-and-grains',
+      'condiments',
+      'cooking-oil',
       'dairy-products',
+      'dried-foods',
       'farming-supplies',
+      'fertilizers',
+      'fresh-fruits',
       'fresh-produce',
+      'fresh-vegetables',
+      'frozen-foods',
+      'herbs',
+      'honey',
       'livestock',
       'meat-and-poultry',
+      'nuts-and-seeds',
+      'organic-foods',
       'packaged-foods',
+      'pasta-and-noodles',
+      'rice',
       'seafood',
       'seeds-and-plants',
-      'spices-and-seasonings'
+      'snacks',
+      'spices-and-seasonings',
+      'tea-and-coffee'
     ]
   },
   'home-furniture-and-appliances': {
@@ -208,17 +289,179 @@ export const CATEGORIES_WITH_SUBCATEGORIES = {
   'vehicles': {
     label: 'Vehicles',
     subcategories: [
+      'atv-and-utv',
       'auto-parts-and-accessories',
       'bicycles',
       'boats-and-watercraft',
       'buses-and-commercial',
-      'car-electronics',
+      'car-audio',
+      'car-batteries',
       'car-care',
+      'car-electronics',
+      'car-exterior-accessories',
+      'car-interior-accessories',
+      'car-lights',
+      'car-oils-and-fluids',
+      'car-tires',
+      'electric-vehicles',
+      'engines-and-parts',
+      'motorcycle-parts',
       'motorcycles',
       'private-cars',
       'recreational-vehicles',
+      'scooters',
       'trailers',
-      'trucks'
+      'tricycles',
+      'trucks',
+      'vehicle-tools'
+    ]
+  },
+  'health-and-medical': {
+    label: 'Health & Medical',
+    subcategories: [
+      'first-aid-supplies',
+      'health-monitors',
+      'medical-supplies',
+      'mobility-aids',
+      'supplements-and-vitamins',
+      'personal-care-devices',
+      'therapy-equipment',
+      'prescription-items'
+    ]
+  },
+  'office-and-school-supplies': {
+    label: 'Office & School Supplies',
+    subcategories: [
+      'art-supplies',
+      'backpacks-and-lunch-bags',
+      'calculators',
+      'desk-accessories',
+      'notebooks-and-pads',
+      'pens-and-pencils',
+      'school-uniforms',
+      'stationery',
+      'teaching-materials',
+      'writing-instruments'
+    ]
+  },
+  'jewelry-and-accessories': {
+    label: 'Jewelry & Accessories',
+    subcategories: [
+      'anklets',
+      'bracelets',
+      'brooches-and-pins',
+      'cufflinks',
+      'earrings',
+      'necklaces',
+      'rings',
+      'jewelry-sets',
+      'body-jewelry',
+      'watches-and-accessories'
+    ]
+  },
+  'baby-products': {
+    label: 'Baby Products',
+    subcategories: [
+      'baby-clothing',
+      'baby-food',
+      'baby-furniture',
+      'baby-health',
+      'baby-safety',
+      'baby-toys',
+      'bathing-and-skincare',
+      'diapering',
+      'feeding',
+      'nursery-decor',
+      'strollers-and-carriers'
+    ]
+  },
+  'luggage-and-bags': {
+    label: 'Luggage & Bags',
+    subcategories: [
+      'backpacks',
+      'briefcases',
+      'handbags',
+      'laptop-bags',
+      'luggage-sets',
+      'messenger-bags',
+      'travel-accessories',
+      'wallets',
+      'crossbody-bags',
+      'tote-bags'
+    ]
+  },
+  'software-and-digital-products': {
+    label: 'Software & Digital Products',
+    subcategories: [
+      'antivirus-and-security',
+      'business-software',
+      'design-software',
+      'digital-courses',
+      'ebooks',
+      'games',
+      'mobile-apps',
+      'music-and-audio',
+      'operating-systems',
+      'productivity-software',
+      'video-and-streaming'
+    ]
+  },
+  'garden-and-outdoor': {
+    label: 'Garden & Outdoor',
+    subcategories: [
+      'garden-tools',
+      'grills-and-outdoor-cooking',
+      'lawn-care',
+      'outdoor-decor',
+      'outdoor-lighting',
+      'patio-furniture',
+      'plants-and-seeds',
+      'pools-and-accessories',
+      'power-equipment',
+      'watering-equipment'
+    ]
+  },
+  'industrial-and-scientific': {
+    label: 'Industrial & Scientific',
+    subcategories: [
+      'janitorial-supplies',
+      'lab-equipment',
+      'material-handling',
+      'packaging-supplies',
+      'professional-instruments',
+      'safety-supplies',
+      'testing-equipment',
+      'warehouse-equipment'
+    ]
+  },
+  'wedding-and-events': {
+    label: 'Wedding & Events',
+    subcategories: [
+      'bridal-dresses',
+      'decorations',
+      'event-supplies',
+      'favors',
+      'groom-attire',
+      'invitations',
+      'party-equipment',
+      'wedding-accessories',
+      'wedding-gifts',
+      'wedding-rings'
+    ]
+  },
+  'toys-and-games': {
+    label: 'Toys & Games',
+    subcategories: [
+      'action-figures',
+      'board-games',
+      'building-toys',
+      'dolls',
+      'educational-toys',
+      'electronic-toys',
+      'outdoor-play',
+      'puzzles',
+      'stuffed-animals',
+      'video-games'
     ]
   },
   'other': {

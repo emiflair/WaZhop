@@ -454,6 +454,36 @@ export default function ProductDetail() {
               )}
             </div>
 
+            {/* Product Variants */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="mb-6 space-y-4">
+                {product.variants.map((variant, vIndex) => (
+                  <div key={vIndex}>
+                    <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+                      {variant.name}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {variant.options.map((option, oIndex) => (
+                        <button
+                          key={oIndex}
+                          type="button"
+                          className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-sm font-medium"
+                        >
+                          {option.value}
+                          {option.price > 0 && (
+                            <span className="ml-2 text-xs text-gray-500">+{formatPrice(option.price, currency)}</span>
+                          )}
+                          {option.stock !== null && option.stock !== undefined && (
+                            <span className="ml-2 text-xs text-gray-500">({option.stock} left)</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Actions - Moved right after price */}
             <div className="space-y-2.5 sm:space-y-3 mb-6">
               {shop?.paymentSettings?.provider && shop?.paymentSettings?.[shop?.paymentSettings?.provider]?.paymentLink && (
