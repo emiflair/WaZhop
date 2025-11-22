@@ -44,8 +44,16 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [shopData, shopsData, productsData] = await Promise.all([
-        shopAPI.getMyShop(),
+      // Fetch shop data with error handling
+      let shopData = null;
+      try {
+        shopData = await shopAPI.getMyShop();
+      } catch (shopError) {
+        console.log('No shop found, user needs to create one');
+        shopData = null;
+      }
+
+      const [shopsData, productsData] = await Promise.all([
         shopAPI.getMyShops(),
         productAPI.getMyProducts(),
       ]);
@@ -61,7 +69,7 @@ const Dashboard = () => {
       setStats({
         totalProducts: productsData.length,
         activeProducts: activeCount,
-        views: totalViews + (shopData.views || 0),
+        views: totalViews + (shopData?.views || 0),
         clicks: totalClicks,
       });
     } catch (error) {
@@ -302,23 +310,21 @@ const Dashboard = () => {
             <Link to="/dashboard/shop" className="btn btn-outline text-center text-sm sm:text-base touch-manipulation">
               Customize Shop
             </Link>
-            <button
-              onClick={() => {
-                if (!shop) {
-                  alert('No shop data available');
-                  return;
-                }
-                if (!shop.slug) {
-                  alert('Shop slug is missing. Please contact support.');
-                  console.error('Shop data:', shop);
-                  return;
-                }
-                openShopInBrowser(shop.slug);
-              }}
-              className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
-            >
-              View Shop
-            </button>
+            {shop && shop.slug ? (
+              <button
+                onClick={() => openShopInBrowser(shop.slug)}
+                className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
+              >
+                View Shop
+              </button>
+            ) : (
+              <Link 
+                to="/dashboard/shop" 
+                className="btn btn-secondary text-center text-sm sm:text-base touch-manipulation"
+              >
+                Create Shop
+              </Link>
+            )}
           </div>
         </div>
 
