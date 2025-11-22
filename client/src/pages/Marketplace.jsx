@@ -96,7 +96,7 @@ export default function Marketplace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
-  // On-scroll prefetching: Only load next page when user scrolls near bottom
+  // Infinite scroll: Auto-load more items when user scrolls near bottom
   useEffect(() => {
     if (!hasMore || loading) return;
 
@@ -105,32 +105,22 @@ export default function Marketplace() {
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
       
-      // Prefetch when user is 80% down the page
+      // Load more when user is 80% down the page
       const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
       
       if (scrollPercentage > 0.8 && products.length >= 12) {
-        const nextPageParams = {
-          page: page + 1,
-          limit: 24,
-          ...(sortBy ? { sort: sortBy } : {}),
-          ...(category !== 'all' && { category }),
-          ...(debouncedSearch && { search: debouncedSearch }),
-          ...(ngState && { state: ngState }),
-          ...(area && { area }),
-          ...(priceRange.min && { minPrice: priceRange.min }),
-          ...(priceRange.max && { maxPrice: priceRange.max })
-        };
+        loadMore();
       }
     };
 
-    // Throttle scroll event to once per 2 seconds
+    // Throttle scroll event to once per second
     let scrollTimeout;
     const throttledScroll = () => {
       if (!scrollTimeout) {
         scrollTimeout = setTimeout(() => {
           handleScroll();
           scrollTimeout = null;
-        }, 2000);
+        }, 1000);
       }
     };
 
@@ -489,11 +479,21 @@ export default function Marketplace() {
                   ))}
                 </div>
 
-                {/* Load More */}
-                {hasMore && (
+                {/* Auto-loading indicator */}
+                {loading && page > 1 && (
+                  <div className="text-center mt-8 mb-8">
+                    <div className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                      <span className="text-sm font-medium">Loading more products...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual Load More button (fallback) */}
+                {hasMore && !loading && (
                   <div className="text-center mt-12 mb-8">
                     <button onClick={loadMore} disabled={loading} className="btn btn-primary px-8">
-                      {loading ? 'Loading...' : 'Load More'}
+                      Load More
                     </button>
                   </div>
                 )}
