@@ -19,7 +19,9 @@ const InventoryManagement = () => {
   const fetchData = async () => {
     try {
       const productsData = await productAPI.getMyProducts();
-      setProducts(productsData || []);
+      // Extract nested data from API response
+      const userProducts = Array.isArray(productsData) ? productsData : (productsData?.data || []);
+      setProducts(userProducts);
     } catch (error) {
       console.error('Error fetching inventory:', error);
       // Don't show error toast if shop doesn't exist (buyer account)
