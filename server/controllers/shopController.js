@@ -77,11 +77,28 @@ exports.getMyShop = asyncHandler(async (req, res) => {
 
 // Helper used for public shop lookup by slug
 const loadPublicShopWithProducts = async (criteria) => {
-  const shop = await Shop.findOne({ ...criteria, isActive: true })
+  // Try to find active shop first
+  let shop = await Shop.findOne({ ...criteria, isActive: true })
     .populate({
       path: 'owner',
       select: 'name whatsapp plan'
     });
+
+  // If no active shop, check if an inactive shop exists and auto-reactivate it
+  if (!shop) {
+    shop = await Shop.findOne(criteria)
+      .populate({
+        path: 'owner',
+        select: 'name whatsapp plan'
+      });
+    
+    // If shop exists but is inactive, reactivate it (fix for existing data)
+    if (shop && !shop.isActive) {
+      console.log(`⚠️  Reactivating inactive shop: ${shop.shopName} (${shop.slug})`);
+      shop.isActive = true;
+      await shop.save();
+    }
+  }
 
   if (!shop) {
     return null;
