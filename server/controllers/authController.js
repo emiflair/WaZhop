@@ -741,7 +741,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/google
 // @access  Public
 exports.googleAuth = asyncHandler(async (req, res) => {
-  const { token, role } = req.body;
+  const { token, role, whatsapp } = req.body;
 
   if (!token) {
     return res.status(400).json({
@@ -774,6 +774,38 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       });
     }
 
+    // Determine requested role and normalize WhatsApp if required
+    const requestedRole = role === 'seller' ? 'seller' : 'buyer';
+    let normalizedWhatsApp = null;
+
+    if (requestedRole === 'seller') {
+      if (!whatsapp || !String(whatsapp).trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'WhatsApp number is required to create a seller account'
+        });
+      }
+
+      const normalizedPhone = normalizePhoneNumber(String(whatsapp));
+
+      if (!normalizedPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid WhatsApp number'
+        });
+      }
+
+      normalizedWhatsApp = normalizedPhone;
+
+      const phoneOwner = await User.findOne({ whatsapp: normalizedPhone });
+      if (phoneOwner && phoneOwner.email !== normalizedEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'WhatsApp number is already in use'
+        });
+      }
+    }
+
     // Normalize email
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -790,18 +822,69 @@ exports.googleAuth = asyncHandler(async (req, res) => {
         });
       }
 
+      let requiresSave = false;
+
+      // Upgrade buyer to seller if requested and not already seller
+      if (requestedRole === 'seller' && user.role !== 'seller') {
+        if (!normalizedWhatsApp) {
+          return res.status(400).json({
+            success: false,
+            message: 'WhatsApp number is required to upgrade to a seller account'
+          });
+        }
+
+        user.role = 'seller';
+        user.whatsapp = normalizedWhatsApp;
+        requiresSave = true;
+
+        if (!user.shop) {
+          const shopName = `${name || user.name || 'My'} Shop`;
+          const baseSlug = generateSlug(shopName);
+          const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+          const newShop = await Shop.create({
+            owner: user._id,
+            shopName,
+            slug: uniqueSlug,
+            description: 'Welcome to my shop!',
+            category: 'other',
+            location: '',
+            showWatermark: true,
+            isActive: true,
+            theme: {
+              primaryColor: '#000000',
+              accentColor: '#FFD700',
+              layout: 'grid',
+              font: 'inter'
+            }
+          });
+
+          user.shop = newShop._id;
+        }
+      }
+
+      // Update WhatsApp if provided and not set yet
+      if (normalizedWhatsApp && !user.whatsapp) {
+        user.whatsapp = normalizedWhatsApp;
+        requiresSave = true;
+      }
+
       // Update profile picture if not set
       if (!user.profilePic && picture) {
         user.profilePic = picture;
-        await user.save();
+        requiresSave = true;
       }
 
-      // Return JWT token
+      if (requiresSave) {
+        await user.save();
+        user = await User.findById(user._id).populate('shop');
+      }
+
       return sendTokenResponse(user, 200, res);
     }
 
     // New user - create account
-    const userRole = role === 'seller' ? 'seller' : 'buyer';
+    const userRole = requestedRole;
 
     // Create new user with Google data
     user = await User.create({
@@ -813,7 +896,8 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       plan: 'free',
       profilePic: picture || null,
       authProvider: 'google',
-      googleId: payload.sub
+      googleId: payload.sub,
+      whatsapp: userRole === 'seller' ? normalizedWhatsApp : undefined
     });
 
     // Create default shop for sellers
