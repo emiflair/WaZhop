@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
 import MobileBottomNav from '../components/MobileBottomNav';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -158,6 +159,29 @@ const Login = () => {
         >
           {loading ? 'Logging in…' : 'Login'}
         </button>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google Login Button */}
+        <GoogleLoginButton
+          onSuccess={(result) => {
+            const target = result.user?.role === 'seller' 
+              ? (from.startsWith('/dashboard') ? from : '/dashboard') 
+              : '/';
+            navigate(target, { replace: true });
+          }}
+          onError={(error) => {
+            setErrors((prev) => ({ ...prev, general: error }));
+          }}
+        />
       </form>
       <MobileBottomNav />
     </AuthLayout>

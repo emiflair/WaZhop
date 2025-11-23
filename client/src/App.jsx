@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CartProvider } from './context/CartContext'
 import { HelmetProvider } from 'react-helmet-async'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { lazy, Suspense, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -190,19 +191,23 @@ function AppRoutes() {
 }
 
 function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   return (
     <ErrorBoundary>
       <HelmetProvider>
-        <ThemeProvider>
-          <Router>
-            <AuthProvider>
-              <CartProvider>
-                <VersionCheck />
-                <AppRoutes />
-              </CartProvider>
-            </AuthProvider>
-          </Router>
-        </ThemeProvider>
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <ThemeProvider>
+            <Router>
+              <AuthProvider>
+                <CartProvider>
+                  <VersionCheck />
+                  <AppRoutes />
+                </CartProvider>
+              </AuthProvider>
+            </Router>
+          </ThemeProvider>
+        </GoogleOAuthProvider>
       </HelmetProvider>
     </ErrorBoundary>
   )

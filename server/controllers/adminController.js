@@ -727,7 +727,7 @@ exports.debugUserShop = asyncHandler(async (req, res) => {
 
   // Find user
   const user = await User.findOne({ email }).lean();
-  
+
   if (!user) {
     return res.status(404).json({
       success: false,

@@ -2,7 +2,9 @@ const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
 const Review = require('../models/Review');
-const { asyncHandler, paginate, paginationMeta, generateSlug } = require('../utils/helpers');
+const {
+  asyncHandler, paginate, paginationMeta, generateSlug
+} = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
 const {
   uploadImageSync,
@@ -182,7 +184,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
   // Auto-create shop if user doesn't have one (first product)
   if (!shop) {
     console.log(`🏪 Auto-creating first shop for user ${req.user.id}`);
-    
+
     const user = await User.findById(req.user.id);
     const baseSlug = generateSlug(user.name);
     const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
@@ -235,18 +237,16 @@ exports.createProduct = asyncHandler(async (req, res) => {
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {
         // Use parallel upload for faster processing
-        const uploadPromises = req.files.map((file, i) => 
-          uploadImageSync(
-            file.buffer,
-            'wazhop/products',
-            'product' // Apply product-specific compression
-          ).then(result => ({
-            url: result.secure_url,
-            publicId: result.public_id,
-            isPrimary: i === 0 // First image is primary
-          }))
-        );
-        
+        const uploadPromises = req.files.map((file, i) => uploadImageSync(
+          file.buffer,
+          'wazhop/products',
+          'product' // Apply product-specific compression
+        ).then((result) => ({
+          url: result.secure_url,
+          publicId: result.public_id,
+          isPrimary: i === 0 // First image is primary
+        })));
+
         const uploadedImages = await Promise.all(uploadPromises);
         images.push(...uploadedImages);
       } catch (error) {
@@ -840,7 +840,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  
+
   res.status(200).json({
     success: true,
     data: enriched,

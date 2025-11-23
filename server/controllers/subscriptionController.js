@@ -669,14 +669,14 @@ exports.checkExpiredSubscriptions = async () => {
           <p>Your <strong>${planText} plan</strong> will expire in approximately <strong>${hoursRemaining} hours</strong>.</p>
           
           <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;">
-            <strong>Expiry Date:</strong> ${new Date(user.planExpiry).toLocaleString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric', 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
+            <strong>Expiry Date:</strong> ${new Date(user.planExpiry).toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}
           </div>
 
           <h3>What happens after expiry:</h3>
@@ -709,11 +709,11 @@ exports.checkExpiredSubscriptions = async () => {
           subject: `⚠️ WaZhop: Your ${planText} Plan Expires in ${hoursRemaining} Hours`,
           html: warningEmailHtml
         });
-        
+
         // Mark that warning was sent
         user.lastExpiryWarning = now;
         await user.save();
-        
+
         console.log(`[Subscription] Warning email sent to ${user.email} (expires in ${hoursRemaining}h)`);
       } catch (emailError) {
         console.error(`[Subscription] Failed to send warning email to ${user.email}:`, emailError.message);
@@ -898,7 +898,7 @@ exports.checkExpiredSubscriptions = async () => {
         user.autoRenew = false;
 
         await user.save();
-        
+
         // Enforce Free plan limits non-destructively (deactivate extra shops, show branding)
         try {
           const { enforceFreePlanForUser } = require('../utils/planEnforcement');
@@ -915,12 +915,12 @@ exports.checkExpiredSubscriptions = async () => {
             <p>Your <strong>${previousPlan} plan</strong> subscription has expired and your account has been downgraded to the <strong>Free plan</strong>.</p>
             
             <div style="background: #fee; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;">
-              <strong>Expiry Date:</strong> ${new Date(user.planExpiry || now).toLocaleString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              <strong>Expiry Date:</strong> ${new Date(user.planExpiry || now).toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })}
             </div>
 
             <h3>What this means:</h3>

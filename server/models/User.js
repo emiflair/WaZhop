@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function () {
+      // Password required only if not using OAuth
+      return !this.authProvider || this.authProvider === 'local';
+    },
     minlength: [6, 'Password must be at least 6 characters'],
     select: false // Don't return password by default
   },
@@ -34,6 +37,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['buyer', 'seller', 'admin'],
     default: 'buyer'
+  },
+  // OAuth fields
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  googleId: {
+    type: String,
+    default: null,
+    sparse: true,
+    unique: true
+  },
+  profilePic: {
+    type: String,
+    default: null
   },
   // Verification flags
   emailVerified: {

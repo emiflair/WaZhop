@@ -1,9 +1,9 @@
 /**
  * Migration: Reactivate Primary Shops for Free Plan Users
- * 
+ *
  * This migration ensures that every user's first (primary) shop is active,
  * fixing the "Shop Not Found" issue for sellers clicking their shop URLs.
- * 
+ *
  * Run this after fixing the planEnforcement.js logic to ensure existing
  * inactive shops are reactivated.
  */
@@ -47,12 +47,12 @@ async function reactivatePrimaryShops() {
       if (!primaryShop.isActive) {
         const shopInfo = `"${primaryShop.shopName}" (${primaryShop.slug})`;
         console.log(`🔧 Reactivating primary shop for user ${user.email}: ${shopInfo}`);
-        
+
         primaryShop.isActive = true;
         primaryShop.showBranding = user.plan === 'free';
         primaryShop.showWatermark = user.plan === 'free';
         await primaryShop.save();
-        
+
         reactivatedCount++;
       } else {
         console.log(`✅ User ${user.email}'s primary shop "${primaryShop.shopName}" is already active`);

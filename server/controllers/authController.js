@@ -735,3 +735,130 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   await user.save();
   res.json({ success: true, message: 'Password reset successful. You can now log in.' });
 });
+
+// @desc    Google OAuth Login/Register
+// @route   POST /api/auth/google
+// @access  Public
+exports.googleAuth = asyncHandler(async (req, res) => {
+  const { token, role } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: 'Google token is required'
+    });
+  }
+
+  try {
+    // Verify Google token
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const {
+      email,
+      name,
+      picture,
+      email_verified: emailVerified
+    } = payload;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Unable to retrieve email from Google'
+      });
+    }
+
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if user exists
+    let user = await User.findOne({ email: normalizedEmail }).populate('shop');
+
+    if (user) {
+      // Existing user - login
+      // Check if account is active
+      if (!user.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been deactivated. Please contact support.'
+        });
+      }
+
+      // Update profile picture if not set
+      if (!user.profilePic && picture) {
+        user.profilePic = picture;
+        await user.save();
+      }
+
+      // Return JWT token
+      return sendTokenResponse(user, 200, res);
+    }
+
+    // New user - create account
+    const userRole = role === 'seller' ? 'seller' : 'buyer';
+
+    // Create new user with Google data
+    user = await User.create({
+      name: name || 'Google User',
+      email: normalizedEmail,
+      password: crypto.randomBytes(32).toString('hex'), // Random password (won't be used)
+      emailVerified: emailVerified || true, // Google emails are pre-verified
+      role: userRole,
+      plan: 'free',
+      profilePic: picture || null,
+      authProvider: 'google',
+      googleId: payload.sub
+    });
+
+    // Create default shop for sellers
+    if (userRole === 'seller') {
+      const shopName = `${name || 'My'} Shop`;
+      const baseSlug = generateSlug(shopName);
+      const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+      await Shop.create({
+        owner: user._id,
+        shopName: shopName,
+        slug: uniqueSlug,
+        description: 'Welcome to my shop!',
+        category: 'other',
+        location: '',
+        showWatermark: true,
+        isActive: true,
+        theme: {
+          primaryColor: '#000000',
+          accentColor: '#FFD700',
+          layout: 'grid',
+          font: 'inter'
+        }
+      });
+    }
+
+    // Populate shop for response
+    user = await User.findById(user._id).populate('shop');
+
+    // Return JWT token
+    sendTokenResponse(user, 201, res);
+  } catch (error) {
+    console.error('[Google Auth] Error:', error);
+
+    // Handle specific Google auth errors
+    if (error.message && error.message.includes('Token used too late')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token has expired. Please try again.'
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid Google token. Please try again.'
+    });
+  }
+});

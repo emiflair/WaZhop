@@ -113,7 +113,7 @@ async function enforceFreePlanForUser(userId, options = {}) {
       primaryShop.showWatermark = true;
       await primaryShop.save();
     }
-    
+
     // Deactivate all other shops (only if user has multiple shops)
     if (otherShops.length) {
       await Shop.updateMany(

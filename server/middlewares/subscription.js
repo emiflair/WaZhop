@@ -63,7 +63,7 @@ const checkSubscriptionExpiry = async (req, res, next) => {
           <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard/subscription" style="background: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Renew Subscription</a></p>
           <p>Best regards,<br>WaZhop Team</p>
         `
-      }).catch(err => console.error('[Subscription] Failed to send expiry email:', err.message));
+      }).catch((err) => console.error('[Subscription] Failed to send expiry email:', err.message));
 
       // Update req.user with new plan info
       req.user.plan = 'free';
@@ -113,9 +113,9 @@ const requirePlan = (allowedPlans) => async (req, res, next) => {
 
     // Check if user's plan is in the allowed plans
     if (!allowedPlans.includes(user.plan)) {
-      const requiredPlanText = allowedPlans.length === 1 
-        ? allowedPlans[0].toUpperCase() 
-        : allowedPlans.map(p => p.toUpperCase()).join(' or ');
+      const requiredPlanText = allowedPlans.length === 1
+        ? allowedPlans[0].toUpperCase()
+        : allowedPlans.map((p) => p.toUpperCase()).join(' or ');
 
       return res.status(403).json({
         success: false,
@@ -155,10 +155,10 @@ const requirePlan = (allowedPlans) => async (req, res, next) => {
 const validatePlanAccess = async (userId, requiredPlan) => {
   try {
     const user = await User.findById(userId);
-    
+
     if (!user) {
-      return { 
-        hasAccess: false, 
+      return {
+        hasAccess: false,
         reason: 'USER_NOT_FOUND',
         message: 'User not found'
       };

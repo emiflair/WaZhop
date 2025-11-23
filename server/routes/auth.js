@@ -14,7 +14,8 @@ const {
   forgotPassword,
   resetPassword,
   requestSmsCode,
-  verifySmsCode
+  verifySmsCode,
+  googleAuth
 } = require('../controllers/authController');
 const { protect, protectAllowUnverified } = require('../middlewares/auth');
 const {
@@ -33,6 +34,7 @@ const {
 // Public routes with rate limiting
 router.post('/register', authRateLimiter, validateRegister, register);
 router.post('/login', authRateLimiter, validateLogin, login);
+router.post('/google', authRateLimiter, googleAuth);
 router.get('/verify-email', verifyEmail);
 router.post('/request-email-verification-public', authRateLimiter, requestEmailVerificationPublic);
 router.post('/forgot-password', strictRateLimiter, forgotPassword);

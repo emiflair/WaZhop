@@ -122,6 +122,24 @@ export const AuthProvider = ({ children }) => {
     // No global toast; pages can render their own UI if needed
   };
 
+  // Google Login
+  const googleLogin = async (googleData) => {
+    try {
+      const response = await authAPI.googleAuth(googleData);
+      const { token, user: loggedInUser } = response;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      setUser(loggedInUser);
+      setIsAuthenticated(true);
+
+      return { success: true, user: loggedInUser };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google login failed';
+      return { success: false, error: message };
+    }
+  };
+
   // Update user data
   const updateUser = (updatedData) => {
     const updatedUser = { ...user, ...updatedData };
@@ -136,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
+    googleLogin,
     updateUser,
   };
 

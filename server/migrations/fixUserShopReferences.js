@@ -1,12 +1,12 @@
 /**
  * Migration: Fix User Shop References
- * 
+ *
  * This migration fixes a critical bug where users had shop references
  * that didn't belong to them. This could happen due to:
  * 1. Referral code issues
  * 2. Population issues
  * 3. Race conditions during registration
- * 
+ *
  * The fix:
  * - Validates each user's shop reference
  * - Removes shop reference if it doesn't belong to the user
@@ -14,9 +14,9 @@
  */
 
 const mongoose = require('mongoose');
+const path = require('path');
 const User = require('../models/User');
 const Shop = require('../models/Shop');
-const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 async function fixUserShopReferences() {
@@ -48,7 +48,7 @@ async function fixUserShopReferences() {
         // Check if the user owns the shop
         if (shop.owner.toString() !== user._id.toString()) {
           console.log(`\n🚨 SECURITY ISSUE: User ${user.email} (${user._id}) has shop ${shop.shopName} (${shop._id}) which belongs to ${shop.owner}`);
-          console.log(`   Removing incorrect shop reference...`);
+          console.log('   Removing incorrect shop reference...');
           user.shop = undefined;
           await user.save();
           fixed++;
@@ -61,12 +61,11 @@ async function fixUserShopReferences() {
       }
     }
 
-    console.log(`\n📈 Migration Summary:`);
+    console.log('\n📈 Migration Summary:');
     console.log(`   ✅ Correct shop references: ${correct}`);
     console.log(`   🔧 Fixed shop references: ${fixed}`);
     console.log(`   ❌ Errors: ${errors}`);
-    console.log(`\n✅ Migration completed successfully!`);
-
+    console.log('\n✅ Migration completed successfully!');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);

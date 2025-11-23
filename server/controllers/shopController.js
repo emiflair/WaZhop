@@ -46,7 +46,7 @@ const updateStorageUsage = async (userId, sizeDelta) => {
 // @access  Private
 exports.getMyShop = asyncHandler(async (req, res) => {
   console.log(`🔍 getMyShop - User: ${req.user.email} (ID: ${req.user.id})`);
-  
+
   const shop = await Shop.findOne({ owner: req.user.id }).populate('products');
 
   if (!shop) {
@@ -116,18 +116,18 @@ exports.getShopBySlug = asyncHandler(async (req, res) => {
 
   if (!result) {
     console.log(`❌ Shop not found for slug: "${slug}"`);
-    
+
     // Check if shop exists with different status
     const anyShop = await Shop.findOne({ slug }).select('_id shopName isActive owner');
     if (anyShop) {
-      console.log(`⚠️  Shop exists but couldn't be loaded:`, {
+      console.log('⚠️  Shop exists but couldn\'t be loaded:', {
         id: anyShop._id,
         name: anyShop.shopName,
         isActive: anyShop.isActive,
         owner: anyShop.owner
       });
     }
-    
+
     return res.status(404).json({
       success: false,
       message: 'Shop not found'
@@ -640,7 +640,7 @@ exports.getMyShops = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
 
   console.log(`🔍 getMyShops - User ID: ${req.user.id}, Type: ${typeof req.user.id}`);
-  
+
   const shops = await Shop.find({ owner: req.user.id })
     .sort({ createdAt: -1 })
     .limit(limit * 1)
@@ -648,15 +648,15 @@ exports.getMyShops = asyncHandler(async (req, res) => {
     .lean(); // Use .lean() for better performance (returns plain JS objects)
 
   console.log(`📊 Found ${shops.length} shops for user ${req.user.id}`);
-  console.log(`📋 Shop details:`, shops.map(s => ({ 
-    shopName: s.shopName, 
-    slug: s.slug, 
-    owner: s.owner, 
-    ownerType: typeof s.owner 
+  console.log('📋 Shop details:', shops.map((s) => ({
+    shopName: s.shopName,
+    slug: s.slug,
+    owner: s.owner,
+    ownerType: typeof s.owner
   })));
 
   // CRITICAL SECURITY CHECK: Filter out any shops that don't belong to this user
-  const validShops = shops.filter(shop => {
+  const validShops = shops.filter((shop) => {
     const isValid = shop.owner.toString() === req.user.id.toString();
     if (!isValid) {
       console.error(`🚨 SECURITY ALERT in getMyShops: User ${req.user.id} query returned shop ${shop._id} owned by ${shop.owner}`);

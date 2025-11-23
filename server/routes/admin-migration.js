@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { protect, isAdmin } = require('../middlewares/auth');
 const User = require('../models/User');
@@ -27,20 +28,20 @@ router.get('/diagnose-shops', protect, isAdmin, async (req, res) => {
     // Check for shops referenced by multiple users
     for (const [shopId, users] of shopToUsersMap.entries()) {
       if (users.length > 1) {
-        const shop = shops.find(s => s._id.toString() === shopId);
+        const shop = shops.find((s) => s._id.toString() === shopId);
         issues.push({
           type: 'MULTIPLE_REFERENCES',
           shopId,
           shopName: shop?.shopName,
           actualOwner: shop?.owner.toString(),
-          users: users.map(u => ({ id: u._id.toString(), name: u.name, email: u.email }))
+          users: users.map((u) => ({ id: u._id.toString(), name: u.name, email: u.email }))
         });
       }
     }
 
     // Check for mismatched ownership
     for (const user of usersWithShops) {
-      const shop = shops.find(s => s._id.toString() === user.shop.toString());
+      const shop = shops.find((s) => s._id.toString() === user.shop.toString());
       if (shop && shop.owner.toString() !== user._id.toString()) {
         issues.push({
           type: 'OWNERSHIP_MISMATCH',
@@ -78,10 +79,10 @@ router.get('/diagnose-shops', protect, isAdmin, async (req, res) => {
 router.post('/fix-shop-references', protect, isAdmin, async (req, res) => {
   try {
     const usersWithShops = await User.find({ shop: { $exists: true, $ne: null } });
-    
+
     let fixed = 0;
     let correct = 0;
-    let errors = [];
+    const errors = [];
 
     for (const user of usersWithShops) {
       try {
@@ -161,7 +162,7 @@ router.post('/reactivate-primary-shops', protect, isAdmin, async (req, res) => {
         primaryShop.showBranding = user.plan === 'free';
         primaryShop.showWatermark = user.plan === 'free';
         await primaryShop.save();
-        
+
         reactivatedCount++;
         details.push({
           userEmail: user.email,
