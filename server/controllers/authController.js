@@ -824,6 +824,12 @@ exports.googleAuth = asyncHandler(async (req, res) => {
 
       let requiresSave = false;
 
+      // Ensure Google auth marks email as verified
+      if (!user.emailVerified && emailVerified !== false) {
+        user.emailVerified = true;
+        requiresSave = true;
+      }
+
       // Upgrade buyer to seller if requested and not already seller
       if (requestedRole === 'seller' && user.role !== 'seller') {
         if (!normalizedWhatsApp) {
