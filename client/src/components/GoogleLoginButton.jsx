@@ -5,6 +5,14 @@ import { useAuth } from '../context/AuthContext';
 const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   const { googleLogin } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  // Check if Google OAuth is configured
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  
+  if (!googleClientId) {
+    console.warn('Google OAuth not configured - VITE_GOOGLE_CLIENT_ID missing');
+    return null; // Don't render button if not configured
+  }
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);

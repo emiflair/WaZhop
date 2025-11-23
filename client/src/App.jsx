@@ -193,10 +193,26 @@ function AppRoutes() {
 function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  // Debug log for Google Client ID
+  console.log('🔑 Google Client ID:', googleClientId ? 'Set ✓' : 'Missing ✗');
+
   return (
     <ErrorBoundary>
       <HelmetProvider>
-        <GoogleOAuthProvider clientId={googleClientId}>
+        {googleClientId ? (
+          <GoogleOAuthProvider clientId={googleClientId}>
+            <ThemeProvider>
+              <Router>
+                <AuthProvider>
+                  <CartProvider>
+                    <VersionCheck />
+                    <AppRoutes />
+                  </CartProvider>
+                </AuthProvider>
+              </Router>
+            </ThemeProvider>
+          </GoogleOAuthProvider>
+        ) : (
           <ThemeProvider>
             <Router>
               <AuthProvider>
@@ -207,7 +223,7 @@ function App() {
               </AuthProvider>
             </Router>
           </ThemeProvider>
-        </GoogleOAuthProvider>
+        )}
       </HelmetProvider>
     </ErrorBoundary>
   )
