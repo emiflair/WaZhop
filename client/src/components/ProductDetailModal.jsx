@@ -8,7 +8,7 @@ import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/currency';
 
-const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectProduct, showImageModal, setShowImageModal, modalImageIndex, setModalImageIndex }) => {
+const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppClick, onSelectProduct, showImageModal, setShowImageModal, modalImageIndex, setModalImageIndex }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -58,10 +58,22 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
       }
       try {
         setLoadingRelated(true);
-        const list = await productAPI.getMarketplaceProducts({ category: product.category, limit: 12 });
-        const items = Array.isArray(list) ? list : [];
-        const filtered = items.filter((p) => p._id !== product._id);
-        setRelatedProducts(filtered.slice(0, 8));
+        
+        // For storefront: if shopProducts array provided, filter from there
+        // For marketplace: fetch from marketplace API
+        if (shopProducts && Array.isArray(shopProducts)) {
+          // Storefront mode: filter products from the same shop
+          const filtered = shopProducts
+            .filter((p) => p._id !== product._id && p.category === product.category)
+            .slice(0, 8);
+          setRelatedProducts(filtered);
+        } else {
+          // Marketplace mode: fetch from API
+          const list = await productAPI.getMarketplaceProducts({ category: product.category, limit: 12 });
+          const items = Array.isArray(list) ? list : [];
+          const filtered = items.filter((p) => p._id !== product._id);
+          setRelatedProducts(filtered.slice(0, 8));
+        }
       } catch (e) {
         console.error('Failed to load related products', e);
         setRelatedProducts([]);
@@ -70,7 +82,7 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
       }
     };
     fetchRelated();
-  }, [product?._id, product?.category]);
+  }, [product?._id, product?.category, shopProducts]);
 
   const fetchReviews = async () => {
     try {

@@ -814,6 +814,7 @@ const Storefront = () => {
         <ProductDetailModal
           product={selectedProduct}
           shop={shop}
+          shopProducts={products}
           onClose={() => setSelectedProduct(null)}
           onWhatsAppClick={handleWhatsAppClick}
           onSelectProduct={setSelectedProduct}
