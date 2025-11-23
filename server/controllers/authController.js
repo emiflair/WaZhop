@@ -212,6 +212,15 @@ exports.login = asyncHandler(async (req, res) => {
     });
   }
 
+  // Check if user registered with Google
+  if (user.authProvider === 'google') {
+    return res.status(400).json({
+      success: false,
+      message: 'This account was created with Google. Please use "Continue with Google" to sign in.',
+      useGoogleAuth: true
+    });
+  }
+
   // Check if password matches
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
@@ -946,6 +955,18 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       // Update profile picture if not set
       if (!user.profilePic && picture) {
         user.profilePic = picture;
+        requiresSave = true;
+      }
+
+      // Link Google account if not already linked
+      if (!user.googleId && payload.sub) {
+        user.googleId = payload.sub;
+        requiresSave = true;
+      }
+
+      // Update auth provider to indicate Google is available
+      if (user.authProvider !== 'google' && !user.authProvider) {
+        user.authProvider = 'google';
         requiresSave = true;
       }
 

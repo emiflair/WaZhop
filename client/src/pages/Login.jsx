@@ -63,6 +63,16 @@ const Login = () => {
       navigate('/verify-email', { replace: true });
       return;
     }
+    // Check if user should use Google auth instead
+    else if (result.useGoogleAuth) {
+      setErrors({
+        email: '',
+        password: '',
+        twoFactorToken: '',
+        general: result.error || 'This account was created with Google. Please use "Continue with Google" below.'
+      });
+      setTouched({ email: true, password: true, twoFactorToken: false });
+    }
     // Inline error feedback on failure
     else if (!result.success) {
       const msg = (result.error || '').toLowerCase();
