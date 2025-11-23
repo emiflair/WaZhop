@@ -208,26 +208,47 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                 </span>
               </div>
 
-              {/* Primary Checkout Button */}
-              <button
-                onClick={() => {
-                  onClose();
-                  navigate('/checkout');
-                }}
-                className="btn btn-primary w-full flex items-center justify-center gap-2 mb-2"
-              >
-                <FiShoppingBag size={20} />
-                Proceed to Checkout
-              </button>
+              {/* Check if any shop in cart has payment gateway configured */}
+              {getItemsByShop().some(({ shop: itemShop }) => itemShop?.paymentSettings?.provider) ? (
+                <>
+                  {/* Primary Checkout Button - Only show if payment gateway is configured */}
+                  <button
+                    onClick={() => {
+                      onClose();
+                      navigate('/checkout');
+                    }}
+                    className="btn btn-primary w-full flex items-center justify-center gap-2 mb-2"
+                  >
+                    <FiShoppingBag size={20} />
+                    Proceed to Checkout
+                  </button>
 
-              {/* WhatsApp Quick Checkout - Alternative option */}
-              <button
-                onClick={handleWhatsAppCheckout}
-                className="btn btn-whatsapp w-full flex items-center justify-center gap-2"
-              >
-                <IoLogoWhatsapp size={20} />
-                Quick Order via WhatsApp
-              </button>
+                  {/* WhatsApp Quick Checkout - Alternative option */}
+                  <button
+                    onClick={handleWhatsAppCheckout}
+                    className="btn btn-whatsapp w-full flex items-center justify-center gap-2"
+                  >
+                    <IoLogoWhatsapp size={20} />
+                    Quick Order via WhatsApp
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* No Payment Gateway - WhatsApp Only */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-3">
+                    <p className="text-xs text-blue-800 dark:text-blue-200">
+                      <strong>💬 WhatsApp Checkout:</strong> This shop hasn&apos;t integrated a payment gateway yet. Complete your order via WhatsApp.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleWhatsAppCheckout}
+                    className="btn btn-whatsapp w-full flex items-center justify-center gap-2"
+                  >
+                    <IoLogoWhatsapp size={20} />
+                    Order via WhatsApp
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={clearCart}
