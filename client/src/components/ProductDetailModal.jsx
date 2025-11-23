@@ -8,7 +8,7 @@ import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/currency';
 
-const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectProduct }) => {
+const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectProduct, showImageModal, setShowImageModal, modalImageIndex, setModalImageIndex }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -195,7 +195,15 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
           {/* Left side - Image Gallery */}
           <div>
             {/* Main Image */}
-            <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-3 sm:mb-4 h-64 sm:h-80 md:h-96">
+            <div 
+              className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-3 sm:mb-4 h-64 sm:h-80 md:h-96 cursor-pointer"
+              onClick={() => {
+                if (images.length > 0 && setShowImageModal && setModalImageIndex) {
+                  setModalImageIndex(selectedImage);
+                  setShowImageModal(true);
+                }
+              }}
+            >
               {images.length > 0 ? (
                 <>
                   <img
@@ -438,6 +446,57 @@ const ProductDetailModal = ({ product, shop, onClose, onWhatsAppClick, onSelectP
             </div>
           )}
         </div>
+
+        {/* Image Lightbox Modal */}
+        {showImageModal && images.length > 0 && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 z-[2000] flex items-center justify-center" onClick={() => setShowImageModal(false)}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowImageModal(false);
+              }}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            >
+              <FiX size={32} />
+            </button>
+            
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImageIndex((prev) => (prev - 1 + images.length) % images.length);
+                  }}
+                  className="absolute left-4 text-white hover:text-gray-300 z-10"
+                >
+                  <FiChevronLeft size={48} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImageIndex((prev) => (prev + 1) % images.length);
+                  }}
+                  className="absolute right-4 text-white hover:text-gray-300 z-10"
+                >
+                  <FiChevronRight size={48} />
+                </button>
+              </>
+            )}
+            
+            <img
+              src={(images[modalImageIndex] && (images[modalImageIndex].url || images[modalImageIndex].secure_url)) || ''}
+              alt={product.name}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
+                {modalImageIndex + 1} / {images.length}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Reviews Section */}
         <div className="border-t border-gray-200 p-6">

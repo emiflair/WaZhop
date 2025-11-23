@@ -28,6 +28,8 @@ const Storefront = () => {
   
   // Product detail modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
   
   // Cart state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -815,6 +817,10 @@ const Storefront = () => {
           onClose={() => setSelectedProduct(null)}
           onWhatsAppClick={handleWhatsAppClick}
           onSelectProduct={setSelectedProduct}
+          showImageModal={showImageModal}
+          setShowImageModal={setShowImageModal}
+          modalImageIndex={modalImageIndex}
+          setModalImageIndex={setModalImageIndex}
         />
       )}
 
