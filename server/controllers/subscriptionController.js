@@ -644,8 +644,82 @@ exports.verifyPaymentAndUpgrade = asyncHandler(async (req, res) => {
 // @access  Internal
 exports.checkExpiredSubscriptions = async () => {
   const now = new Date();
+  const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   try {
+    // Find users whose subscriptions expire in the next 24 hours (for warning emails)
+    const expiringUsers = await User.find({
+      plan: { $in: ['pro', 'premium'] },
+      planExpiry: { $gt: now, $lte: twentyFourHoursFromNow },
+      subscriptionStatus: 'active',
+      lastExpiryWarning: { $exists: false } // Only send warning once
+    });
+
+    console.log(`[Subscription] Found ${expiringUsers.length} subscriptions expiring in 24 hours`);
+
+    // Send 24-hour warning emails
+    for (const user of expiringUsers) {
+      const hoursRemaining = Math.ceil((user.planExpiry - now) / (1000 * 60 * 60));
+      const planText = user.plan.charAt(0).toUpperCase() + user.plan.slice(1);
+
+      const warningEmailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #f97316;">⚠️ Your WaZhop Subscription Expires Soon</h2>
+          <p>Hi ${user.name || 'there'},</p>
+          <p>Your <strong>${planText} plan</strong> will expire in approximately <strong>${hoursRemaining} hours</strong>.</p>
+          
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;">
+            <strong>Expiry Date:</strong> ${new Date(user.planExpiry).toLocaleString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </div>
+
+          <h3>What happens after expiry:</h3>
+          <ul style="color: #555;">
+            <li>Your account will be downgraded to the <strong>Free plan</strong></li>
+            <li>You'll lose access to premium features (analytics, custom domain, etc.)</li>
+            <li>Only 1 shop and 10 products will remain active</li>
+            <li>Additional shops and products will be hidden (but not deleted)</li>
+          </ul>
+
+          <p style="margin-top: 30px;"><strong>Renew now to keep all your premium features!</strong></p>
+          <p>
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard/subscription" 
+               style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+              Renew Subscription Now
+            </a>
+          </p>
+
+          <p style="color: #888; font-size: 14px; margin-top: 30px;">
+            Don't worry - all your data is safe! You can upgrade anytime to restore full access.
+          </p>
+
+          <p style="margin-top: 30px;">Best regards,<br><strong>WaZhop Team</strong></p>
+        </div>
+      `;
+
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: `⚠️ WaZhop: Your ${planText} Plan Expires in ${hoursRemaining} Hours`,
+          html: warningEmailHtml
+        });
+        
+        // Mark that warning was sent
+        user.lastExpiryWarning = now;
+        await user.save();
+        
+        console.log(`[Subscription] Warning email sent to ${user.email} (expires in ${hoursRemaining}h)`);
+      } catch (emailError) {
+        console.error(`[Subscription] Failed to send warning email to ${user.email}:`, emailError.message);
+      }
+    }
+
     // Find users with expired paid plans
     const expiredUsers = await User.find({
       plan: { $in: ['pro', 'premium'] },
@@ -684,21 +758,39 @@ exports.checkExpiredSubscriptions = async () => {
           }
 
           // Send email notification about downgrade
+          const previousPlan = user.plan.charAt(0).toUpperCase() + user.plan.slice(1);
           const downgradeEmailHtml = `
-            <h2>WaZhop Subscription Downgraded</h2>
-            <p>Hi ${user.name || 'there'},</p>
-            <p>Your subscription has been downgraded to the <strong>Free plan</strong> after ${maxAttempts} failed renewal attempts.</p>
-            <p><strong>Reason:</strong> ${user.renewalFailureReason}</p>
-            <h3>What this means:</h3>
-            <ul>
-              <li>You now have access to Free plan features only</li>
-              <li>Extra shops and products beyond free limits have been deactivated</li>
-              <li>Premium features are no longer available</li>
-            </ul>
-            <p>You can upgrade anytime to restore your premium features:</p>
-            <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard/subscription" style="background: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Upgrade Now</a></p>
-            <p>Thank you for using WaZhop!</p>
-            <p>Best regards,<br>WaZhop Team</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ef4444;">❌ Your WaZhop Subscription Has Been Downgraded</h2>
+              <p>Hi ${user.name || 'there'},</p>
+              <p>Your <strong>${previousPlan} plan</strong> subscription has been downgraded to the <strong>Free plan</strong> after ${maxAttempts} failed renewal attempts.</p>
+              
+              <div style="background: #fee; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;">
+                <strong>Reason:</strong> ${user.renewalFailureReason}
+              </div>
+
+              <h3>What this means for your account:</h3>
+              <ul style="color: #555;">
+                <li>✅ You now have access to <strong>Free plan features only</strong> (1 shop, 10 products max)</li>
+                <li>🔒 Extra shops and products beyond free limits have been <strong>deactivated</strong> (not deleted)</li>
+                <li>❌ Premium features are <strong>no longer available</strong> (analytics, custom domain, advanced themes, etc.)</li>
+                <li>💾 All your data is <strong>safe and preserved</strong> - nothing has been deleted</li>
+              </ul>
+
+              <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;">
+                <strong>Good News:</strong> You can upgrade anytime to restore all your premium features and reactivate hidden shops/products!
+              </div>
+
+              <p style="margin-top: 30px;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard/subscription" 
+                   style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+                  Upgrade to Restore Access
+                </a>
+              </p>
+
+              <p style="margin-top: 30px;">Thank you for using WaZhop!</p>
+              <p>Best regards,<br><strong>WaZhop Team</strong></p>
+            </div>
           `;
 
           try {
@@ -796,15 +888,17 @@ exports.checkExpiredSubscriptions = async () => {
           await user.save();
         }
       } else {
-        // Downgrade to free plan
-        console.log(`[Subscription] Downgrading ${user.email} from ${user.plan} to free`);
+        // Downgrade to free plan (no auto-renew enabled)
+        console.log(`[Subscription] Downgrading ${user.email} from ${user.plan} to free (no auto-renew)`);
 
+        const previousPlan = user.plan.charAt(0).toUpperCase() + user.plan.slice(1);
         user.plan = 'free';
         user.planExpiry = null;
         user.subscriptionStatus = 'expired';
         user.autoRenew = false;
 
         await user.save();
+        
         // Enforce Free plan limits non-destructively (deactivate extra shops, show branding)
         try {
           const { enforceFreePlanForUser } = require('../utils/planEnforcement');
@@ -813,7 +907,58 @@ exports.checkExpiredSubscriptions = async () => {
           console.warn('[Subscription] Enforcement error (non-fatal):', e.message);
         }
 
-        // TODO: Send email notification about expiration
+        // Send email notification about expiration
+        const expirationEmailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #ef4444;">Your WaZhop Subscription Has Expired</h2>
+            <p>Hi ${user.name || 'there'},</p>
+            <p>Your <strong>${previousPlan} plan</strong> subscription has expired and your account has been downgraded to the <strong>Free plan</strong>.</p>
+            
+            <div style="background: #fee; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0;">
+              <strong>Expiry Date:</strong> ${new Date(user.planExpiry || now).toLocaleString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+
+            <h3>What this means:</h3>
+            <ul style="color: #555;">
+              <li>You can only access <strong>Free plan features</strong> (1 shop, 10 products max)</li>
+              <li>Additional shops and products are now <strong>hidden</strong> but safely preserved</li>
+              <li>Premium features like analytics, custom domain, and advanced themes are disabled</li>
+              <li>WaZhop branding will be shown on your shop</li>
+            </ul>
+
+            <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0;">
+              <strong>Good News:</strong> All your data is safe! Upgrade anytime to restore full access to all your shops, products, and premium features.
+            </div>
+
+            <p style="margin-top: 30px;"><strong>Ready to upgrade?</strong></p>
+            <p>
+              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard/subscription" 
+                 style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+                Renew Your Subscription
+              </a>
+            </p>
+
+            <p style="margin-top: 30px;">Thank you for being part of WaZhop!</p>
+            <p>Best regards,<br><strong>WaZhop Team</strong></p>
+          </div>
+        `;
+
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: 'WaZhop: Your Subscription Has Expired',
+            html: expirationEmailHtml
+          });
+          console.log(`[Subscription] Expiration notification sent to ${user.email}`);
+        } catch (emailError) {
+          console.error(`[Subscription] Failed to send expiration email to ${user.email}:`, emailError.message);
+        }
+
         console.log(`[Subscription] User ${user.email} downgraded to free plan`);
       }
     }

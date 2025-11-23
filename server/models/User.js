@@ -112,6 +112,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  lastExpiryWarning: {
+    type: Date,
+    default: null
+  },
   storageUsed: {
     type: Number,
     default: 0, // in bytes
