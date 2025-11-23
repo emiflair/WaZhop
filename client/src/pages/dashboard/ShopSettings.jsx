@@ -483,12 +483,31 @@ const ShopSettings = () => {
   };
 
   const categories = [
-    { value: 'fashion', label: 'Fashion & Clothing' },
+    { value: 'babies-and-kids', label: 'Babies & Kids' },
+    { value: 'beauty-and-personal-care', label: 'Beauty & Personal Care' },
+    { value: 'commercial-equipment-and-tools', label: 'Commercial Equipment & Tools' },
     { value: 'electronics', label: 'Electronics' },
-    { value: 'food', label: 'Food & Beverages' },
-    { value: 'beauty', label: 'Beauty & Cosmetics' },
-    { value: 'home', label: 'Home & Garden' },
+    { value: 'fashion', label: 'Fashion' },
+    { value: 'food-agriculture-and-farming', label: 'Food, Agriculture & Farming' },
+    { value: 'home-furniture-and-appliances', label: 'Home, Furniture & Appliances' },
+    { value: 'leisure-and-activities', label: 'Leisure & Activities' },
+    { value: 'pets', label: 'Pets' },
+    { value: 'phones-and-tablets', label: 'Phones & Tablets' },
+    { value: 'property', label: 'Property' },
+    { value: 'repair-and-construction', label: 'Repair & Construction' },
+    { value: 'sporting-goods', label: 'Sporting Goods' },
     { value: 'services', label: 'Services' },
+    { value: 'vehicles', label: 'Vehicles' },
+    { value: 'health-and-medical', label: 'Health & Medical' },
+    { value: 'office-and-school-supplies', label: 'Office & School Supplies' },
+    { value: 'jewelry-and-accessories', label: 'Jewelry & Accessories' },
+    { value: 'baby-products', label: 'Baby Products' },
+    { value: 'luggage-and-bags', label: 'Luggage & Bags' },
+    { value: 'software-and-digital-products', label: 'Software & Digital Products' },
+    { value: 'garden-and-outdoor', label: 'Garden & Outdoor' },
+    { value: 'industrial-and-scientific', label: 'Industrial & Scientific' },
+    { value: 'wedding-and-events', label: 'Wedding & Events' },
+    { value: 'toys-and-games', label: 'Toys & Games' },
     { value: 'other', label: 'Other' }
   ];
 
