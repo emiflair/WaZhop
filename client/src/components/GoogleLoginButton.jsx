@@ -76,11 +76,44 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     }
   };
 
-  const handleGoogleSuccess = (credentialResponse) => {
-    setPendingToken(credentialResponse.credential);
-    setShowModal(true);
-    setSellerStep(defaultRoleLabel === 'seller');
-    setModalError('');
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+    setPendingToken(token);
+    setLoading(true);
+
+    try {
+      // Check if user exists first
+      const checkResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      const checkData = await checkResponse.json();
+
+      if (!checkResponse.ok) {
+        setLoading(false);
+        setModalError(checkData.message || 'Failed to verify Google account');
+        onError?.(checkData.message);
+        return;
+      }
+
+      if (checkData.userExists) {
+        // User exists - login directly without showing modal
+        await submitGoogleLogin(checkData.user.role, null);
+      } else {
+        // New user - show modal to select role
+        setLoading(false);
+        setShowModal(true);
+        setSellerStep(defaultRoleLabel === 'seller');
+        setModalError('');
+      }
+    } catch (error) {
+      setLoading(false);
+      const message = error?.message || 'Failed to verify Google account';
+      setModalError(message);
+      onError?.(message);
+    }
   };
 
   const handleGoogleError = () => {

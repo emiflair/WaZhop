@@ -737,6 +737,74 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Password reset successful. You can now log in.' });
 });
 
+// @desc    Check if Google user exists
+// @route   POST /api/auth/google/check
+// @access  Public
+exports.checkGoogleUser = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      message: 'Google token is required'
+    });
+  }
+
+  try {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email } = payload;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Unable to retrieve email from Google'
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).populate('shop');
+
+    if (user) {
+      // User exists - check if active
+      if (!user.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been deactivated. Please contact support.',
+          userExists: true
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        userExists: true,
+        user: {
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      });
+    }
+
+    // User doesn't exist
+    return res.status(200).json({
+      success: true,
+      userExists: false
+    });
+  } catch (error) {
+    console.error('Google user check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to verify Google token'
+    });
+  }
+});
+
 // @desc    Google OAuth Login/Register
 // @route   POST /api/auth/google
 // @access  Public
