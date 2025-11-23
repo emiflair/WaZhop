@@ -82,10 +82,12 @@ export const AuthProvider = ({ children }) => {
   // Login user
   const login = async (credentials) => {
     try {
+      setLoading(true);
       const response = await authAPI.login(credentials);
       
       // Check if 2FA is required
       if (response.requires2FA) {
+        setLoading(false);
         return { success: false, requires2FA: true, error: response.message };
       }
 
@@ -95,6 +97,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(loggedInUser));
       setUser(loggedInUser);
       setIsAuthenticated(true);
+      setLoading(false);
 
       return { success: true, user: loggedInUser };
     } catch (error) {
@@ -106,8 +109,10 @@ export const AuthProvider = ({ children }) => {
       // If email verification is required, store email for verification flow
       if (requiresVerification && email) {
         localStorage.setItem('pendingVerifyEmail', email);
+        setLoading(false);
         return { success: false, error: message, requiresVerification: true, errors };
       }
+      setLoading(false);
       
       return { success: false, error: message, errors };
     }
@@ -125,6 +130,7 @@ export const AuthProvider = ({ children }) => {
   // Google Login
   const googleLogin = async (googleData) => {
     try {
+      setLoading(true);
       const response = await authAPI.googleAuth(googleData);
       const { token, user: loggedInUser } = response;
 
@@ -132,10 +138,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(loggedInUser));
       setUser(loggedInUser);
       setIsAuthenticated(true);
+      setLoading(false);
 
       return { success: true, user: loggedInUser };
     } catch (error) {
       const message = error.response?.data?.message || 'Google login failed';
+      setLoading(false);
       return { success: false, error: message };
     }
   };
