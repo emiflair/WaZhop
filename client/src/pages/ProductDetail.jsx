@@ -6,7 +6,7 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
 import StarRating from '../components/StarRating';
-import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2 } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2, FiX } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../utils/currency';
@@ -35,6 +35,8 @@ export default function ProductDetail() {
     comment: '',
     imageFile: null,
   });
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   const fetchRelatedProducts = useCallback(async (productId) => {
     try {
@@ -313,8 +315,12 @@ export default function ProductDetail() {
                   <img 
                     src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} 
                     alt={product.name} 
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                     fetchPriority={selectedImage === 0 ? "high" : "auto"}
+                    onClick={() => {
+                      setModalImageIndex(selectedImage);
+                      setShowImageModal(true);
+                    }}
                   />
                   {images.length > 1 && (
                     <>
@@ -608,6 +614,57 @@ export default function ProductDetail() {
         <MobileBottomNav />
         <Footer />
       </div>
+
+      {/* Image Lightbox Modal */}
+      {showImageModal && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <button 
+            onClick={() => setShowImageModal(false)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+          >
+            <FiX size={32} />
+          </button>
+          
+          <div className="relative max-w-6xl max-h-full" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={(images[modalImageIndex]?.url || images[modalImageIndex]?.secure_url) || ''}
+              alt={product.name}
+              className="max-w-full max-h-[90vh] object-contain mx-auto"
+            />
+            
+            {images.length > 1 && (
+              <>
+                <button 
+                  onClick={() => setModalImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 backdrop-blur-sm transition-colors"
+                >
+                  <FiChevronLeft size={28} />
+                </button>
+                <button 
+                  onClick={() => setModalImageIndex((prev) => (prev + 1) % images.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 backdrop-blur-sm transition-colors"
+                >
+                  <FiChevronRight size={28} />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {images.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setModalImageIndex(idx)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === modalImageIndex ? 'bg-white w-8' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -194,15 +194,12 @@ export default function Marketplace() {
           
           <div className="app-container relative z-10 py-2 sm:py-3 md:py-4">
             <div className="text-center">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-1.5 sm:mb-2">
-                Shop from <span className="text-white/90">Verified</span> Sellers
-              </h1>
-              <p className="text-xs sm:text-sm md:text-base text-white/90 max-w-2xl mx-auto mb-2 sm:mb-3">
-                Thousands of products. Best deals. Instant WhatsApp checkout.
-              </p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-2 sm:mb-3">
+              Shop from <span className="text-white/90">Verified</span> Sellers
+            </h1>
 
-              {/* Get Started CTA for guests */}
-              {!isAuthenticated && (
+            {/* Get Started CTA for guests */}
+            {!isAuthenticated && (
                 <div className="mb-2 sm:mb-3">
                   <Link
                     to="/register?role=seller"
