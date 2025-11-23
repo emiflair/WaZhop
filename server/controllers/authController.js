@@ -774,6 +774,9 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       });
     }
 
+    // Normalize email once so it can be reused below
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Determine requested role and normalize WhatsApp if required
     const requestedRole = role === 'seller' ? 'seller' : 'buyer';
     let normalizedWhatsApp = null;
@@ -805,9 +808,6 @@ exports.googleAuth = asyncHandler(async (req, res) => {
         });
       }
     }
-
-    // Normalize email
-    const normalizedEmail = email.trim().toLowerCase();
 
     // Check if user exists
     let user = await User.findOne({ email: normalizedEmail }).populate('shop');
