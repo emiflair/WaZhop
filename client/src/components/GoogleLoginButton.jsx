@@ -87,8 +87,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     onError?.('Google login failed');
   };
 
-  const handleSellerSubmit = (event) => {
-    event.preventDefault();
+  const handleSellerSubmit = () => {
     const formatted = formatSellerWhatsapp(sellerWhatsapp);
     if (!formatted) {
       setModalError('Enter a valid WhatsApp number (10 digits after 0).');
@@ -204,7 +203,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                     </p>
                   </div>
 
-                  <form onSubmit={handleSellerSubmit} className="space-y-4">
+                  <div className="space-y-4">
                     <div>
                       <label htmlFor="google-seller-whatsapp" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         WhatsApp Number
@@ -220,6 +219,12 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                           placeholder="8012345678"
                           value={sellerWhatsapp}
                           onChange={(event) => setSellerWhatsapp(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              handleSellerSubmit();
+                            }
+                          }}
                           className="flex-1 rounded-r-lg border-0 bg-transparent px-3 py-2 text-gray-900 outline-none placeholder:text-gray-400 focus:outline-none dark:text-white"
                           disabled={loading}
                           maxLength={10}
@@ -228,13 +233,14 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                     </div>
 
                     <button
-                      type="submit"
+                      type="button"
                       disabled={loading}
                       className="w-full rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={handleSellerSubmit}
                     >
                       {loading ? 'Creating seller account…' : 'Continue as Seller'}
                     </button>
-                  </form>
+                  </div>
                 </div>
               )}
             </div>
