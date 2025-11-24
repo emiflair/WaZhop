@@ -928,39 +928,36 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       // and the role parameter matches 'seller'
       if (requestedRole === 'seller' && user.role !== 'seller') {
         if (!normalizedWhatsApp) {
-          return res.status(400).json({
-            success: false,
-            message: 'WhatsApp number is required to upgrade to a seller account'
-          });
-        }
+          console.warn(`[Google Auth] Seller upgrade requested without WhatsApp; keeping buyer role for ${user.email}`);
+        } else {
+          user.role = 'seller';
+          user.whatsapp = normalizedWhatsApp;
+          requiresSave = true;
 
-        user.role = 'seller';
-        user.whatsapp = normalizedWhatsApp;
-        requiresSave = true;
+          if (!user.shop) {
+            const shopName = `${name || user.name || 'My'} Shop`;
+            const baseSlug = generateSlug(shopName);
+            const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
-        if (!user.shop) {
-          const shopName = `${name || user.name || 'My'} Shop`;
-          const baseSlug = generateSlug(shopName);
-          const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+            const newShop = await Shop.create({
+              owner: user._id,
+              shopName,
+              slug: uniqueSlug,
+              description: 'Welcome to my shop!',
+              category: 'other',
+              location: '',
+              showWatermark: true,
+              isActive: true,
+              theme: {
+                primaryColor: '#000000',
+                accentColor: '#FFD700',
+                layout: 'grid',
+                font: 'inter'
+              }
+            });
 
-          const newShop = await Shop.create({
-            owner: user._id,
-            shopName,
-            slug: uniqueSlug,
-            description: 'Welcome to my shop!',
-            category: 'other',
-            location: '',
-            showWatermark: true,
-            isActive: true,
-            theme: {
-              primaryColor: '#000000',
-              accentColor: '#FFD700',
-              layout: 'grid',
-              font: 'inter'
-            }
-          });
-
-          user.shop = newShop._id;
+            user.shop = newShop._id;
+          }
         }
       }
 
