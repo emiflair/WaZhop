@@ -43,7 +43,11 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   };
 
   const submitGoogleLogin = async (chosenRole, whatsappValue) => {
+    console.log('📤 submitGoogleLogin called with role:', chosenRole, 'whatsapp:', whatsappValue);
+    console.log('🔑 pendingToken exists:', !!pendingToken);
+    
     if (!pendingToken) {
+      console.error('❌ No pending token - this should not happen');
       onError?.('Unable to complete Google login. Please try again.');
       resetState();
       return;
@@ -58,18 +62,22 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
         payload.whatsapp = whatsappValue;
       }
 
+      console.log('🚀 Calling googleLogin with payload:', { ...payload, token: '***' });
       const result = await googleLogin(payload);
+      console.log('✅ googleLogin result:', result);
 
       if (result.success) {
         resetState();
         onSuccess?.(result);
       } else {
         const message = result.error || 'Google login failed';
+        console.error('❌ Google login failed:', message);
         setLoading(false);
         setModalError(message);
         onError?.(message);
       }
     } catch (error) {
+      console.error('❌ Google login exception:', error);
       const message = error?.response?.data?.message || error?.message || 'Google login failed';
       setLoading(false);
       setModalError(message);
@@ -79,25 +87,37 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     const token = credentialResponse.credential;
+    
+    if (!token) {
+      console.error('No credential token received from Google');
+      onError?.('Google login failed. Please try again.');
+      return;
+    }
+
     setPendingToken(token);
     setLoading(true);
 
     try {
       // Check if user exists first using api instance (correct base URL)
+      console.log('🔍 Checking if Google user exists...');
       const checkData = await api.post('/auth/google/check', { token });
+      console.log('✅ Check response:', checkData);
 
       if (checkData.userExists) {
         // User exists - login directly without showing modal
         // Use the existing user's role to login automatically
+        console.log('👤 Existing user found, auto-logging in with role:', checkData.user.role);
         await submitGoogleLogin(checkData.user.role, null);
       } else {
         // New user - show modal to select role
+        console.log('🆕 New user, showing role selection modal');
         setLoading(false);
         setShowModal(true);
         setSellerStep(defaultRoleLabel === 'seller');
         setModalError('');
       }
     } catch (error) {
+      console.error('❌ Google user check error:', error);
       setLoading(false);
       const message = error?.response?.data?.message || error?.message || 'Failed to verify Google account';
       setModalError(message);
