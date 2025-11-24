@@ -2,6 +2,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useMemo, useState } from 'react';
 import { FaArrowLeft, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   const { googleLogin } = useAuth();
@@ -82,24 +83,12 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     setLoading(true);
 
     try {
-      // Check if user exists first
-      const checkResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
-
-      const checkData = await checkResponse.json();
-
-      if (!checkResponse.ok) {
-        setLoading(false);
-        setModalError(checkData.message || 'Failed to verify Google account');
-        onError?.(checkData.message);
-        return;
-      }
+      // Check if user exists first using api instance (correct base URL)
+      const checkData = await api.post('/auth/google/check', { token });
 
       if (checkData.userExists) {
         // User exists - login directly without showing modal
+        // Use the existing user's role to login automatically
         await submitGoogleLogin(checkData.user.role, null);
       } else {
         // New user - show modal to select role
@@ -110,7 +99,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
       }
     } catch (error) {
       setLoading(false);
-      const message = error?.message || 'Failed to verify Google account';
+      const message = error?.response?.data?.message || error?.message || 'Failed to verify Google account';
       setModalError(message);
       onError?.(message);
     }

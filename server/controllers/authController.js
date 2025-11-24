@@ -789,27 +789,39 @@ exports.checkGoogleUser = asyncHandler(async (req, res) => {
         });
       }
 
+      // User exists and is active - return user data for auto-login
       return res.status(200).json({
         success: true,
         userExists: true,
         user: {
+          id: user._id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role,
+          whatsapp: user.whatsapp
         }
       });
     }
 
-    // User doesn't exist
+    // User doesn't exist - frontend will show role selection modal
     return res.status(200).json({
       success: true,
       userExists: false
     });
   } catch (error) {
-    console.error('Google user check error:', error);
+    console.error('[Google User Check] Error:', error);
+    
+    // Handle specific Google token errors
+    if (error.message && error.message.includes('Token used too late')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token has expired. Please try signing in again.'
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: 'Failed to verify Google token'
+      message: 'Failed to verify Google account. Please try again.'
     });
   }
 });
@@ -890,7 +902,7 @@ exports.googleAuth = asyncHandler(async (req, res) => {
     let user = await User.findOne({ email: normalizedEmail }).populate('shop');
 
     if (user) {
-      // Existing user - login
+      // Existing user - login with their existing account
       // Check if account is active
       if (!user.isActive) {
         return res.status(403).json({
@@ -907,7 +919,13 @@ exports.googleAuth = asyncHandler(async (req, res) => {
         requiresSave = true;
       }
 
-      // Upgrade buyer to seller if requested and not already seller
+      // For existing users, we DON'T change their role
+      // If they signed up as a buyer, they stay as a buyer
+      // If they signed up as a seller, they stay as a seller
+      // This prevents accidental role changes during login
+      
+      // However, we do allow upgrading from buyer to seller if explicitly requested
+      // and the role parameter matches 'seller'
       if (requestedRole === 'seller' && user.role !== 'seller') {
         if (!normalizedWhatsApp) {
           return res.status(400).json({
@@ -975,6 +993,9 @@ exports.googleAuth = asyncHandler(async (req, res) => {
         user = await User.findById(user._id).populate('shop');
       }
 
+      // Log successful login for existing user
+      console.log(`[Google Auth] Existing user logged in: ${user.email} (${user.role})`);
+      
       return sendTokenResponse(user, 200, res);
     }
 

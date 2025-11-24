@@ -183,7 +183,7 @@ function AppRoutes() {
                 <Route path="/demo/loading-states" element={<ProtectedRoute><LoadingStatesExamples /></ProtectedRoute>} />
                 <Route path="/demo/mobile-responsive" element={<ProtectedRoute><MobileResponsiveDemo /></ProtectedRoute>} />
 
-                {/* Public Storefront */}
+                {/* Public Storefront - MUST BE LAST to avoid catching other routes */}
                 <Route path="/:slug" element={<Storefront />} />
       </Routes>
     </Suspense>
