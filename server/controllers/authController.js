@@ -866,36 +866,14 @@ exports.googleAuth = asyncHandler(async (req, res) => {
     // Normalize email once so it can be reused below
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Determine requested role and normalize WhatsApp if required
+    // Determine requested role and normalize WhatsApp if provided
     const requestedRole = role === 'seller' ? 'seller' : 'buyer';
-    let normalizedWhatsApp = null;
-
-    if (requestedRole === 'seller') {
-      if (!whatsapp || !String(whatsapp).trim()) {
-        return res.status(400).json({
-          success: false,
-          message: 'WhatsApp number is required to create a seller account'
-        });
-      }
-
-      const normalizedPhone = normalizePhoneNumber(String(whatsapp));
-
-      if (!normalizedPhone) {
-        return res.status(400).json({
-          success: false,
-          message: 'Please provide a valid WhatsApp number'
-        });
-      }
-
-      normalizedWhatsApp = normalizedPhone;
-
-      const phoneOwner = await User.findOne({ whatsapp: normalizedPhone });
-      if (phoneOwner && phoneOwner.email !== normalizedEmail) {
-        return res.status(400).json({
-          success: false,
-          message: 'WhatsApp number is already in use'
-        });
-      }
+    const normalizedWhatsApp = whatsapp ? normalizePhoneNumber(String(whatsapp)) : null;
+    if (whatsapp && !normalizedWhatsApp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid WhatsApp number'
+      });
     }
 
     // Check if user exists
@@ -927,42 +905,65 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       // However, we do allow upgrading from buyer to seller if explicitly requested
       // and the role parameter matches 'seller'
       if (requestedRole === 'seller' && user.role !== 'seller') {
-        if (!normalizedWhatsApp) {
-          console.warn(`[Google Auth] Seller upgrade requested without WhatsApp; keeping buyer role for ${user.email}`);
-        } else {
-          user.role = 'seller';
-          user.whatsapp = normalizedWhatsApp;
-          requiresSave = true;
+        const upgradeWhatsApp = normalizedWhatsApp || user.whatsapp;
+        if (!upgradeWhatsApp) {
+          return res.status(400).json({
+            success: false,
+            message: 'WhatsApp number is required to upgrade to a seller account'
+          });
+        }
 
-          if (!user.shop) {
-            const shopName = `${name || user.name || 'My'} Shop`;
-            const baseSlug = generateSlug(shopName);
-            const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
-
-            const newShop = await Shop.create({
-              owner: user._id,
-              shopName,
-              slug: uniqueSlug,
-              description: 'Welcome to my shop!',
-              category: 'other',
-              location: '',
-              showWatermark: true,
-              isActive: true,
-              theme: {
-                primaryColor: '#000000',
-                accentColor: '#FFD700',
-                layout: 'grid',
-                font: 'inter'
-              }
+        // Ensure WhatsApp uniqueness if new number supplied
+        if (normalizedWhatsApp) {
+          const phoneOwner = await User.findOne({ whatsapp: upgradeWhatsApp });
+          if (phoneOwner && phoneOwner.email !== normalizedEmail) {
+            return res.status(400).json({
+              success: false,
+              message: 'WhatsApp number is already in use'
             });
-
-            user.shop = newShop._id;
           }
+        }
+
+        user.role = 'seller';
+        user.whatsapp = upgradeWhatsApp;
+        requiresSave = true;
+
+        if (!user.shop) {
+          const shopName = `${name || user.name || 'My'} Shop`;
+          const baseSlug = generateSlug(shopName);
+          const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
+
+          const newShop = await Shop.create({
+            owner: user._id,
+            shopName,
+            slug: uniqueSlug,
+            description: 'Welcome to my shop!',
+            category: 'other',
+            location: '',
+            showWatermark: true,
+            isActive: true,
+            theme: {
+              primaryColor: '#000000',
+              accentColor: '#FFD700',
+              layout: 'grid',
+              font: 'inter'
+            }
+          });
+
+          user.shop = newShop._id;
         }
       }
 
       // Update WhatsApp if provided and not set yet
-      if (normalizedWhatsApp && !user.whatsapp) {
+      if (normalizedWhatsApp && user.whatsapp !== normalizedWhatsApp) {
+        // Ensure number is unique or already owned by this user
+        const phoneOwner = await User.findOne({ whatsapp: normalizedWhatsApp });
+        if (phoneOwner && phoneOwner.email !== normalizedEmail) {
+          return res.status(400).json({
+            success: false,
+            message: 'WhatsApp number is already in use'
+          });
+        }
         user.whatsapp = normalizedWhatsApp;
         requiresSave = true;
       }
@@ -996,7 +997,24 @@ exports.googleAuth = asyncHandler(async (req, res) => {
       return sendTokenResponse(user, 200, res);
     }
 
-    // New user - create account
+    // New user - enforce WhatsApp for sellers
+    if (requestedRole === 'seller' && !normalizedWhatsApp) {
+      return res.status(400).json({
+        success: false,
+        message: 'WhatsApp number is required to create a seller account'
+      });
+    }
+
+    if (normalizedWhatsApp) {
+      const phoneOwner = await User.findOne({ whatsapp: normalizedWhatsApp });
+      if (phoneOwner) {
+        return res.status(400).json({
+          success: false,
+          message: 'WhatsApp number is already in use'
+        });
+      }
+    }
+
     const userRole = requestedRole;
 
     // Create new user with Google data
