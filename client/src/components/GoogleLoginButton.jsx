@@ -42,11 +42,13 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     return `+234${digits}`;
   };
 
-  const submitGoogleLogin = async (chosenRole, whatsappValue) => {
+  const submitGoogleLogin = async (chosenRole, whatsappValue, overrideToken) => {
     console.log('📤 submitGoogleLogin called with role:', chosenRole, 'whatsapp:', whatsappValue);
-    console.log('🔑 pendingToken exists:', !!pendingToken);
-    
-    if (!pendingToken) {
+
+    const tokenToUse = overrideToken || pendingToken;
+    console.log('🔑 token available:', !!tokenToUse);
+
+    if (!tokenToUse) {
       console.error('❌ No pending token - this should not happen');
       onError?.('Unable to complete Google login. Please try again.');
       resetState();
@@ -57,7 +59,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     setModalError('');
 
     try {
-      const payload = { token: pendingToken, role: chosenRole };
+      const payload = { token: tokenToUse, role: chosenRole };
       if (chosenRole === 'seller' && whatsappValue) {
         payload.whatsapp = whatsappValue;
       }
@@ -107,7 +109,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
         // User exists - login directly without showing modal
         // Use the existing user's role to login automatically
         console.log('👤 Existing user found, auto-logging in with role:', checkData.user.role);
-        await submitGoogleLogin(checkData.user.role, null);
+        await submitGoogleLogin(checkData.user.role, null, token);
       } else {
         // New user - show modal to select role
         console.log('🆕 New user, showing role selection modal');
