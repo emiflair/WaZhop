@@ -43,11 +43,10 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   };
 
   const submitGoogleLogin = async (chosenRole, whatsappValue, overrideToken) => {
-    console.log('📤 submitGoogleLogin called with role:', chosenRole, 'whatsapp:', whatsappValue);
-
     const tokenToUse = overrideToken || pendingToken;
-    console.log('🔑 token available:', !!tokenToUse);
-
+    console.log('📤 submitGoogleLogin called with role:', chosenRole, 'whatsapp:', whatsappValue, 'using override token:', !!overrideToken);
+    console.log('🔑 pendingToken exists:', !!pendingToken, 'tokenToUse exists:', !!tokenToUse);
+    
     if (!tokenToUse) {
       console.error('❌ No pending token - this should not happen');
       onError?.('Unable to complete Google login. Please try again.');
