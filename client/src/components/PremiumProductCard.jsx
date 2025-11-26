@@ -115,16 +115,7 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
           </div>
         )}
 
-        {/* Condition Badge */}
-        <div className={`absolute ${product.stock === 0 ? 'top-14' : 'top-3'} left-3 px-2 py-1 rounded text-xs font-semibold ${
-          product.condition === 'used' 
-            ? 'bg-gray-600 text-white' 
-            : 'bg-green-500 text-white'
-        }`}>
-          {product.condition === 'used' ? 'Used' : 'Brand New'}
-        </div>
-
-        {/* Quick View Button */}
+        {/* Quick View Button */
         {productCards?.showQuickView && onQuickView && (
           <button
             onClick={() => onQuickView(product)}
@@ -140,6 +131,17 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
 
       {/* Product Info */}
       <div className="p-4 space-y-3">
+        {/* Condition Badge */}
+        <div className="flex items-center">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+            product.condition === 'used' 
+              ? 'bg-gray-600 text-white' 
+              : 'bg-green-500 text-white'
+          }`}>
+            {product.condition === 'used' ? 'Used' : 'Brand New'}
+          </span>
+        </div>
+
         {/* Product Name */}
         <h3 className="font-semibold text-lg line-clamp-2" style={{ color: colors?.text }}>
           {product.name}

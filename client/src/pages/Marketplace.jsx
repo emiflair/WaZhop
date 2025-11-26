@@ -750,16 +750,7 @@ function ProductCard({ product, onOpen, index = 0 }) {
           </div>
         )}
 
-        {/* Condition Badge */}
-        <div className={`absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg ${
-          (product.condition === 'used') 
-            ? 'bg-gray-600 text-white' 
-            : 'bg-green-500 text-white'
-        }`}>
-          {product.condition === 'used' ? 'Used' : 'Brand New'}
-        </div>
-
-        {/* Rating Badge */}
+        {/* Rating Badge */
         <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium shadow-lg">
           <FiStar className="text-yellow-500 w-3 h-3" />
           <span className="text-gray-900 dark:text-gray-100 font-semibold">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
@@ -802,6 +793,17 @@ function ProductCard({ product, onOpen, index = 0 }) {
 
       {/* Content - compact */}
       <div className="p-3 sm:p-3">
+        {/* Condition Badge */}
+        <div className="mb-2">
+          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+            product.condition === 'used' 
+              ? 'bg-gray-600 text-white' 
+              : 'bg-green-500 text-white'
+          }`}>
+            {product.condition === 'used' ? 'Used' : 'Brand New'}
+          </span>
+        </div>
+
         <h3 className="font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 mb-1.5 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
           {product.name}
         </h3>

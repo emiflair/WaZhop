@@ -265,7 +265,13 @@ const Storefront = () => {
                 Only {product.stock} left
               </span>
             )}
-            <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md ${
+          </div>
+        </div>
+
+        <div className="p-2 sm:p-3 md:p-4">
+          {/* Condition Badge */}
+          <div className="mb-2">
+            <span className={`inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
               product.condition === 'used' 
                 ? 'bg-gray-600 text-white' 
                 : 'bg-green-500 text-white'
@@ -273,9 +279,7 @@ const Storefront = () => {
               {product.condition === 'used' ? 'Used' : 'Brand New'}
             </span>
           </div>
-        </div>
 
-        <div className="p-2 sm:p-3 md:p-4">
           <h3 
             className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg mb-1 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] cursor-pointer hover:text-blue-600 active:text-blue-700 dark:text-white dark:hover:text-blue-400 dark:active:text-blue-500 touch-manipulation"
             onClick={() => setSelectedProduct(product)}
