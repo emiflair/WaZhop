@@ -299,25 +299,21 @@ export default function Marketplace() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Navbar />
 
-        {/* Discover Amazing Products Banner */}
-        <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-2 sm:py-3 text-center">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white tracking-tight px-4 select-none">
-            Discover Amazing Products
-          </h2>
-        </div>
-
         {/* Hero Slider Section */}
         <section className="relative text-white overflow-hidden bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10 pointer-events-none"></div>
-          <div className="relative z-10 pt-6 md:pt-8 lg:pt-10 pb-0 px-0">
-            <div className="max-w-6xl mx-auto flex flex-col gap-4 md:gap-6 px-4">
+          <div className="relative z-10 pt-4 md:pt-6 pb-0 px-0">
+            <div className="max-w-6xl mx-auto flex flex-col gap-1 md:gap-2 px-4">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white tracking-tight text-center select-none">
+                Discover Amazing Products
+              </h2>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-center">
                 Shop from <span className="text-white/80">Verified</span> Sellers
               </h1>
             </div>
 
             {/* Full-width banner - mobile simple, desktop full-bleed */}
-            <div className="relative mt-4 sm:mt-6 md:mt-8 h-56 sm:h-64 md:h-[500px] lg:h-[600px] xl:h-[650px]">
+            <div className="relative mt-3 sm:mt-4 md:mt-6 h-56 sm:h-64 md:h-[500px] lg:h-[600px] xl:h-[650px]">
               {/* Mobile: Simple centered banner */}
               <div className="md:hidden relative h-full w-full rounded-none overflow-hidden bg-transparent">
                 {HERO_SLIDES.map((slide, index) => {
