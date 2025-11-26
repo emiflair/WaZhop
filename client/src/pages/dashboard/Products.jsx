@@ -477,6 +477,8 @@ const Products = () => {
     setEditingProduct(product);
     setQuickAddMode(false);
     setBulkUploadMode(false);
+    const normalizedCondition = (product.condition || '').toLowerCase();
+
     setFormData({
       name: product.name,
       description: product.description,
@@ -489,7 +491,7 @@ const Products = () => {
       sku: product.sku || '',
       locationState: product.locationState || 'Lagos',
       locationArea: product.locationArea || '',
-      condition: product.condition || ''
+      condition: normalizedCondition
     });
     
     // Load existing images with IDs
@@ -519,6 +521,8 @@ const Products = () => {
     setEditingProduct(null); // Not editing, creating new
     setQuickAddMode(false);
     setBulkUploadMode(false);
+    const normalizedCondition = (product.condition || '').toLowerCase();
+
     setFormData({
       name: `${product.name} (Copy)`,
       description: product.description,
@@ -531,7 +535,7 @@ const Products = () => {
       sku: product.sku ? `${product.sku}-copy` : '',
       locationState: product.locationState || 'Lagos',
       locationArea: product.locationArea || '',
-      condition: product.condition || ''
+      condition: normalizedCondition
     });
     
     // Don't copy images - seller needs to add new ones
