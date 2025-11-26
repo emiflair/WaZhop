@@ -170,7 +170,18 @@ exports.getProduct = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createProduct = asyncHandler(async (req, res) => {
   const {
-    name, description, price, comparePrice, category, subcategory, tags, inStock, sku, shopId, locationState, locationArea
+    name,
+    description,
+    price,
+    comparePrice,
+    category,
+    subcategory,
+    tags,
+    inStock,
+    sku,
+    shopId,
+    locationState,
+    locationArea
   } = req.body;
 
   // Find the shop - use provided shopId or default to user's first active shop
@@ -340,18 +351,40 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       : req.body.tags.split(',').map((t) => t.trim());
   }
 
+  // Build update object with only allowed fields
+  const updateData = {};
+  
+  // Explicitly map each field
+  if (req.body.name !== undefined) updateData.name = req.body.name;
+  if (req.body.description !== undefined) updateData.description = req.body.description;
+  if (req.body.price !== undefined) updateData.price = req.body.price;
+  if (req.body.comparePrice !== undefined) updateData.comparePrice = req.body.comparePrice;
+  if (req.body.category !== undefined) updateData.category = req.body.category;
+  if (req.body.subcategory !== undefined) updateData.subcategory = req.body.subcategory;
+  if (req.body.inStock !== undefined) updateData.inStock = req.body.inStock;
+  if (req.body.sku !== undefined) updateData.sku = req.body.sku;
+  if (req.body.variants !== undefined) updateData.variants = req.body.variants;
+  
+  // Handle tags
+  if (req.body.tags !== undefined) {
+    updateData.tags = Array.isArray(req.body.tags)
+      ? req.body.tags
+      : req.body.tags.split(',').map((t) => t.trim());
+  }
+  
+  // Normalize location fields
+  if (req.body.locationState !== undefined) {
+    updateData.locationState = req.body.locationState ? req.body.locationState.toString().trim() : null;
+  }
+  if (req.body.locationArea !== undefined) {
+    updateData.locationArea = req.body.locationArea ? req.body.locationArea.toString().trim() : null;
+  }
+  
+
+
   product = await Product.findByIdAndUpdate(
     req.params.id,
-    (() => {
-      const update = { ...req.body };
-      if (update.locationState !== undefined) {
-        update.locationState = update.locationState ? update.locationState.toString().trim() : null;
-      }
-      if (update.locationArea !== undefined) {
-        update.locationArea = update.locationArea ? update.locationArea.toString().trim() : null;
-      }
-      return update;
-    })(),
+    updateData,
     {
       new: true,
       runValidators: true
@@ -702,7 +735,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   // Fetch products with shop and owner details
   // Only select fields needed for marketplace listing (reduces payload size)
   const products = await Product.find(query)
-    .select('name price images category subcategory tags boost shop views createdAt inStock stock comparePrice')
+    .select('name price images category subcategory tags boost shop views createdAt inStock stock comparePrice condition')
     .populate({
       path: 'shop',
       select: 'shopName slug logo owner',
@@ -957,7 +990,7 @@ exports.getRelatedProducts = asyncHandler(async (req, res) => {
   query.shop = { $in: activeShops.map((s) => s._id) };
 
   const relatedProducts = await Product.find(query)
-    .select('name price images category subcategory shop views createdAt inStock stock comparePrice')
+    .select('name price images category subcategory shop views createdAt inStock stock comparePrice condition')
     .populate({
       path: 'shop',
       select: 'shopName slug logo'

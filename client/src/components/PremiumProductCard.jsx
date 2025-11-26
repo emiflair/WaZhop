@@ -115,7 +115,7 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
           </div>
         )}
 
-        {/* Quick View Button */}
+        {/* Quick View Button */
         {productCards?.showQuickView && onQuickView && (
           <button
             onClick={() => onQuickView(product)}

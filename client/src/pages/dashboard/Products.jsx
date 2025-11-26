@@ -88,10 +88,10 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       const response = await productAPI.getMyProducts();
-      console.log('📦 Full products response:', response);
+      console.log('📦 FETCH: Full products response:', response);
       // Handle response format: response.data or response.data.data
       const products = response?.data?.data || response?.data || [];
-      console.log('✅ Extracted products:', products.length);
+      console.log('✅ FETCH: Extracted products:', products.length);
       setProducts(products);
       setFilteredProducts(products);
     } catch (error) {
@@ -293,20 +293,22 @@ const Products = () => {
         return;
       }
 
+      // Build clean update payload - only include necessary fields
       const productData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
+        category: (formData.category || 'other').toString().trim().toLowerCase().replace(/\s+/g, '-') || 'other',
+        subcategory: formData.subcategory || null,
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
+        inStock: formData.inStock,
+        sku: formData.sku || '',
+        locationState: formData.locationState || null,
+        locationArea: formData.locationArea || null,
         variants: variants.length > 0 ? variants : undefined,
       };
 
-      // Normalize category: lowercase slug and fallback to 'other'
-      productData.category = (productData.category || 'other')
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-') || 'other';
 
       if (editingProduct) {
         // Update existing product
@@ -319,7 +321,15 @@ const Products = () => {
           updatePromises.push(productAPI.uploadImages(editingProduct._id, images));
         }
         
-        await Promise.all(updatePromises);
+        const results = await Promise.all(updatePromises);
+        const updatedProduct = results[0]?.data?.data || results[0]?.data;
+        
+        console.log('✅ RESPONSE: Product update response:', {
+          rawResponse: results[0],
+          extractedProduct: updatedProduct,
+          allFields: Object.keys(updatedProduct || {})
+        });
+        
         toast.success('Product updated successfully!');
       } else {
         // Require at least 1 image for new products
@@ -388,14 +398,12 @@ const Products = () => {
     
     try {
       const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image);
-      
+
       if (validProducts.length === 0) {
-        toast.error('Please fill Name, Price, and Category for at least one product');
+        toast.error('Please fill Name, Price, Category, and add an image for at least one product');
         setUploading(false);
         return;
-      }
-
-      const promises = validProducts.map(async (bulkProduct) => {
+      }      const promises = validProducts.map(async (bulkProduct) => {
         try {
           const productData = {
             name: bulkProduct.name,
@@ -444,6 +452,7 @@ const Products = () => {
     setEditingProduct(product);
     setQuickAddMode(false);
     setBulkUploadMode(false);
+
     setFormData({
       name: product.name,
       description: product.description,
@@ -485,6 +494,7 @@ const Products = () => {
     setEditingProduct(null); // Not editing, creating new
     setQuickAddMode(false);
     setBulkUploadMode(false);
+
     setFormData({
       name: `${product.name} (Copy)`,
       description: product.description,
@@ -649,6 +659,7 @@ const Products = () => {
       price: '',
       comparePrice: '',
       category: 'other',
+      subcategory: '',
       tags: '',
       inStock: true,
       sku: '',
