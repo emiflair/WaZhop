@@ -616,6 +616,7 @@ export default function Marketplace() {
                       onChange={(e) => setArea(e.target.value)}
                       placeholder="Area (e.g., V.I.)"
                       className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                      style={{ fontSize: '16px' }}
                     />
                   </div>
                   <div className="sm:col-span-1 flex items-end">
