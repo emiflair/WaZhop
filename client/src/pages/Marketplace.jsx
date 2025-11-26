@@ -372,8 +372,8 @@ export default function Marketplace() {
 
         {/* Trending Categories Section */}
         <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-          <div className="app-container py-6">
-            <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="app-container py-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
               <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300">Trending Categories</h3>
             </div>
 
@@ -462,7 +462,7 @@ export default function Marketplace() {
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
         {/* Products Grid */}
-        <div className="flex-1 py-8 pb-24 md:pb-8">
+        <div className="flex-1 py-5 pb-24 md:pb-8">
           <div className="container-custom">
             {loading && page === 1 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
@@ -713,18 +713,6 @@ function ProductCard({ product, onOpen, index = 0 }) {
           loading={shouldEagerLoad ? "eager" : "lazy"}
           fetchPriority={shouldEagerLoad ? "high" : "auto"}
         />
-        
-        {/* WaZhop Watermark for Free Users Only */}
-        {(product.shop?.owner?.plan === 'free' || (!product.shop?.owner?.plan && product.shop?.owner?._id)) && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="flex items-center gap-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
-              <svg className="w-6 h-6 text-primary-600" viewBox="0 0 100 100" fill="currentColor">
-                <text x="50" y="70" fontSize="80" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">W</text>
-              </svg>
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">WaZhop</span>
-            </div>
-          </div>
-        )}
         
         {/* Multiple Images Indicator */}
         {product.images?.length > 1 && (
