@@ -80,7 +80,17 @@ const Products = () => {
   // Debug: Track condition changes in formData
   useEffect(() => {
     console.log('🔍 STATE: formData.condition changed to:', formData.condition, typeof formData.condition);
+    console.log('🔍 STATE: Full formData:', formData);
   }, [formData.condition]);
+
+  // Debug: Track all formData changes
+  useEffect(() => {
+    console.log('📋 FORMDATA: Entire form state updated:', {
+      condition: formData.condition,
+      name: formData.name,
+      category: formData.category
+    });
+  }, [formData]);
 
   const fetchSubscription = async () => {
     try {
