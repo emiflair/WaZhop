@@ -310,6 +310,9 @@ const Products = () => {
         .toLowerCase()
         .replace(/\s+/g, '-') || 'other';
 
+      // Ensure condition is included and normalized
+      productData.condition = (formData.condition || 'brand new').toLowerCase().trim();
+
       if (editingProduct) {
         // Update existing product
         const updatePromises = [
@@ -654,11 +657,13 @@ const Products = () => {
       price: '',
       comparePrice: '',
       category: 'other',
+      subcategory: '',
       tags: '',
       inStock: true,
       sku: '',
       locationState: 'Lagos',
-      locationArea: ''
+      locationArea: '',
+      condition: 'brand new'
     });
     setImages([]);
     setImagePreviews([]);
