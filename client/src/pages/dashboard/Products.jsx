@@ -307,23 +307,22 @@ const Products = () => {
         return;
       }
 
+      // Build clean update payload - only include necessary fields
       const productData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
+        category: (formData.category || 'other').toString().trim().toLowerCase().replace(/\s+/g, '-') || 'other',
+        subcategory: formData.subcategory || null,
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
+        inStock: formData.inStock,
+        sku: formData.sku || '',
+        locationState: formData.locationState || null,
+        locationArea: formData.locationArea || null,
+        condition: formData.condition ? formData.condition.toLowerCase().trim() : null,
         variants: variants.length > 0 ? variants : undefined,
       };
-
-      // Normalize category: lowercase slug and fallback to 'other'
-      productData.category = (productData.category || 'other')
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-') || 'other';
-
-      // Include condition as-is from form (no default override)
-      productData.condition = formData.condition.toLowerCase().trim();
       
       console.log('💾 SAVE: Preparing to save product:', {
         editingProductId: editingProduct?._id,
