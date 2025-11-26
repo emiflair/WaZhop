@@ -53,7 +53,8 @@ const Products = () => {
     inStock: true,
     sku: '',
     locationState: 'Lagos',
-    locationArea: ''
+    locationArea: '',
+    condition: 'brand new'
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -281,7 +282,8 @@ const Products = () => {
           tags: [],
           inStock: true,
           locationState: user?.shopDetails?.locationState || 'Lagos',
-          locationArea: user?.shopDetails?.locationArea || ''
+          locationArea: user?.shopDetails?.locationArea || '',
+          condition: formData.condition || 'brand new'
         };
         
         await productAPI.createProduct(quickProduct, images);
@@ -363,6 +365,7 @@ const Products = () => {
         price: '',
         category: '',
         subcategory: '',
+        condition: 'brand new',
         image: file,
         imagePreview: URL.createObjectURL(file)
       }));
@@ -406,7 +409,8 @@ const Products = () => {
             tags: [],
             inStock: true,
             locationState: user?.shopDetails?.locationState || 'Lagos',
-            locationArea: user?.shopDetails?.locationArea || ''
+            locationArea: user?.shopDetails?.locationArea || '',
+            condition: bulkProduct.condition || 'brand new'
           };
           
           return await productAPI.createProduct(productData, [bulkProduct.image]);
@@ -455,7 +459,8 @@ const Products = () => {
       inStock: product.inStock,
       sku: product.sku || '',
       locationState: product.locationState || 'Lagos',
-      locationArea: product.locationArea || ''
+      locationArea: product.locationArea || '',
+      condition: product.condition || 'brand new'
     });
     
     // Load existing images with IDs
@@ -1198,6 +1203,7 @@ const Products = () => {
                               <th className="px-3 py-2 text-left text-xs font-medium">Price (₦) *</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Category *</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Subcategory</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium">Condition *</th>
                               <th className="px-3 py-2 text-center text-xs font-medium">Action</th>
                             </tr>
                           </thead>
@@ -1266,6 +1272,16 @@ const Products = () => {
                                       placeholder="-"
                                     />
                                   )}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <select
+                                    value={product.condition}
+                                    onChange={(e) => updateBulkProduct(product.id, 'condition', e.target.value)}
+                                    className="input text-sm w-full"
+                                  >
+                                    <option value="brand new">Brand New</option>
+                                    <option value="used">Used</option>
+                                  </select>
                                 </td>
                                 <td className="px-3 py-2 text-center">
                                   <TouchButton
@@ -1382,6 +1398,35 @@ const Products = () => {
                           placeholder="Select category first"
                         />
                       )}
+                    </div>
+                  </div>
+
+                  {/* Product Condition */}
+                  <div>
+                    <label className="label text-sm sm:text-base">Condition *</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="condition-quick"
+                          value="brand new"
+                          checked={formData.condition === 'brand new'}
+                          onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm sm:text-base">Brand New</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="condition-quick"
+                          value="used"
+                          checked={formData.condition === 'used'}
+                          onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm sm:text-base">Used</span>
+                      </label>
                     </div>
                   </div>
 
@@ -1582,6 +1627,35 @@ const Products = () => {
                       className="input text-sm sm:text-base"
                       placeholder="leather, women, handbag"
                     />
+                  </div>
+                </div>
+
+                {/* Product Condition */}
+                <div>
+                  <label className="label text-sm sm:text-base">Product Condition *</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="condition"
+                        value="brand new"
+                        checked={formData.condition === 'brand new'}
+                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm sm:text-base">Brand New</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="condition"
+                        value="used"
+                        checked={formData.condition === 'used'}
+                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm sm:text-base">Used</span>
+                    </label>
                   </div>
                 </div>
 
