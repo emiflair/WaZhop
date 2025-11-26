@@ -391,13 +391,23 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     updateData.locationArea = req.body.locationArea ? req.body.locationArea.toString().trim() : null;
   }
   
-  // CRITICAL: Ensure condition field is explicitly set
-  if (req.body.condition !== undefined && req.body.condition !== null && req.body.condition !== '') {
-    updateData.condition = req.body.condition.toString().toLowerCase().trim();
+  // CRITICAL: Ensure condition field is explicitly set and validated
+  if (req.body.condition !== undefined) {
+    const normalizedCondition = req.body.condition ? req.body.condition.toString().toLowerCase().trim() : null;
+    
+    if (!normalizedCondition || (normalizedCondition !== 'brand new' && normalizedCondition !== 'used')) {
+      console.log('❌ CONDITION: Invalid value received:', req.body.condition);
+      return res.status(400).json({
+        success: false,
+        message: 'Product condition must be either "brand new" or "used"'
+      });
+    }
+    
+    updateData.condition = normalizedCondition;
     console.log('🔄 CONDITION: Received from client:', req.body.condition);
     console.log('🔄 CONDITION: Normalized for DB:', updateData.condition);
   } else {
-    console.log('⚠️ CONDITION: Missing or empty in request body!', req.body.condition);
+    console.log('⚠️ CONDITION: Not provided in request body, keeping existing value');
   }
 
   console.log('📝 UPDATE: All fields being updated:', Object.keys(updateData));

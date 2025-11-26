@@ -1706,10 +1706,19 @@ const Products = () => {
                         type="radio"
                         name="condition"
                         value="brand new"
-                        checked={formData.condition === 'brand new'}
+                        checked={(() => {
+                          const isChecked = formData.condition === 'brand new';
+                          console.log('✅ CHECK: Brand New radio -', { formDataCondition: formData.condition, isChecked });
+                          return isChecked;
+                        })()}
                         onChange={(e) => {
                           console.log('🔘 CLICK: Brand New selected, value:', e.target.value);
-                          setFormData({ ...formData, condition: e.target.value });
+                          console.log('📝 BEFORE: formData.condition =', formData.condition);
+                          setFormData(prev => {
+                            const newData = { ...prev, condition: e.target.value };
+                            console.log('📝 AFTER: newData.condition =', newData.condition);
+                            return newData;
+                          });
                         }}
                         className="w-4 h-4"
                       />
@@ -1720,10 +1729,19 @@ const Products = () => {
                         type="radio"
                         name="condition"
                         value="used"
-                        checked={formData.condition === 'used'}
+                        checked={(() => {
+                          const isChecked = formData.condition === 'used';
+                          console.log('✅ CHECK: Used radio -', { formDataCondition: formData.condition, isChecked });
+                          return isChecked;
+                        })()}
                         onChange={(e) => {
                           console.log('🔘 CLICK: Used selected, value:', e.target.value);
-                          setFormData({ ...formData, condition: e.target.value });
+                          console.log('📝 BEFORE: formData.condition =', formData.condition);
+                          setFormData(prev => {
+                            const newData = { ...prev, condition: e.target.value };
+                            console.log('📝 AFTER: newData.condition =', newData.condition);
+                            return newData;
+                          });
                         }}
                         className="w-4 h-4"
                       />
