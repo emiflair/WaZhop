@@ -763,8 +763,8 @@ function ProductCard({ product, onOpen, index = 0 }) {
         <div className={`absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              toast.success('Added to favorites!')
+              e.stopPropagation();
+              toast.success('Added to favorites!');
             }}
             className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-full hover:bg-primary-500 hover:text-white transition-colors shadow-lg"
           >
@@ -772,8 +772,8 @@ function ProductCard({ product, onOpen, index = 0 }) {
           </button>
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              onOpen()
+              e.stopPropagation();
+              onOpen();
             }}
             className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors shadow-lg font-semibold text-sm"
           >
