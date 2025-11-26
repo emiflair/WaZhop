@@ -93,6 +93,7 @@ const Products = () => {
       // Handle response format: response.data or response.data.data
       const products = response?.data?.data || response?.data || [];
       console.log('✅ Extracted products:', products.length);
+      console.log('🔍 Product conditions:', products.map(p => ({ name: p.name, condition: p.condition })));
       setProducts(products);
       setFilteredProducts(products);
     } catch (error) {
@@ -332,7 +333,14 @@ const Products = () => {
           updatePromises.push(productAPI.uploadImages(editingProduct._id, images));
         }
         
-        await Promise.all(updatePromises);
+        const results = await Promise.all(updatePromises);
+        const updatedProduct = results[0]?.data?.data;
+        
+        console.log('✅ Product update response:', {
+          condition: updatedProduct?.condition,
+          fullProduct: updatedProduct
+        });
+        
         toast.success('Product updated successfully!');
       } else {
         // Require at least 1 image for new products
