@@ -3,13 +3,35 @@
  * Sets default condition to 'brand new' for all products without a condition
  */
 
+const path = require('path');
+const fs = require('fs');
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
-require('dotenv').config();
+
+// Try to load .env from multiple possible locations
+const envPaths = [
+  path.join(__dirname, '../.env'),
+  path.join(__dirname, '../../.env'),
+  path.join(process.cwd(), '.env')
+];
+
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+    console.log(`📁 Loaded environment from: ${envPath}`);
+    break;
+  }
+}
 
 const addProductCondition = async () => {
   try {
     // Connect to MongoDB
+    if (!process.env.MONGODB_URI) {
+      console.error('❌ MONGODB_URI not found in environment variables');
+      console.log('Please set MONGODB_URI environment variable or create a .env file');
+      process.exit(1);
+    }
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
@@ -41,7 +63,6 @@ const addProductCondition = async () => {
     } else {
       console.log(`⚠️  ${totalProducts - productsWithCondition} products still missing condition`);
     }
-
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
