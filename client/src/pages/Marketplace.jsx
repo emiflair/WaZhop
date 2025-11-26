@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid } from 'react-icons/fi'
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
@@ -62,6 +62,7 @@ export default function Marketplace() {
   const [showDiscoveryPanel, setShowDiscoveryPanel] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [trendingCategories] = useState([
+    { name: 'All Categories', category: 'all', icon: FiGrid },
     { name: 'Fashion', category: 'fashion', icon: FaTshirt },
     { name: 'Electronics', category: 'electronics', icon: FiMonitor },
     { name: 'Phones & Tablets', category: 'phones-and-tablets', icon: FiSmartphone },
