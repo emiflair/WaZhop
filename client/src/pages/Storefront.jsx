@@ -265,15 +265,13 @@ const Storefront = () => {
                 Only {product.stock} left
               </span>
             )}
-            {product.condition && (
-              <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md ${
-                product.condition === 'brand new' 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-gray-600 text-white'
-              }`}>
-                {product.condition === 'brand new' ? 'Brand New' : 'Used'}
-              </span>
-            )}
+            <span className={`text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded shadow-md ${
+              product.condition === 'used' 
+                ? 'bg-gray-600 text-white' 
+                : 'bg-green-500 text-white'
+            }`}>
+              {product.condition === 'used' ? 'Used' : 'Brand New'}
+            </span>
           </div>
         </div>
 

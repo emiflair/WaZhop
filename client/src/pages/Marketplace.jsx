@@ -751,15 +751,13 @@ function ProductCard({ product, onOpen, index = 0 }) {
         )}
 
         {/* Condition Badge */}
-        {product.condition && (
-          <div className={`absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg ${
-            product.condition === 'brand new' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-gray-600 text-white'
-          }`}>
-            {product.condition === 'brand new' ? 'Brand New' : 'Used'}
-          </div>
-        )}
+        <div className={`absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg ${
+          (product.condition === 'used') 
+            ? 'bg-gray-600 text-white' 
+            : 'bg-green-500 text-white'
+        }`}>
+          {product.condition === 'used' ? 'Used' : 'Brand New'}
+        </div>
 
         {/* Rating Badge */}
         <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium shadow-lg">

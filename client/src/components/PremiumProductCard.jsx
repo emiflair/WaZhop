@@ -116,15 +116,13 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
         )}
 
         {/* Condition Badge */}
-        {product.condition && (
-          <div className={`absolute ${product.stock === 0 ? 'top-14' : 'top-3'} left-3 px-2 py-1 rounded text-xs font-semibold ${
-            product.condition === 'brand new' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-gray-600 text-white'
-          }`}>
-            {product.condition === 'brand new' ? 'Brand New' : 'Used'}
-          </div>
-        )}
+        <div className={`absolute ${product.stock === 0 ? 'top-14' : 'top-3'} left-3 px-2 py-1 rounded text-xs font-semibold ${
+          product.condition === 'used' 
+            ? 'bg-gray-600 text-white' 
+            : 'bg-green-500 text-white'
+        }`}>
+          {product.condition === 'used' ? 'Used' : 'Brand New'}
+        </div>
 
         {/* Quick View Button */}
         {productCards?.showQuickView && onQuickView && (
