@@ -310,8 +310,10 @@ const Products = () => {
         .toLowerCase()
         .replace(/\s+/g, '-') || 'other';
 
-      // Ensure condition is included and normalized
-      productData.condition = (formData.condition || 'brand new').toLowerCase().trim();
+      // Include condition as-is from form (no default override)
+      if (formData.condition) {
+        productData.condition = formData.condition.toLowerCase().trim();
+      }
       
       console.log('📦 Product Data being sent:', {
         condition: productData.condition,
