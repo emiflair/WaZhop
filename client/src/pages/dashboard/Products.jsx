@@ -89,11 +89,16 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       const response = await productAPI.getMyProducts();
-      console.log('📦 Full products response:', response);
+      console.log('📦 FETCH: Full products response:', response);
       // Handle response format: response.data or response.data.data
       const products = response?.data?.data || response?.data || [];
-      console.log('✅ Extracted products:', products.length);
-      console.log('🔍 Product conditions:', products.map(p => ({ name: p.name, condition: p.condition })));
+      console.log('✅ FETCH: Extracted products:', products.length);
+      console.log('🔍 FETCH: Product conditions:', products.map(p => ({ 
+        id: p._id, 
+        name: p.name, 
+        condition: p.condition,
+        conditionType: typeof p.condition
+      })));
       setProducts(products);
       setFilteredProducts(products);
     } catch (error) {
@@ -320,9 +325,11 @@ const Products = () => {
       // Include condition as-is from form (no default override)
       productData.condition = formData.condition.toLowerCase().trim();
       
-      console.log('📦 Product Data being sent:', {
-        condition: productData.condition,
+      console.log('💾 SAVE: Preparing to save product:', {
+        editingProductId: editingProduct?._id,
         formDataCondition: formData.condition,
+        finalCondition: productData.condition,
+        isUpdate: !!editingProduct,
         allData: productData
       });
 
@@ -338,11 +345,13 @@ const Products = () => {
         }
         
         const results = await Promise.all(updatePromises);
-        const updatedProduct = results[0]?.data?.data;
+        const updatedProduct = results[0]?.data?.data || results[0]?.data;
         
-        console.log('✅ Product update response:', {
+        console.log('✅ RESPONSE: Product update response:', {
+          rawResponse: results[0],
+          extractedProduct: updatedProduct,
           condition: updatedProduct?.condition,
-          fullProduct: updatedProduct
+          allFields: Object.keys(updatedProduct || {})
         });
         
         toast.success('Product updated successfully!');
@@ -478,6 +487,13 @@ const Products = () => {
     setQuickAddMode(false);
     setBulkUploadMode(false);
     const normalizedCondition = (product.condition || '').toLowerCase();
+    
+    console.log('🔄 EDIT: Loading product for edit:', {
+      productId: product._id,
+      rawCondition: product.condition,
+      normalizedCondition,
+      productData: product
+    });
 
     setFormData({
       name: product.name,
