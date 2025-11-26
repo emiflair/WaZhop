@@ -86,7 +86,7 @@ const productSchema = new mongoose.Schema({
   condition: {
     type: String,
     enum: ['brand new', 'used'],
-    default: 'brand new',
+    required: [true, 'Product condition is required'],
     lowercase: true,
     trim: true
   },

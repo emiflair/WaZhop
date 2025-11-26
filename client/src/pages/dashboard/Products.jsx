@@ -54,7 +54,7 @@ const Products = () => {
     sku: '',
     locationState: 'Lagos',
     locationArea: '',
-    condition: 'brand new'
+    condition: ''
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -266,6 +266,12 @@ const Products = () => {
     setUploading(true);
 
     try {
+      if (!formData.condition) {
+        toast.error('Please select a product condition');
+        setUploading(false);
+        return;
+      }
+
       // Handle Quick Add mode - minimal required fields
       if (quickAddMode) {
         if (!formData.name || !formData.price || !formData.category || images.length === 0) {
@@ -284,7 +290,7 @@ const Products = () => {
           inStock: true,
           locationState: user?.shopDetails?.locationState || 'Lagos',
           locationArea: user?.shopDetails?.locationArea || '',
-          condition: formData.condition || 'brand new'
+          condition: formData.condition.toLowerCase().trim()
         };
         
         await productAPI.createProduct(quickProduct, images);
@@ -312,9 +318,7 @@ const Products = () => {
         .replace(/\s+/g, '-') || 'other';
 
       // Include condition as-is from form (no default override)
-      if (formData.condition) {
-        productData.condition = formData.condition.toLowerCase().trim();
-      }
+      productData.condition = formData.condition.toLowerCase().trim();
       
       console.log('📦 Product Data being sent:', {
         condition: productData.condition,
@@ -384,7 +388,7 @@ const Products = () => {
         price: '',
         category: '',
         subcategory: '',
-        condition: 'brand new',
+        condition: '',
         image: file,
         imagePreview: URL.createObjectURL(file)
       }));
@@ -409,10 +413,16 @@ const Products = () => {
     setUploading(true);
     
     try {
-      const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image);
+      const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image && p.condition);
       
       if (validProducts.length === 0) {
-        toast.error('Please fill Name, Price, and Category for at least one product');
+        toast.error('Please fill Name, Price, Category, Condition, and add an image for at least one product');
+        setUploading(false);
+        return;
+      }
+
+      if (validProducts.length !== bulkProducts.length) {
+        toast.error('Some bulk products are missing condition. Please update all rows.');
         setUploading(false);
         return;
       }
@@ -429,7 +439,7 @@ const Products = () => {
             inStock: true,
             locationState: user?.shopDetails?.locationState || 'Lagos',
             locationArea: user?.shopDetails?.locationArea || '',
-            condition: bulkProduct.condition || 'brand new'
+            condition: bulkProduct.condition.toLowerCase().trim()
           };
           
           return await productAPI.createProduct(productData, [bulkProduct.image]);
@@ -479,7 +489,7 @@ const Products = () => {
       sku: product.sku || '',
       locationState: product.locationState || 'Lagos',
       locationArea: product.locationArea || '',
-      condition: product.condition || 'brand new'
+      condition: product.condition || ''
     });
     
     // Load existing images with IDs
@@ -520,7 +530,8 @@ const Products = () => {
       inStock: product.inStock,
       sku: product.sku ? `${product.sku}-copy` : '',
       locationState: product.locationState || 'Lagos',
-      locationArea: product.locationArea || ''
+      locationArea: product.locationArea || '',
+      condition: product.condition || ''
     });
     
     // Don't copy images - seller needs to add new ones
@@ -679,7 +690,7 @@ const Products = () => {
       sku: '',
       locationState: 'Lagos',
       locationArea: '',
-      condition: 'brand new'
+      condition: ''
     });
     setImages([]);
     setImagePreviews([]);
@@ -1300,6 +1311,7 @@ const Products = () => {
                                     onChange={(e) => updateBulkProduct(product.id, 'condition', e.target.value)}
                                     className="input text-sm w-full"
                                   >
+                                    <option value="">Select condition</option>
                                     <option value="brand new">Brand New</option>
                                     <option value="used">Used</option>
                                   </select>
