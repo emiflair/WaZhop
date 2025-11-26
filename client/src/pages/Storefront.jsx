@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { shopAPI, productAPI } from '../utils/api';
-import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart, FiFilter, FiSliders } from 'react-icons/fi';
+import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart, FiFilter, FiSliders, FiArrowLeft } from 'react-icons/fi';
 import { IoLogoWhatsapp, IoLogoTiktok } from 'react-icons/io5';
 import StarRating from '../components/StarRating';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -13,6 +13,7 @@ import { CATEGORY_SUGGESTIONS, toLabel } from '../utils/categories';
 
 const Storefront = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -440,6 +441,16 @@ const Storefront = () => {
             : `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
         }}
       >
+        {/* Back Button - Top Left */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-3 sm:left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all touch-target"
+          style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+          aria-label="Go back"
+        >
+          <FiArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
+        </button>
+
         {/* Top Right Watermark - Free Plan Only */}
         {shop.showWatermark && (
           <div 
