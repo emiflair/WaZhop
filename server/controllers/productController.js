@@ -170,8 +170,29 @@ exports.getProduct = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createProduct = asyncHandler(async (req, res) => {
   const {
-    name, description, price, comparePrice, category, subcategory, tags, inStock, sku, shopId, locationState, locationArea
+    name,
+    description,
+    price,
+    comparePrice,
+    category,
+    subcategory,
+    tags,
+    inStock,
+    sku,
+    shopId,
+    locationState,
+    locationArea,
+    condition
   } = req.body;
+
+  const normalizedCondition = condition ? condition.toString().toLowerCase().trim() : null;
+
+  if (!normalizedCondition || !['brand new', 'used'].includes(normalizedCondition)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please select a valid product condition (Brand New or Used)'
+    });
+  }
 
   // Find the shop - use provided shopId or default to user's first active shop
   let shop;
@@ -282,6 +303,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
     sku,
     images,
     position,
+    condition: normalizedCondition,
     locationState: normState,
     locationArea: normArea
   });
