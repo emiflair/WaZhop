@@ -736,7 +736,7 @@ exports.getMarketplaceProducts = asyncHandler(async (req, res) => {
   // Fetch products with shop and owner details
   // Only select fields needed for marketplace listing (reduces payload size)
   const products = await Product.find(query)
-    .select('name price images category subcategory tags boost shop views createdAt inStock stock comparePrice')
+    .select('name price images category subcategory tags boost shop views createdAt inStock stock comparePrice condition')
     .populate({
       path: 'shop',
       select: 'shopName slug logo owner',
@@ -991,7 +991,7 @@ exports.getRelatedProducts = asyncHandler(async (req, res) => {
   query.shop = { $in: activeShops.map((s) => s._id) };
 
   const relatedProducts = await Product.find(query)
-    .select('name price images category subcategory shop views createdAt inStock stock comparePrice')
+    .select('name price images category subcategory shop views createdAt inStock stock comparePrice condition')
     .populate({
       path: 'shop',
       select: 'shopName slug logo'
