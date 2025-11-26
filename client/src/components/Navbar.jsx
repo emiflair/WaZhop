@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiSearch } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
@@ -10,8 +10,15 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
+  const isMarketplace = location.pathname === '/';
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const openMarketplaceFilters = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('openMarketplaceFilters'));
+    }
+  };
 
   // Close mobile menu on route change or escape key
   useEffect(() => {
@@ -105,6 +112,16 @@ const Navbar = () => {
                 </Link>
               );
             })}
+
+            {isMarketplace && (
+              <button
+                onClick={openMarketplaceFilters}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                aria-label="Open marketplace search and filters"
+              >
+                <FiSearch size={20} />
+              </button>
+            )}
             
             {/* BUY and SELL buttons - only show for non-authenticated users */}
             {!isAuthenticated && (
@@ -160,15 +177,26 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={toggleMenu}
-            className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:bg-gray-200 dark:active:bg-gray-600 transition"
-            aria-label={isOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isOpen}
-          >
-            {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-          </button>
+          {/* Mobile controls */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isMarketplace && (
+              <button
+                onClick={openMarketplaceFilters}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:bg-gray-200 dark:active:bg-gray-600 transition"
+                aria-label="Open marketplace search and filters"
+              >
+                <FiSearch size={22} />
+              </button>
+            )}
+            <button
+              onClick={toggleMenu}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:bg-gray-200 dark:active:bg-gray-600 transition"
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isOpen}
+            >
+              {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -8,11 +8,40 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import MobileBottomNav from '../components/MobileBottomNav'
 import SEO from '../components/SEO'
-import LoadingSpinner from '../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 // Product details now open on a dedicated page, not a modal
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+// Marketplace hero slider configuration. Replace the background values or provide an `image`
+// property when marketing banners are ready. Each slide supports either a background gradient
+// or a hosted image URL.
+const HERO_SLIDES = [
+  {
+    id: 'marketplace-banner-1',
+    image: '/wazhopbanner/Banner1.PNG'
+  },
+  {
+    id: 'marketplace-banner-2',
+    image: '/wazhopbanner/Banner2.PNG'
+  },
+  {
+    id: 'marketplace-banner-3',
+    image: '/wazhopbanner/Banner3.PNG'
+  },
+  {
+    id: 'marketplace-banner-4',
+    image: '/wazhopbanner/Banner4.PNG'
+  },
+  {
+    id: 'marketplace-banner-5',
+    image: '/wazhopbanner/Banner5.PNG'
+  },
+  {
+    id: 'marketplace-banner-6',
+    image: '/wazhopbanner/Banner6.PNG'
+  }
+]
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
@@ -30,6 +59,8 @@ export default function Marketplace() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [ngState, setNgState] = useState('')
   const [area, setArea] = useState('')
+  const [showDiscoveryPanel, setShowDiscoveryPanel] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
   const [trendingCategories] = useState([
     { name: 'Fashion', category: 'fashion', icon: FaTshirt },
     { name: 'Electronics', category: 'electronics', icon: FiMonitor },
@@ -50,19 +81,38 @@ export default function Marketplace() {
   })
   const navigate = useNavigate()
 
-  const fetchProducts = useCallback(async (reset = false) => {
+  const fetchProducts = useCallback(async (reset = false, overrides = {}) => {
     try {
       setLoading(true)
+      const {
+        search: searchOverride,
+        category: categoryOverride,
+        state: stateOverride,
+        area: areaOverride,
+        sort: sortOverride,
+        minPrice: minPriceOverride,
+        maxPrice: maxPriceOverride
+      } = overrides
+
+      const effectiveCategory = categoryOverride ?? category
+      const effectiveSort = sortOverride ?? sortBy
+      const effectiveSearch = searchOverride !== undefined
+        ? searchOverride.trim()
+        : (debouncedSearch ? debouncedSearch.trim() : '')
+      const effectiveState = stateOverride ?? ngState
+      const effectiveArea = areaOverride ?? area
+      const effectiveMinPrice = minPriceOverride ?? priceRange.min
+      const effectiveMaxPrice = maxPriceOverride ?? priceRange.max
       const params = {
         page: reset ? 1 : page,
         limit: 24,
-        ...(sortBy ? { sort: sortBy } : {}),
-        ...(category !== 'all' && { category }),
-        ...(debouncedSearch && { search: debouncedSearch }),
-        ...(ngState && { state: ngState }),
-        ...(area && { area }),
-        ...(priceRange.min && { minPrice: priceRange.min }),
-        ...(priceRange.max && { maxPrice: priceRange.max })
+        ...(effectiveSort ? { sort: effectiveSort } : {}),
+        ...(effectiveCategory !== 'all' && { category: effectiveCategory }),
+        ...(effectiveSearch && { search: effectiveSearch }),
+        ...(effectiveState && { state: effectiveState }),
+        ...(effectiveArea && { area: effectiveArea }),
+        ...(effectiveMinPrice && { minPrice: effectiveMinPrice }),
+        ...(effectiveMaxPrice && { maxPrice: effectiveMaxPrice })
       }
       const response = await productAPI.getMarketplaceProducts(params)
       console.log('📦 Marketplace API response:', response)
@@ -139,12 +189,8 @@ export default function Marketplace() {
       setRecentSearches(updated)
       localStorage.setItem('recentSearches', JSON.stringify(updated))
     }
-    // fetchProducts will be called automatically by debouncedSearch effect
-  }
-
-  const quickSearch = (term) => {
-    setSearchInput(term)
-    // Debounce will handle the API call automatically
+    fetchProducts(true, { search: searchInput })
+    setShowDiscoveryPanel(false)
   }
 
   const selectCategory = (categoryValue) => {
@@ -169,6 +215,80 @@ export default function Marketplace() {
     }
   }
 
+  const openDiscoveryPanel = () => setShowDiscoveryPanel(true)
+  const openDiscoveryPanelForSort = () => {
+    setShowDiscoveryPanel(true)
+    // Ensure sort dropdown is visible when panel opens
+    setTimeout(() => {
+      const sortElement = document.getElementById('marketplace-sort-select')
+      if (sortElement) {
+        sortElement.focus()
+      }
+    }, 200)
+  }
+
+  const handleClearAll = () => {
+    clearFilters()
+    fetchProducts(true, { search: '', category: 'all', state: '', area: '', sort: '', minPrice: '', maxPrice: '' })
+    setShowDiscoveryPanel(false)
+  }
+
+  const handleRecentSearchClick = (term) => {
+    setSearchInput(term)
+    setRecentSearches((prev) => {
+      const trimmed = term.trim()
+      const updated = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(0, 5)
+      localStorage.setItem('recentSearches', JSON.stringify(updated))
+      return updated
+    })
+    fetchProducts(true, { search: term })
+    setShowDiscoveryPanel(false)
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleOpenFilters = () => setShowDiscoveryPanel(true)
+    const handleOpenSort = () => openDiscoveryPanelForSort()
+    window.addEventListener('openMarketplaceFilters', handleOpenFilters)
+    window.addEventListener('openMarketplaceSort', handleOpenSort)
+    return () => {
+      window.removeEventListener('openMarketplaceFilters', handleOpenFilters)
+      window.removeEventListener('openMarketplaceSort', handleOpenSort)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!showDiscoveryPanel || typeof window === 'undefined') return
+    const handleKey = (event) => {
+      if (event.key === 'Escape') {
+        setShowDiscoveryPanel(false)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [showDiscoveryPanel])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const previousOverflow = document.body.style.overflow
+    if (showDiscoveryPanel) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = previousOverflow || ''
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [showDiscoveryPanel])
+
+  useEffect(() => {
+    if (HERO_SLIDES.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)
+    }, 7000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <>
       <SEO
@@ -180,270 +300,169 @@ export default function Marketplace() {
 
         {/* Discover Amazing Products Banner */}
         <div className="bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800 py-2 sm:py-3 text-center">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight px-4 select-none">
-            <span className="inline">Discover</span>{' '}
-            <span className="inline text-white/70">Amazing</span>{' '}
-            <span className="inline">Products</span>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white tracking-tight px-4 select-none">
+            Discover Amazing Products
           </h2>
         </div>
 
-        {/* Hero Section - Compact */}
-        <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-orange-600 dark:from-primary-700 dark:via-primary-800 dark:to-orange-800 text-white overflow-hidden">
-          {/* Decorative Elements */}
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10"></div>
-          
-          <div className="app-container relative z-10 py-2 sm:py-3 md:py-4">
-            <div className="text-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-2 sm:mb-3">
-              Shop from <span className="text-white/90">Verified</span> Sellers
-            </h1>
+        {/* Hero Slider Section */}
+        <section className="relative text-white overflow-hidden bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10 pointer-events-none"></div>
+          <div className="relative z-10 pt-6 md:pt-8 lg:pt-10 pb-0 px-0">
+            <div className="max-w-6xl mx-auto flex flex-col gap-4 md:gap-6 px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-center">
+                Shop from <span className="text-white/80">Verified</span> Sellers
+              </h1>
+            </div>
 
-            {/* Get Started CTA for guests */}
-            {!isAuthenticated && (
-                <div className="mb-2 sm:mb-3">
-                  <Link
-                    to="/register?role=seller"
-                    className="inline-flex items-center justify-center px-6 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-primary-600 hover:bg-gray-50 active:bg-gray-100 shadow-lg transition-all duration-200"
-                  >
-                    Start Selling
-                  </Link>
-                </div>
-              )}
-
-
-
-              {/* Search */}
-              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-                <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none z-10" />
-                  <input
-                    type="text"
-                    placeholder="Search products, categories..."
-                    className="w-full pl-10 pr-24 py-2 sm:py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-0 shadow-lg focus:ring-2 focus:ring-white/30 text-base font-medium placeholder:text-gray-400"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                  />
-                  {searchInput && searchInput !== debouncedSearch && (
-                    <span className="absolute right-32 sm:right-36 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400 animate-pulse">
-                      searching...
-                    </span>
-                  )}
-                  <button 
-                    type="submit" 
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold rounded-md hover:from-primary-700 hover:to-orange-700 transition-all duration-200 shadow-md text-xs sm:text-sm"
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
-              {/* Filters */}
-              <div className="mt-1.5 sm:mt-2 max-w-3xl mx-auto">
-                {/* Row 1: Category and State */}
-                <div className="grid grid-cols-2 gap-1.5 sm:gap-3 mb-1.5 sm:mb-3">
-                  <select 
-                    value={category} 
-                    onChange={(e)=>setCategory(e.target.value)} 
-                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
-                  >
-                    <option value="all">All Categories</option>
-                    {Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map(cat => (
-                      <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
-                    ))}
-                  </select>
-                  <select 
-                    value={ngState} 
-                    onChange={(e)=>setNgState(e.target.value)} 
-                    className="px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30"
-                  >
-                    <option value="">All States</option>
-                    {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                {/* Row 2: Area and Apply */}
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
-                  <input 
-                    className="col-span-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 text-gray-700 dark:text-gray-200 font-medium shadow-lg focus:ring-4 focus:ring-white/30 placeholder:text-gray-400" 
-                    type="text" 
-                    value={area} 
-                    placeholder="Area (e.g., V.I.)" 
-                    onChange={(e)=>setArea(e.target.value)} 
-                  />
-                  <button 
-                    onClick={()=>fetchProducts(true)} 
-                    className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-primary-600 dark:text-primary-400 font-semibold rounded-lg sm:rounded-xl hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 touch-target"
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-
-              {/* Trending Categories */}
-              {!searchInput && (
-                <div className="mt-1.5 sm:mt-2">
-                  {/* Desktop - Centered flex wrap */}
-                  <div className="hidden sm:flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
-                    <span className="text-xs text-white/80 font-bold uppercase tracking-wider self-center">Trending:</span>
-                    {trendingCategories.map((item, i) => {
-                      const Icon = item.icon
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => selectCategory(item.category)}
-                          className="px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target hover:scale-105 transform"
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          {item.name}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Mobile - Horizontal scroll with icons and text */}
-                  <div className="sm:hidden">
-                    <div className="text-xs text-white/90 font-bold uppercase tracking-wider mb-2 text-center">Trending Categories</div>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
-                      {trendingCategories.map((item, i) => {
-                        const Icon = item.icon
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => selectCategory(item.category)}
-                            className="flex-shrink-0 px-3 py-2 bg-white/20 active:bg-white/30 backdrop-blur-sm text-white text-xs font-medium rounded-full transition-all duration-200 border border-white/30 flex items-center gap-1.5 touch-target shadow-sm"
-                            aria-label={item.name}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                            <span className="whitespace-nowrap">{item.name}</span>
-                          </button>
-                        )
-                      })}
+            {/* Full-width banner - mobile simple, desktop full-bleed */}
+            <div className="relative mt-4 sm:mt-6 md:mt-8 h-56 sm:h-64 md:h-[500px] lg:h-[600px] xl:h-[650px]">
+              {/* Mobile: Simple centered banner */}
+              <div className="md:hidden relative h-full w-full rounded-none overflow-hidden bg-transparent">
+                {HERO_SLIDES.map((slide, index) => {
+                  const isActive = index === currentSlide
+                  return (
+                    <div
+                      key={slide.id}
+                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                      style={{
+                        backgroundImage: slide.image ? `url(${slide.image})` : slide.background || '#111827',
+                        backgroundSize: 'cover',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-black/5" />
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                  )
+                })}
+              </div>
 
-        {/* Filters & Sort Bar - Native App Style */}
-        <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-          <div className="app-container py-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Mobile Filter Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="sm:hidden flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors touch-target"
-              >
-                <FiFilter className="w-4 h-4" />
-                <span className="text-sm">Filters</span>
-              </button>
+              {/* Desktop: Full-width banner covering both sides */}
+              <div className="hidden md:block relative h-full w-full overflow-hidden">
+                {HERO_SLIDES.map((slide, index) => {
+                  const isActive = index === currentSlide
+                  return (
+                    <div
+                      key={slide.id}
+                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                      style={{
+                        backgroundImage: slide.image ? `url(${slide.image})` : slide.background || '#111827',
+                        backgroundSize: 'cover',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-black/5" />
+                    </div>
+                  )
+                })}
 
-              {/* Category Pills - Native Style */}
-              <div className="hidden sm:flex items-center gap-2 flex-wrap flex-1 overflow-x-auto scrollbar-hide">
-                <button
-                  onClick={() => setCategory('all')}
-                  className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 whitespace-nowrap touch-target ${
-                    category === 'all'
-                      ? 'bg-gradient-to-r from-primary-600 to-orange-600 text-white shadow-lg shadow-primary-500/30'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md'
-                  }`}
+                {/* Autoplay handles slide changes; no manual controls to keep layout clean */}
+              </div>
+
+              {!isAuthenticated && (
+                <Link
+                  to="/register?role=seller"
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-full bg-white/95 text-primary-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
-                  All
-                </button>
-                {CATEGORY_SUGGESTIONS.slice(0, 6).map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 whitespace-nowrap touch-target ${
-                      category === cat
-                        ? 'bg-gradient-to-r from-primary-600 to-orange-600 text-white shadow-lg shadow-primary-500/30'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md'
-                    }`}
-                  >
-                    {cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </button>
-                ))}
-              </div>
-
-              {/* Sort Dropdown - Native Style */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium border-0 focus:ring-2 focus:ring-primary-500 text-sm shadow-md touch-target"
-              >
-                <option value="">Featured (Boosted first)</option>
-                <option value="-createdAt">Newest First</option>
-                <option value="price">Price: Low to High</option>
-                <option value="-price">Price: High to Low</option>
-                <option value="-views">Most Popular</option>
-                <option value="-clicks">Trending</option>
-              </select>
-
-              {/* Clear Filters */}
-              {(category !== 'all' || searchInput || priceRange.min || priceRange.max || ngState || area) && (
-                <button onClick={clearFilters} className="btn btn-outline text-sm flex items-center gap-2">
-                  <FiX /> Clear
-                </button>
+                  Start Selling
+                </Link>
               )}
             </div>
+          </div>
+        </section>
 
-            {/* Mobile Filter Panel */}
-            {showFilters && (
-              <div className="sm:hidden mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-3">
-                <div>
-                  <label className="label text-sm mb-2">Category</label>
-                  <select value={category} onChange={(e) => setCategory(e.target.value)} className="input text-sm">
-                    <option value="all">All Categories</option>
-                    {CATEGORY_SUGGESTIONS.map(cat => (
-                      <option key={cat} value={cat}>{cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="label text-xs">State</label>
-                    <select value={ngState} onChange={(e)=>setNgState(e.target.value)} className="input text-sm">
-                      <option value="">All States</option>
-                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s=> (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label text-xs">Area</label>
-                    <input className="input text-sm" type="text" value={area} placeholder="e.g., VI" onChange={(e)=>setArea(e.target.value)} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="label text-xs">Min Price</label>
-                    <input
-                      type="number"
-                      placeholder="₦0"
-                      className="input text-sm"
-                      value={priceRange.min}
-                      onChange={(e) => setPriceRange(p => ({ ...p, min: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="label text-xs">Max Price</label>
-                    <input
-                      type="number"
-                      placeholder="₦999999"
-                      className="input text-sm"
-                      value={priceRange.max}
-                      onChange={(e) => setPriceRange(p => ({ ...p, max: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <button onClick={() => { fetchProducts(true); setShowFilters(false); }} className="btn btn-primary w-full text-sm">
-                  Apply Filters
-                </button>
+        {/* Trending Categories Section */}
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+          <div className="app-container py-6">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300">Trending Categories</h3>
+            </div>
+
+            {/* Desktop: Grid layout with 2 rows */}
+            <div className="hidden sm:grid grid-cols-6 gap-4">
+              {trendingCategories.map((item, i) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={i}
+                    onClick={() => selectCategory(item.category)}
+                    className="flex flex-col items-center gap-2 group"
+                  >
+                    <div
+                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        category === item.category
+                          ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-lg shadow-primary-500/30 scale-105'
+                          : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10 dark:from-primary-500/20 dark:to-orange-500/20 hover:from-primary-500 hover:to-orange-500 hover:shadow-lg hover:shadow-primary-500/20 hover:scale-105'
+                      }`}
+                    >
+                      <Icon
+                        className={`w-7 h-7 md:w-8 md:h-8 transition-colors duration-300 ${
+                          category === item.category
+                            ? 'text-white'
+                            : 'text-primary-600 dark:text-primary-400 group-hover:text-white'
+                        }`}
+                      />
+                    </div>
+                    <span
+                      className={`text-xs md:text-sm font-medium text-center leading-tight transition-colors duration-300 ${
+                        category === item.category
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : 'text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400'
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Mobile: Horizontal scroll with circular icons */}
+            <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-2 px-2">
+              <div className="flex gap-4 pb-2">
+                {trendingCategories.map((item, i) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => selectCategory(item.category)}
+                      className="flex flex-col items-center gap-2 flex-shrink-0"
+                    >
+                      <div
+                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                          category === item.category
+                            ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-lg shadow-primary-500/30 scale-105'
+                            : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10 dark:from-primary-500/20 dark:to-orange-500/20'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-6 h-6 transition-colors duration-300 ${
+                            category === item.category
+                              ? 'text-white'
+                              : 'text-primary-600 dark:text-primary-400'
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`text-[10px] font-medium text-center leading-tight max-w-[60px] transition-colors duration-300 ${
+                          category === item.category
+                            ? 'text-primary-600 dark:text-primary-400'
+                            : 'text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
-            )}
+            </div>
           </div>
         </div>
+
+        {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
         {/* Products Grid */}
         <div className="flex-1 py-8 pb-24 md:pb-8">
@@ -504,6 +523,146 @@ export default function Marketplace() {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {showDiscoveryPanel && (
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center px-4 sm:px-6 py-6">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowDiscoveryPanel(false)}
+          />
+          <div className="relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Marketplace Search</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Filter by category, location or keywords in one place.</p>
+              </div>
+              <button
+                onClick={() => setShowDiscoveryPanel(false)}
+                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                aria-label="Close filters"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="px-4 sm:px-6 py-5 space-y-5 max-h-[80vh] overflow-y-auto">
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search products, categories..."
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                  {searchInput && searchInput !== debouncedSearch && (
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide animate-pulse">
+                      updating…
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                    >
+                      <option value="all">All Categories</option>
+                      {Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map(cat => (
+                        <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">State</label>
+                    <select
+                      value={ngState}
+                      onChange={(e) => setNgState(e.target.value)}
+                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                    >
+                      <option value="">All States</option>
+                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Sort</label>
+                  <select
+                    id="marketplace-sort-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                  >
+                    <option value="">Featured (Boosted first)</option>
+                    <option value="-createdAt">Newest First</option>
+                    <option value="price">Price: Low to High</option>
+                    <option value="-price">Price: High to Low</option>
+                    <option value="-views">Most Popular</option>
+                    <option value="-clicks">Trending</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2 flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Area</label>
+                    <input
+                      type="text"
+                      value={area}
+                      onChange={(e) => setArea(e.target.value)}
+                      placeholder="Area (e.g., V.I.)"
+                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                    />
+                  </div>
+                  <div className="sm:col-span-1 flex items-end">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition"
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300"
+                  >
+                    Clear all
+                  </button>
+                  <span className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500">Powered by WaZhop Marketplace</span>
+                </div>
+              </form>
+
+              {recentSearches.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Recent searches</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {recentSearches.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => handleRecentSearchClick(term)}
+                        className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm text-gray-700 dark:text-gray-200 hover:bg-primary-600 hover:text-white dark:hover:bg-primary-500 transition"
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Product detail opens on a separate page now */}
     </>
