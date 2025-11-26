@@ -340,26 +340,35 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       : req.body.tags.split(',').map((t) => t.trim());
   }
 
-  console.log('🔄 Updating product - Received condition:', req.body.condition);
+  const updateData = { ...req.body };
+  
+  // Normalize location fields
+  if (updateData.locationState !== undefined) {
+    updateData.locationState = updateData.locationState ? updateData.locationState.toString().trim() : null;
+  }
+  if (updateData.locationArea !== undefined) {
+    updateData.locationArea = updateData.locationArea ? updateData.locationArea.toString().trim() : null;
+  }
+  
+  // Ensure condition field is properly included
+  if (updateData.condition !== undefined) {
+    updateData.condition = updateData.condition.toLowerCase().trim();
+  }
+
+  console.log('🔄 Updating product - Condition in request:', req.body.condition);
+  console.log('📝 Final update data condition:', updateData.condition);
+  console.log('🔍 All fields being updated:', Object.keys(updateData));
 
   product = await Product.findByIdAndUpdate(
     req.params.id,
-    (() => {
-      const update = { ...req.body };
-      if (update.locationState !== undefined) {
-        update.locationState = update.locationState ? update.locationState.toString().trim() : null;
-      }
-      if (update.locationArea !== undefined) {
-        update.locationArea = update.locationArea ? update.locationArea.toString().trim() : null;
-      }
-      console.log('📝 Final update object condition:', update.condition);
-      return update;
-    })(),
+    updateData,
     {
       new: true,
       runValidators: true
     }
   );
+
+  console.log('✅ Updated product condition in DB:', product.condition);
 
   res.status(200).json({
     success: true,
