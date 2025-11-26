@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { shopAPI, productAPI } from '../utils/api';
-import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart, FiFilter, FiSliders, FiArrowLeft } from 'react-icons/fi';
+import { FiShoppingBag, FiMapPin, FiInstagram, FiFacebook, FiTwitter, FiPackage, FiSearch, FiShoppingCart, FiFilter, FiSliders, FiArrowLeft, FiCheck } from 'react-icons/fi';
 import { IoLogoWhatsapp, IoLogoTiktok } from 'react-icons/io5';
 import StarRating from '../components/StarRating';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -491,8 +491,34 @@ const Storefront = () => {
         </button>
       </div>
 
+      {/* Activation Banner - Shows for temporary stores */}
+      {shop.isTemporary && shop.activationToken && (
+        <div className="container-custom -mt-12 sm:-mt-16 relative z-10 mb-6">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-xl p-6 sm:p-8 text-white">
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                🎉 This Store Was Created For You!
+              </h2>
+              <p className="text-lg sm:text-xl mb-6 text-green-50">
+                Click below to activate and claim this store with all its products
+              </p>
+              <Link
+                to={`/activate-store/${shop._id}/${shop.activationToken}`}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-green-600 font-bold text-lg rounded-lg hover:bg-green-50 transition-colors shadow-lg hover:shadow-xl"
+              >
+                <FiCheck className="h-6 w-6" />
+                Activate Store Now
+              </Link>
+              <p className="text-sm text-green-100 mt-4">
+                Browse the products below and activate when ready
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Shop Info - Mobile Optimized */}
-      <div className="container-custom -mt-12 sm:-mt-16 relative z-10">
+      <div className={`container-custom ${shop.isTemporary ? '' : '-mt-12 sm:-mt-16'} relative z-10`}>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {shop.logo?.url && (

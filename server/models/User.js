@@ -148,6 +148,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Temporary Account Fields (Admin Create Feature)
+  isTemporary: {
+    type: Boolean,
+    default: false
+  },
+  accountStatus: {
+    type: String,
+    enum: ['active', 'pending_activation', 'suspended'],
+    default: 'active'
+  },
   referralCode: {
     type: String
   },

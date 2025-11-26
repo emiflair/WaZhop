@@ -319,6 +319,22 @@ export const adminAPI = {
   getActivity: (limit) => api.get('/admin/activity', { params: { limit } }),
 };
 
+// Admin Create Store endpoints
+export const adminCreateAPI = {
+  createTemporaryStore: (data) => api.post('/admin/create-store', data),
+  getTemporaryStores: () => api.get('/admin/create-store/temporary'),
+  addProductToTempStore: (shopId, formData) => api.post(`/admin/create-store/${shopId}/products`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteTemporaryStore: (shopId) => api.delete(`/admin/create-store/${shopId}`),
+};
+
+// Store Activation endpoints
+export const storeActivationAPI = {
+  verifyActivationToken: (shopId, token) => api.get(`/activate-store/verify/${shopId}/${token}`),
+  activateStore: (shopId, token, data) => api.post(`/activate-store/${shopId}/${token}`, data),
+};
+
 export const paymentAPI = {
   // Track payment initiation
   initiatePayment: (data) => api.post('/payments/initiate', data),
