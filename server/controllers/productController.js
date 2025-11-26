@@ -362,24 +362,46 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       : req.body.tags.split(',').map((t) => t.trim());
   }
 
-  const updateData = { ...req.body };
+  // Build update object with only allowed fields
+  const updateData = {};
+  
+  // Explicitly map each field
+  if (req.body.name !== undefined) updateData.name = req.body.name;
+  if (req.body.description !== undefined) updateData.description = req.body.description;
+  if (req.body.price !== undefined) updateData.price = req.body.price;
+  if (req.body.comparePrice !== undefined) updateData.comparePrice = req.body.comparePrice;
+  if (req.body.category !== undefined) updateData.category = req.body.category;
+  if (req.body.subcategory !== undefined) updateData.subcategory = req.body.subcategory;
+  if (req.body.inStock !== undefined) updateData.inStock = req.body.inStock;
+  if (req.body.sku !== undefined) updateData.sku = req.body.sku;
+  if (req.body.variants !== undefined) updateData.variants = req.body.variants;
+  
+  // Handle tags
+  if (req.body.tags !== undefined) {
+    updateData.tags = Array.isArray(req.body.tags)
+      ? req.body.tags
+      : req.body.tags.split(',').map((t) => t.trim());
+  }
   
   // Normalize location fields
-  if (updateData.locationState !== undefined) {
-    updateData.locationState = updateData.locationState ? updateData.locationState.toString().trim() : null;
+  if (req.body.locationState !== undefined) {
+    updateData.locationState = req.body.locationState ? req.body.locationState.toString().trim() : null;
   }
-  if (updateData.locationArea !== undefined) {
-    updateData.locationArea = updateData.locationArea ? updateData.locationArea.toString().trim() : null;
+  if (req.body.locationArea !== undefined) {
+    updateData.locationArea = req.body.locationArea ? req.body.locationArea.toString().trim() : null;
   }
   
-  // Ensure condition field is properly included
-  if (updateData.condition !== undefined) {
-    updateData.condition = updateData.condition.toLowerCase().trim();
+  // CRITICAL: Ensure condition field is explicitly set
+  if (req.body.condition !== undefined && req.body.condition !== null && req.body.condition !== '') {
+    updateData.condition = req.body.condition.toString().toLowerCase().trim();
+    console.log('🔄 CONDITION: Received from client:', req.body.condition);
+    console.log('🔄 CONDITION: Normalized for DB:', updateData.condition);
+  } else {
+    console.log('⚠️ CONDITION: Missing or empty in request body!', req.body.condition);
   }
 
-  console.log('🔄 Updating product - Condition in request:', req.body.condition);
-  console.log('📝 Final update data condition:', updateData.condition);
-  console.log('🔍 All fields being updated:', Object.keys(updateData));
+  console.log('📝 UPDATE: All fields being updated:', Object.keys(updateData));
+  console.log('🔍 UPDATE: Full updateData:', JSON.stringify(updateData, null, 2));
 
   product = await Product.findByIdAndUpdate(
     req.params.id,
@@ -390,7 +412,8 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     }
   );
 
-  console.log('✅ Updated product condition in DB:', product.condition);
+  console.log('✅ SAVED: Product condition in DB:', product.condition);
+  console.log('✅ SAVED: Full product:', JSON.stringify(product, null, 2));
 
   res.status(200).json({
     success: true,
