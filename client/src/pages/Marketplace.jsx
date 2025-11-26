@@ -550,6 +550,7 @@ export default function Marketplace() {
                     type="text"
                     placeholder="Search products, categories..."
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    style={{ fontSize: '16px' }}
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                   />
