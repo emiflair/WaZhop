@@ -750,7 +750,7 @@ function ProductCard({ product, onOpen, index = 0 }) {
           </div>
         )}
 
-        {/* Rating Badge */
+        {/* Rating Badge */}
         <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-xs font-medium shadow-lg">
           <FiStar className="text-yellow-500 w-3 h-3" />
           <span className="text-gray-900 dark:text-gray-100 font-semibold">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
