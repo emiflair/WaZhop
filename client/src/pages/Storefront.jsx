@@ -227,7 +227,7 @@ const Storefront = () => {
       : 0;
     const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
     const isLowStock = !isOutOfStock && product.stock !== null && product.stock <= (product.lowStockThreshold || 5);
-    const condition = (product.condition || '').toLowerCase();
+
 
     return (
       <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">

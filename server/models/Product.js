@@ -83,12 +83,7 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  condition: {
-    type: String,
-    enum: ['brand new', 'used'],
-    lowercase: true,
-    trim: true
-  },
+
   stock: {
     type: Number,
     default: null, // null means unlimited/not tracked

@@ -181,18 +181,8 @@ exports.createProduct = asyncHandler(async (req, res) => {
     sku,
     shopId,
     locationState,
-    locationArea,
-    condition
+    locationArea
   } = req.body;
-
-  const normalizedCondition = condition ? condition.toString().toLowerCase().trim() : null;
-
-  if (!normalizedCondition || !['brand new', 'used'].includes(normalizedCondition)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please select a valid product condition (Brand New or Used)'
-    });
-  }
 
   // Find the shop - use provided shopId or default to user's first active shop
   let shop;
@@ -303,7 +293,6 @@ exports.createProduct = asyncHandler(async (req, res) => {
     sku,
     images,
     position,
-    condition: normalizedCondition,
     locationState: normState,
     locationArea: normArea
   });
@@ -391,27 +380,7 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     updateData.locationArea = req.body.locationArea ? req.body.locationArea.toString().trim() : null;
   }
   
-  // CRITICAL: Ensure condition field is explicitly set and validated
-  if (req.body.condition !== undefined) {
-    const normalizedCondition = req.body.condition ? req.body.condition.toString().toLowerCase().trim() : null;
-    
-    if (!normalizedCondition || (normalizedCondition !== 'brand new' && normalizedCondition !== 'used')) {
-      console.log('❌ CONDITION: Invalid value received:', req.body.condition);
-      return res.status(400).json({
-        success: false,
-        message: 'Product condition must be either "brand new" or "used"'
-      });
-    }
-    
-    updateData.condition = normalizedCondition;
-    console.log('🔄 CONDITION: Received from client:', req.body.condition);
-    console.log('🔄 CONDITION: Normalized for DB:', updateData.condition);
-  } else {
-    console.log('⚠️ CONDITION: Not provided in request body, keeping existing value');
-  }
 
-  console.log('📝 UPDATE: All fields being updated:', Object.keys(updateData));
-  console.log('🔍 UPDATE: Full updateData:', JSON.stringify(updateData, null, 2));
 
   product = await Product.findByIdAndUpdate(
     req.params.id,
@@ -421,9 +390,6 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       runValidators: true
     }
   );
-
-  console.log('✅ SAVED: Product condition in DB:', product.condition);
-  console.log('✅ SAVED: Full product:', JSON.stringify(product, null, 2));
 
   res.status(200).json({
     success: true,

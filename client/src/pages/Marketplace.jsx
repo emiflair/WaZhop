@@ -793,19 +793,6 @@ function ProductCard({ product, onOpen, index = 0 }) {
 
       {/* Content - compact */}
       <div className="p-3 sm:p-3">
-        {/* Condition Badge */}
-        {product.condition && (
-          <div className="mb-2">
-            <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-              product.condition === 'used'
-                ? 'bg-gray-600 text-white'
-                : 'bg-green-500 text-white'
-            }`}>
-              {product.condition === 'used' ? 'Used' : 'Brand New'}
-            </span>
-          </div>
-        )}
-
         <h3 className="font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 mb-1.5 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
           {product.name}
         </h3>

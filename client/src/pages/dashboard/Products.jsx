@@ -53,8 +53,7 @@ const Products = () => {
     inStock: true,
     sku: '',
     locationState: 'Lagos',
-    locationArea: '',
-    condition: ''
+    locationArea: ''
   });
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -77,21 +76,6 @@ const Products = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, searchTerm, filterStatus]);
 
-  // Debug: Track condition changes in formData
-  useEffect(() => {
-    console.log('🔍 STATE: formData.condition changed to:', formData.condition, typeof formData.condition);
-    console.log('🔍 STATE: Full formData:', formData);
-  }, [formData.condition]);
-
-  // Debug: Track all formData changes
-  useEffect(() => {
-    console.log('📋 FORMDATA: Entire form state updated:', {
-      condition: formData.condition,
-      name: formData.name,
-      category: formData.category
-    });
-  }, [formData]);
-
   const fetchSubscription = async () => {
     try {
       await userAPI.getSubscription();
@@ -108,12 +92,6 @@ const Products = () => {
       // Handle response format: response.data or response.data.data
       const products = response?.data?.data || response?.data || [];
       console.log('✅ FETCH: Extracted products:', products.length);
-      console.log('🔍 FETCH: Product conditions:', products.map(p => ({ 
-        id: p._id, 
-        name: p.name, 
-        condition: p.condition,
-        conditionType: typeof p.condition
-      })));
       setProducts(products);
       setFilteredProducts(products);
     } catch (error) {
@@ -286,12 +264,6 @@ const Products = () => {
     setUploading(true);
 
     try {
-      if (!formData.condition) {
-        toast.error('Please select a product condition');
-        setUploading(false);
-        return;
-      }
-
       // Handle Quick Add mode - minimal required fields
       if (quickAddMode) {
         if (!formData.name || !formData.price || !formData.category || images.length === 0) {
@@ -309,8 +281,7 @@ const Products = () => {
           tags: [],
           inStock: true,
           locationState: user?.shopDetails?.locationState || 'Lagos',
-          locationArea: user?.shopDetails?.locationArea || '',
-          condition: formData.condition.toLowerCase().trim()
+          locationArea: user?.shopDetails?.locationArea || ''
         };
         
         await productAPI.createProduct(quickProduct, images);
@@ -335,17 +306,9 @@ const Products = () => {
         sku: formData.sku || '',
         locationState: formData.locationState || null,
         locationArea: formData.locationArea || null,
-        condition: formData.condition ? formData.condition.toLowerCase().trim() : null,
         variants: variants.length > 0 ? variants : undefined,
       };
-      
-      console.log('💾 SAVE: Preparing to save product:', {
-        editingProductId: editingProduct?._id,
-        formDataCondition: formData.condition,
-        finalCondition: productData.condition,
-        isUpdate: !!editingProduct,
-        allData: productData
-      });
+
 
       if (editingProduct) {
         // Update existing product
@@ -364,7 +327,6 @@ const Products = () => {
         console.log('✅ RESPONSE: Product update response:', {
           rawResponse: results[0],
           extractedProduct: updatedProduct,
-          condition: updatedProduct?.condition,
           allFields: Object.keys(updatedProduct || {})
         });
         
@@ -411,7 +373,6 @@ const Products = () => {
         price: '',
         category: '',
         subcategory: '',
-        condition: '',
         image: file,
         imagePreview: URL.createObjectURL(file)
       }));
@@ -436,21 +397,13 @@ const Products = () => {
     setUploading(true);
     
     try {
-      const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image && p.condition);
-      
+      const validProducts = bulkProducts.filter(p => p.name && p.price && p.category && p.image);
+
       if (validProducts.length === 0) {
-        toast.error('Please fill Name, Price, Category, Condition, and add an image for at least one product');
+        toast.error('Please fill Name, Price, Category, and add an image for at least one product');
         setUploading(false);
         return;
-      }
-
-      if (validProducts.length !== bulkProducts.length) {
-        toast.error('Some bulk products are missing condition. Please update all rows.');
-        setUploading(false);
-        return;
-      }
-
-      const promises = validProducts.map(async (bulkProduct) => {
+      }      const promises = validProducts.map(async (bulkProduct) => {
         try {
           const productData = {
             name: bulkProduct.name,
@@ -461,8 +414,7 @@ const Products = () => {
             tags: [],
             inStock: true,
             locationState: user?.shopDetails?.locationState || 'Lagos',
-            locationArea: user?.shopDetails?.locationArea || '',
-            condition: bulkProduct.condition.toLowerCase().trim()
+            locationArea: user?.shopDetails?.locationArea || ''
           };
           
           return await productAPI.createProduct(productData, [bulkProduct.image]);
@@ -500,14 +452,6 @@ const Products = () => {
     setEditingProduct(product);
     setQuickAddMode(false);
     setBulkUploadMode(false);
-    const normalizedCondition = (product.condition || '').toLowerCase();
-    
-    console.log('🔄 EDIT: Loading product for edit:', {
-      productId: product._id,
-      rawCondition: product.condition,
-      normalizedCondition,
-      productData: product
-    });
 
     setFormData({
       name: product.name,
@@ -520,8 +464,7 @@ const Products = () => {
       inStock: product.inStock,
       sku: product.sku || '',
       locationState: product.locationState || 'Lagos',
-      locationArea: product.locationArea || '',
-      condition: normalizedCondition
+      locationArea: product.locationArea || ''
     });
     
     // Load existing images with IDs
@@ -551,7 +494,6 @@ const Products = () => {
     setEditingProduct(null); // Not editing, creating new
     setQuickAddMode(false);
     setBulkUploadMode(false);
-    const normalizedCondition = (product.condition || '').toLowerCase();
 
     setFormData({
       name: `${product.name} (Copy)`,
@@ -564,8 +506,7 @@ const Products = () => {
       inStock: product.inStock,
       sku: product.sku ? `${product.sku}-copy` : '',
       locationState: product.locationState || 'Lagos',
-      locationArea: product.locationArea || '',
-      condition: normalizedCondition
+      locationArea: product.locationArea || ''
     });
     
     // Don't copy images - seller needs to add new ones
@@ -723,8 +664,7 @@ const Products = () => {
       inStock: true,
       sku: '',
       locationState: 'Lagos',
-      locationArea: '',
-      condition: ''
+      locationArea: ''
     });
     setImages([]);
     setImagePreviews([]);
@@ -1269,7 +1209,6 @@ const Products = () => {
                               <th className="px-3 py-2 text-left text-xs font-medium">Price (₦) *</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Category *</th>
                               <th className="px-3 py-2 text-left text-xs font-medium">Subcategory</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium">Condition *</th>
                               <th className="px-3 py-2 text-center text-xs font-medium">Action</th>
                             </tr>
                           </thead>
@@ -1338,17 +1277,6 @@ const Products = () => {
                                       placeholder="-"
                                     />
                                   )}
-                                </td>
-                                <td className="px-3 py-2">
-                                  <select
-                                    value={product.condition}
-                                    onChange={(e) => updateBulkProduct(product.id, 'condition', e.target.value)}
-                                    className="input text-sm w-full"
-                                  >
-                                    <option value="">Select condition</option>
-                                    <option value="brand new">Brand New</option>
-                                    <option value="used">Used</option>
-                                  </select>
                                 </td>
                                 <td className="px-3 py-2 text-center">
                                   <TouchButton
@@ -1465,35 +1393,6 @@ const Products = () => {
                           placeholder="Select category first"
                         />
                       )}
-                    </div>
-                  </div>
-
-                  {/* Product Condition */}
-                  <div>
-                    <label className="label text-sm sm:text-base">Condition *</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="condition-quick"
-                          value="brand new"
-                          checked={formData.condition === 'brand new'}
-                          onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm sm:text-base">Brand New</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="condition-quick"
-                          value="used"
-                          checked={formData.condition === 'used'}
-                          onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm sm:text-base">Used</span>
-                      </label>
                     </div>
                   </div>
 
@@ -1694,59 +1593,6 @@ const Products = () => {
                       className="input text-sm sm:text-base"
                       placeholder="leather, women, handbag"
                     />
-                  </div>
-                </div>
-
-                {/* Product Condition */}
-                <div>
-                  <label className="label text-sm sm:text-base">Product Condition *</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="condition"
-                        value="brand new"
-                        checked={(() => {
-                          const isChecked = formData.condition === 'brand new';
-                          console.log('✅ CHECK: Brand New radio -', { formDataCondition: formData.condition, isChecked });
-                          return isChecked;
-                        })()}
-                        onChange={(e) => {
-                          console.log('🔘 CLICK: Brand New selected, value:', e.target.value);
-                          console.log('📝 BEFORE: formData.condition =', formData.condition);
-                          setFormData(prev => {
-                            const newData = { ...prev, condition: e.target.value };
-                            console.log('📝 AFTER: newData.condition =', newData.condition);
-                            return newData;
-                          });
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm sm:text-base">Brand New</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="condition"
-                        value="used"
-                        checked={(() => {
-                          const isChecked = formData.condition === 'used';
-                          console.log('✅ CHECK: Used radio -', { formDataCondition: formData.condition, isChecked });
-                          return isChecked;
-                        })()}
-                        onChange={(e) => {
-                          console.log('🔘 CLICK: Used selected, value:', e.target.value);
-                          console.log('📝 BEFORE: formData.condition =', formData.condition);
-                          setFormData(prev => {
-                            const newData = { ...prev, condition: e.target.value };
-                            console.log('📝 AFTER: newData.condition =', newData.condition);
-                            return newData;
-                          });
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm sm:text-base">Used</span>
-                    </label>
                   </div>
                 </div>
 
