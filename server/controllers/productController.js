@@ -340,6 +340,8 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       : req.body.tags.split(',').map((t) => t.trim());
   }
 
+  console.log('🔄 Updating product - Received condition:', req.body.condition);
+
   product = await Product.findByIdAndUpdate(
     req.params.id,
     (() => {
@@ -350,6 +352,7 @@ exports.updateProduct = asyncHandler(async (req, res) => {
       if (update.locationArea !== undefined) {
         update.locationArea = update.locationArea ? update.locationArea.toString().trim() : null;
       }
+      console.log('📝 Final update object condition:', update.condition);
       return update;
     })(),
     {

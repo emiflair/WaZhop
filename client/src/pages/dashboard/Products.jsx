@@ -312,6 +312,12 @@ const Products = () => {
 
       // Ensure condition is included and normalized
       productData.condition = (formData.condition || 'brand new').toLowerCase().trim();
+      
+      console.log('📦 Product Data being sent:', {
+        condition: productData.condition,
+        formDataCondition: formData.condition,
+        allData: productData
+      });
 
       if (editingProduct) {
         // Update existing product
