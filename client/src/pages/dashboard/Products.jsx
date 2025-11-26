@@ -77,6 +77,11 @@ const Products = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, searchTerm, filterStatus]);
 
+  // Debug: Track condition changes in formData
+  useEffect(() => {
+    console.log('🔍 STATE: formData.condition changed to:', formData.condition, typeof formData.condition);
+  }, [formData.condition]);
+
   const fetchSubscription = async () => {
     try {
       await userAPI.getSubscription();
@@ -1692,7 +1697,10 @@ const Products = () => {
                         name="condition"
                         value="brand new"
                         checked={formData.condition === 'brand new'}
-                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                        onChange={(e) => {
+                          console.log('🔘 CLICK: Brand New selected, value:', e.target.value);
+                          setFormData({ ...formData, condition: e.target.value });
+                        }}
                         className="w-4 h-4"
                       />
                       <span className="text-sm sm:text-base">Brand New</span>
@@ -1703,7 +1711,10 @@ const Products = () => {
                         name="condition"
                         value="used"
                         checked={formData.condition === 'used'}
-                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                        onChange={(e) => {
+                          console.log('🔘 CLICK: Used selected, value:', e.target.value);
+                          setFormData({ ...formData, condition: e.target.value });
+                        }}
                         className="w-4 h-4"
                       />
                       <span className="text-sm sm:text-base">Used</span>
