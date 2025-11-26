@@ -227,6 +227,7 @@ const Storefront = () => {
       : 0;
     const isOutOfStock = !product.inStock || (product.stock !== null && product.stock === 0);
     const isLowStock = !isOutOfStock && product.stock !== null && product.stock <= (product.lowStockThreshold || 5);
+    const condition = (product.condition || '').toLowerCase();
 
     return (
       <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl active:shadow-lg transition-all duration-300 group">
@@ -270,15 +271,17 @@ const Storefront = () => {
 
         <div className="p-2 sm:p-3 md:p-4">
           {/* Condition Badge */}
-          <div className="mb-2">
-            <span className={`inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
-              product.condition === 'used' 
-                ? 'bg-gray-600 text-white' 
-                : 'bg-green-500 text-white'
-            }`}>
-              {product.condition === 'used' ? 'Used' : 'Brand New'}
-            </span>
-          </div>
+          {condition && (
+            <div className="mb-2">
+              <span className={`inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
+                condition === 'used'
+                  ? 'bg-gray-600 text-white'
+                  : 'bg-green-500 text-white'
+              }`}>
+                {condition === 'used' ? 'Used' : 'Brand New'}
+              </span>
+            </div>
+          )}
 
           <h3 
             className="font-semibold text-xs sm:text-sm md:text-base lg:text-lg mb-1 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] cursor-pointer hover:text-blue-600 active:text-blue-700 dark:text-white dark:hover:text-blue-400 dark:active:text-blue-500 touch-manipulation"

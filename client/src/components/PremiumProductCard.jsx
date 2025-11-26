@@ -72,6 +72,7 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
   };
 
   const discountPercent = getDiscountPercentage();
+  const productCondition = (product.condition || '').toLowerCase();
 
   return (
     <div
@@ -132,15 +133,17 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
       {/* Product Info */}
       <div className="p-4 space-y-3">
         {/* Condition Badge */}
-        <div className="flex items-center">
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-            product.condition === 'used' 
-              ? 'bg-gray-600 text-white' 
-              : 'bg-green-500 text-white'
-          }`}>
-            {product.condition === 'used' ? 'Used' : 'Brand New'}
-          </span>
-        </div>
+        {productCondition && (
+          <div className="flex items-center">
+            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+              productCondition === 'used'
+                ? 'bg-gray-600 text-white'
+                : 'bg-green-500 text-white'
+            }`}>
+              {productCondition === 'used' ? 'Used' : 'Brand New'}
+            </span>
+          </div>
+        )}
 
         {/* Product Name */}
         <h3 className="font-semibold text-lg line-clamp-2" style={{ color: colors?.text }}>
