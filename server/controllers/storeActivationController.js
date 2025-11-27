@@ -146,8 +146,3 @@ exports.activateStore = asyncHandler(async (req, res) => {
     message: 'Store activated successfully! Welcome to WaZhop.'
   });
 });
-
-module.exports = {
-  verifyActivationToken,
-  activateStore
-};

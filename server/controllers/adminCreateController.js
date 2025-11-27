@@ -200,10 +200,3 @@ exports.deleteTemporaryStore = asyncHandler(async (req, res) => {
     message: 'Temporary store deleted successfully'
   });
 });
-
-module.exports = {
-  createTemporaryStore,
-  addProductToTempStore,
-  getTemporaryStores,
-  deleteTemporaryStore
-};
