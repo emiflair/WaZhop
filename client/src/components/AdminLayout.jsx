@@ -107,9 +107,6 @@ const AdminLayout = ({ children }) => {
           <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-gray-700 bg-red-600 dark:bg-red-700">
             <div className="flex-shrink-0 flex items-center -ml-14">
               <img src={logoWhite} alt="WaZhop Admin" className="h-20 w-auto object-contain" />
-              <div>
-                <span className="text-xs text-red-100">Platform Management</span>
-              </div>
             </div>
           </div>
 
