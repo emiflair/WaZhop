@@ -7,6 +7,7 @@ const {
   deleteTemporaryStore
 } = require('../controllers/adminCreateController');
 const { protect, authorize } = require('../middlewares/auth');
+const { uploadProductImages } = require('../middlewares/imageOptimization');
 
 // All routes require admin authentication
 router.use(protect);
@@ -18,8 +19,8 @@ router.post('/create-store', createTemporaryStore);
 // Get all temporary stores
 router.get('/create-store/temporary', getTemporaryStores);
 
-// Add product to temporary store
-router.post('/create-store/:shopId/products', addProductToTempStore);
+// Add product to temporary store (with image upload support)
+router.post('/create-store/:shopId/products', uploadProductImages, addProductToTempStore);
 
 // Delete temporary store
 router.delete('/create-store/:shopId', deleteTemporaryStore);

@@ -8,9 +8,9 @@ const { asyncHandler, generateSlug } = require('../utils/helpers');
 // @route   POST /api/admin/create-store
 // @access  Private (Admin only)
 exports.createTemporaryStore = asyncHandler(async (req, res) => {
-  const { storeName, category, tags } = req.body;
+  const { name, category, tags } = req.body;
 
-  if (!storeName) {
+  if (!name) {
     return res.status(400).json({
       success: false,
       message: 'Store name is required'
@@ -18,7 +18,7 @@ exports.createTemporaryStore = asyncHandler(async (req, res) => {
   }
 
   // Generate unique slug
-  const baseSlug = generateSlug(storeName);
+  const baseSlug = generateSlug(name);
   const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
   // Create temporary user account
@@ -26,7 +26,7 @@ exports.createTemporaryStore = asyncHandler(async (req, res) => {
   const randomPassword = crypto.randomBytes(32).toString('hex');
   
   const tempUser = await User.create({
-    name: storeName,
+    name: name,
     email: tempEmail,
     password: randomPassword,
     role: 'seller',
@@ -44,10 +44,11 @@ exports.createTemporaryStore = asyncHandler(async (req, res) => {
   // Create temporary shop
   const shop = await Shop.create({
     owner: tempUser._id,
-    shopName: storeName,
+    shopName: name,
     slug: uniqueSlug,
     description: '',
     category: category || 'other',
+    tags: tags || [],
     isTemporary: true,
     createdByAdmin: true,
     activationToken,
@@ -113,7 +114,10 @@ exports.addProductToTempStore = asyncHandler(async (req, res) => {
     });
   }
 
-  // Create product (images handled separately via upload endpoint)
+  // Process uploaded images (from imageOptimization middleware)
+  const images = req.uploadedImages || [];
+
+  // Create product with uploaded images
   const product = await Product.create({
     shop: shop._id,
     name,
@@ -121,9 +125,9 @@ exports.addProductToTempStore = asyncHandler(async (req, res) => {
     price: parseFloat(price),
     category: category || 'other',
     subcategory: subcategory || null,
-    tags: tags || [],
+    tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : []),
     inStock: inStock !== undefined ? inStock : true,
-    images: [] // Will be added via separate upload
+    images: images
   });
 
   res.status(201).json({
