@@ -148,9 +148,12 @@ exports.getTemporaryStores = asyncHandler(async (req, res) => {
   const shopsWithProducts = await Promise.all(
     shops.map(async (shop) => {
       const productCount = await Product.countDocuments({ shop: shop._id });
+      const products = await Product.find({ shop: shop._id }).select('name price images');
       return {
         ...shop.toObject(),
+        name: shop.shopName, // Add name field for frontend
         productCount,
+        products,
         previewUrl: `${process.env.CLIENT_URL}/s/${shop.slug}?preview=true`,
         activationUrl: `${process.env.CLIENT_URL}/activate-store/${shop._id}/${shop.activationToken}`
       };
