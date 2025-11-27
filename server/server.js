@@ -155,9 +155,10 @@ app.use('/api/referrals', referralRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/coupons', couponRoutes);
+// Mount admin-create routes BEFORE general admin routes (more specific paths match first)
+app.use('/api/admin', adminCreateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/migrations', adminMigrationRoutes);
-app.use('/api/admin', adminCreateRoutes);
 app.use('/api/activate-store', storeActivationRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/whatsapp', require('./routes/whatsapp'));
