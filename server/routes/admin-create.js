@@ -7,7 +7,12 @@ const {
   deleteTemporaryStore
 } = require('../controllers/adminCreateController');
 const { protect, isAdmin } = require('../middlewares/auth');
-const { uploadProductImages } = require('../middlewares/imageOptimization');
+const { upload } = require('../config/cloudinary');
+const {
+  validateImage,
+  imageUploadRateLimiter,
+  limitConcurrentUploads
+} = require('../middlewares/imageOptimization');
 
 // Health check endpoint (no auth required for debugging)
 router.get('/create-store/health', (req, res) => {
@@ -25,7 +30,13 @@ router.post('/create-store', createTemporaryStore);
 router.get('/create-store/temporary', getTemporaryStores);
 
 // Add product to temporary store (with image upload support)
-router.post('/create-store/:shopId/products', uploadProductImages, addProductToTempStore);
+router.post('/create-store/:shopId/products', 
+  imageUploadRateLimiter, 
+  upload.array('images', 5), 
+  limitConcurrentUploads, 
+  validateImage, 
+  addProductToTempStore
+);
 
 // Delete temporary store
 router.delete('/create-store/:shopId', deleteTemporaryStore);
