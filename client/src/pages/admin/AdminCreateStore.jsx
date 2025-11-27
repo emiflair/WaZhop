@@ -62,7 +62,9 @@ export default function AdminCreateStore() {
         tags: storeForm.tags.split(',').map(t => t.trim()).filter(Boolean)
       };
 
+      console.log('📤 Creating store with payload:', payload);
       const response = await adminCreateAPI.createTemporaryStore(payload);
+      console.log('✅ Store created response:', response);
       
       toast.success('Store created successfully!');
       setStoreForm({ name: '', category: 'fashion', tags: '' });
@@ -81,8 +83,11 @@ export default function AdminCreateStore() {
         );
       }
     } catch (error) {
-      console.error('Failed to create store:', error);
-      toast.error(error.userMessage || 'Failed to create store');
+      console.error('❌ Failed to create store:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      const errorMessage = error.response?.data?.message || error.userMessage || 'Failed to create store';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
