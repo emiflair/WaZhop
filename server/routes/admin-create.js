@@ -6,12 +6,12 @@ const {
   getTemporaryStores,
   deleteTemporaryStore
 } = require('../controllers/adminCreateController');
-const { protect, authorize } = require('../middlewares/auth');
+const { protect, isAdmin } = require('../middlewares/auth');
 const { uploadProductImages } = require('../middlewares/imageOptimization');
 
 // All routes require admin authentication
 router.use(protect);
-router.use(authorize('admin'));
+router.use(isAdmin);
 
 // Create temporary store
 router.post('/create-store', createTemporaryStore);

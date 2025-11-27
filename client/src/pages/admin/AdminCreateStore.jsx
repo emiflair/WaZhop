@@ -39,10 +39,15 @@ export default function AdminCreateStore() {
   const fetchTemporaryStores = async () => {
     try {
       const response = await adminCreateAPI.getTemporaryStores();
+      console.log('✅ Temporary stores response:', response);
       setTemporaryStores(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch temporary stores:', error);
-      toast.error(error.userMessage || 'Failed to load stores');
+      console.error('❌ Failed to fetch temporary stores:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      // Only show error toast if it's not a 404 (which is normal for first time)
+      if (error.response?.status !== 404) {
+        toast.error(error.userMessage || 'Failed to load stores');
+      }
     }
   };
 
