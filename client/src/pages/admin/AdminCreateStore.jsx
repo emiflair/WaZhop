@@ -292,57 +292,52 @@ export default function AdminCreateStore() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            <div className="space-y-6 p-6">
               {temporaryStores.map((store) => {
                 const isExpanded = selectedStore?._id === store._id && !showProductForm;
                 return (
-                  <div key={store._id} className="relative">
-                    {/* Store Card */}
+                  <div key={store._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {/* Store Card Header - Always Visible */}
                     <div
                       onClick={() => setSelectedStore(isExpanded ? null : store)}
-                      className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-primary-500 overflow-hidden"
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
-                      {/* Card Header */}
                       <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-6 text-white">
-                        <h3 className="text-xl font-bold mb-2 truncate">
-                          {store.name}
-                        </h3>
-                        <div className="flex items-center justify-between text-sm opacity-90">
-                          <span className="flex items-center gap-1">
-                            <FiPackage className="h-4 w-4" />
-                            {store.productCount || 0} products
-                          </span>
-                          <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
-                            {getCategoryLabel(store.category)}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold mb-2">
+                              {store.name || 'Untitled Store'}
+                            </h3>
+                            <div className="flex items-center gap-4 text-sm opacity-90">
+                              <span className="flex items-center gap-1">
+                                <FiPackage className="h-4 w-4" />
+                                {store.productCount || 0} products
+                              </span>
+                              <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+                                {getCategoryLabel(store.category)}
+                              </span>
+                              <span className="text-xs">
+                                Created: {new Date(store.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="flex items-center gap-1 px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs font-medium">
+                            Pending Activation
                           </span>
                         </div>
                       </div>
 
-                      {/* Card Body */}
-                      <div className="p-4">
-                        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-3">
-                          <span className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-medium">
-                            Pending Activation
-                          </span>
-                          <span className="text-xs">
-                            {new Date(store.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        {/* Collapsed View - Quick Actions */}
-                        {!isExpanded && (
-                          <div className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Click to view details
-                            </p>
-                          </div>
-                        )}
+                      {/* Click Indicator */}
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/30 text-center border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {isExpanded ? '▲ Click to collapse' : '▼ Click to view details and manage'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Expanded Details Panel */}
+                    {/* Expanded Details Panel - Shown Below */}
                     {isExpanded && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 z-10 animate-fadeIn">
+                      <div className="border-t-2 border-primary-500 bg-gray-50 dark:bg-gray-700/30 p-6 animate-fadeIn">
                         <div className="space-y-4">
                           {/* URLs Section */}
                           <div>
