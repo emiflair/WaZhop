@@ -9,6 +9,11 @@ const {
 const { protect, isAdmin } = require('../middlewares/auth');
 const { uploadProductImages } = require('../middlewares/imageOptimization');
 
+// Health check endpoint (no auth required for debugging)
+router.get('/create-store/health', (req, res) => {
+  res.json({ success: true, message: 'Admin Create Store routes loaded', timestamp: new Date() });
+});
+
 // All routes require admin authentication
 router.use(protect);
 router.use(isAdmin);
