@@ -30,6 +30,7 @@ const AdminLayout = ({ children }) => {
     { name: 'Shops', href: '/admin/shops', icon: FaStore },
     { name: 'Products', href: '/admin/products', icon: FiShoppingBag },
     { name: 'Orders', href: '/admin/orders', icon: FiPackage },
+    { name: 'Create Store', href: '/admin/create-store', icon: FaStore },
     { name: 'Analytics', href: '/admin/analytics', icon: FiBarChart2 },
     { name: 'Revenue', href: '/admin/revenue', icon: FiDollarSign },
     { name: 'Settings', href: '/admin/settings', icon: FiSettings },

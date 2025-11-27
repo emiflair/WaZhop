@@ -218,6 +218,27 @@ const shopSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // Temporary Store Fields (Admin Create Feature)
+  isTemporary: {
+    type: Boolean,
+    default: false
+  },
+  activationToken: {
+    type: String,
+    default: null
+  },
+  activationTokenExpires: {
+    type: Date,
+    default: null
+  },
+  createdByAdmin: {
+    type: Boolean,
+    default: false
+  },
+  activatedAt: {
+    type: Date,
+    default: null
+  },
   // Custom domain for Premium plan
   customDomain: {
     type: String,

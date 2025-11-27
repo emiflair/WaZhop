@@ -61,6 +61,7 @@ const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
 const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
+const AdminCreateStore = lazy(() => import('./pages/admin/AdminCreateStore'))
 
 // Lazy load demo pages
 const ErrorHandlingExamples = lazy(() => import('./pages/ErrorHandlingExamples'))
@@ -69,6 +70,7 @@ const MobileResponsiveDemo = lazy(() => import('./pages/MobileResponsiveDemo'))
 
 // Lazy load storefront
 const Storefront = lazy(() => import('./pages/Storefront'))
+const ActivateStore = lazy(() => import('./pages/ActivateStore'))
 
 // Protected Route Components
 import ProtectedRoute from './components/ProtectedRoute'
@@ -149,6 +151,7 @@ function AppRoutes() {
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/verify-2fa" element={<TwoFactorVerify />} />
+                <Route path="/activate-store/:shopId/:token" element={<ActivateStore />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
@@ -164,6 +167,7 @@ function AppRoutes() {
                 <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
                 <Route path="/admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
                 <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+                <Route path="/admin/create-store" element={<AdminRoute><AdminCreateStore /></AdminRoute>} />
 
                 {/* Protected Dashboard Routes */}
                 {/* Allow buyers to access /dashboard so the upgrade modal can show */}
