@@ -68,7 +68,7 @@ exports.createTemporaryStore = asyncHandler(async (req, res) => {
   });
 
   // Generate preview URL
-  const previewUrl = `${process.env.CLIENT_URL}/s/${uniqueSlug}?preview=true`;
+  const previewUrl = `${process.env.CLIENT_URL}/s/${uniqueSlug}`;
   const activationUrl = `${process.env.CLIENT_URL}/activate-store/${shop._id}/${activationToken}`;
 
   res.status(201).json({
@@ -148,10 +148,13 @@ exports.getTemporaryStores = asyncHandler(async (req, res) => {
   const shopsWithProducts = await Promise.all(
     shops.map(async (shop) => {
       const productCount = await Product.countDocuments({ shop: shop._id });
+      const products = await Product.find({ shop: shop._id }).select('name price images');
       return {
         ...shop.toObject(),
+        name: shop.shopName, // Add name field for frontend
         productCount,
-        previewUrl: `${process.env.CLIENT_URL}/s/${shop.slug}?preview=true`,
+        products,
+        previewUrl: `${process.env.CLIENT_URL}/s/${shop.slug}`,
         activationUrl: `${process.env.CLIENT_URL}/activate-store/${shop._id}/${shop.activationToken}`
       };
     })

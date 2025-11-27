@@ -235,8 +235,8 @@ export default function AdminCreateStore() {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                 >
                   {CATEGORY_SUGGESTIONS.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {getCategoryLabel(cat.value)}
+                    <option key={cat} value={cat}>
+                      {getCategoryLabel(cat)}
                     </option>
                   ))}
                 </select>
@@ -292,108 +292,173 @@ export default function AdminCreateStore() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {temporaryStores.map((store) => (
-                <div key={store._id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {store.name}
-                        </h3>
-                        <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full">
-                          Pending Activation
-                        </span>
-                      </div>
-                      
-                      <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FiPackage className="h-4 w-4" />
-                          {store.productCount} products
-                        </span>
-                        <span>Category: {getCategoryLabel(store.category)}</span>
-                        <span>
-                          Created: {new Date(store.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      {/* URLs */}
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-20">
-                            Preview:
-                          </span>
-                          <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
-                            <code className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">
-                              {store.previewUrl}
-                            </code>
-                            <button
-                              onClick={() => copyToClipboard(store.previewUrl, 'Preview')}
-                              className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
-                            >
-                              {copiedUrl === 'Preview' ? <FiCheck className="h-4 w-4" /> : <FiCopy className="h-4 w-4" />}
-                            </button>
-                            <a
-                              href={store.previewUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
-                            >
-                              <FiExternalLink className="h-4 w-4" />
-                            </a>
+            <div className="space-y-6 p-6">
+              {temporaryStores.map((store) => {
+                const isExpanded = selectedStore?._id === store._id && !showProductForm;
+                return (
+                  <div key={store._id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {/* Store Card Header - Always Visible */}
+                    <div
+                      onClick={() => setSelectedStore(isExpanded ? null : store)}
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-6 text-white">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold mb-2">
+                              {store.name || 'Untitled Store'}
+                            </h3>
+                            <div className="flex items-center gap-4 text-sm opacity-90">
+                              <span className="flex items-center gap-1">
+                                <FiPackage className="h-4 w-4" />
+                                {store.productCount || 0} products
+                              </span>
+                              <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+                                {getCategoryLabel(store.category)}
+                              </span>
+                              <span className="text-xs">
+                                Created: {new Date(store.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-20">
-                            Activate:
+                          <span className="flex items-center gap-1 px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs font-medium">
+                            Pending Activation
                           </span>
-                          <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
-                            <code className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">
-                              {store.activationUrl}
-                            </code>
-                            <button
-                              onClick={() => copyToClipboard(store.activationUrl, 'Activation')}
-                              className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
-                            >
-                              {copiedUrl === 'Activation' ? <FiCheck className="h-4 w-4" /> : <FiCopy className="h-4 w-4" />}
-                            </button>
-                            <a
-                              href={store.activationUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
-                            >
-                              <FiExternalLink className="h-4 w-4" />
-                            </a>
-                          </div>
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="mt-4 flex gap-3">
-                        <button
-                          onClick={() => {
-                            setSelectedStore(store);
-                            setShowProductForm(true);
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <FiPlus className="h-4 w-4" />
-                          Add Product
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStore(store._id)}
-                          className="flex items-center gap-2 px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                          <FiTrash2 className="h-4 w-4" />
-                          Delete Store
-                        </button>
+                      {/* Click Indicator */}
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/30 text-center border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {isExpanded ? '▲ Click to collapse' : '▼ Click to view details and manage'}
+                        </p>
                       </div>
                     </div>
+
+                    {/* Expanded Details Panel - Shown Below */}
+                    {isExpanded && (
+                      <div className="border-t-2 border-primary-500 bg-gray-50 dark:bg-gray-700/30 p-6 animate-fadeIn">
+                        <div className="space-y-4">
+                          {/* URLs Section */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                              Store Links
+                            </h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                                  Preview URL
+                                </label>
+                                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                                  <code className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">
+                                    {store.previewUrl}
+                                  </code>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyToClipboard(store.previewUrl, `preview-${store._id}`);
+                                    }}
+                                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
+                                  >
+                                    {copiedUrl === `preview-${store._id}` ? <FiCheck className="h-4 w-4 text-green-600" /> : <FiCopy className="h-4 w-4" />}
+                                  </button>
+                                  <a
+                                    href={store.previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
+                                  >
+                                    <FiExternalLink className="h-4 w-4" />
+                                  </a>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                                  Activation URL
+                                </label>
+                                <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                                  <code className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">
+                                    {store.activationUrl}
+                                  </code>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyToClipboard(store.activationUrl, `activate-${store._id}`);
+                                    }}
+                                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
+                                  >
+                                    {copiedUrl === `activate-${store._id}` ? <FiCheck className="h-4 w-4 text-green-600" /> : <FiCopy className="h-4 w-4" />}
+                                  </button>
+                                  <a
+                                    href={store.activationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors"
+                                  >
+                                    <FiExternalLink className="h-4 w-4" />
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Products Section */}
+                          {store.products && store.products.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                Products ({store.products.length})
+                              </h4>
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {store.products.map((product, idx) => (
+                                  <div key={idx} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                    {product.images?.[0] && (
+                                      <img src={product.images[0]} alt={product.name} className="w-10 h-10 object-cover rounded" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {product.name}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        ₦{product.price?.toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowProductForm(true);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              <FiPlus className="h-4 w-4" />
+                              Add Product
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteStore(store._id);
+                              }}
+                              className="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                              <FiTrash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -464,8 +529,8 @@ export default function AdminCreateStore() {
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       {CATEGORY_SUGGESTIONS.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {getCategoryLabel(cat.value)}
+                        <option key={cat} value={cat}>
+                          {getCategoryLabel(cat)}
                         </option>
                       ))}
                     </select>
