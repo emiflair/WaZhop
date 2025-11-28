@@ -22,7 +22,7 @@ const Storefront = () => {
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('random');
   // Mobile popovers for category/sort
   const [showCatSheet, setShowCatSheet] = useState(false);
   const [showSortSheet, setShowSortSheet] = useState(false);
@@ -173,6 +173,8 @@ const Storefront = () => {
     })
     .sort((a, b) => {
       switch (sortBy) {
+        case 'random':
+          return 0; // Don't sort, keep backend's random order
         case 'price-low':
           return a.price - b.price;
         case 'price-high':
@@ -716,6 +718,7 @@ const Storefront = () => {
                   className="input text-base appearance-none cursor-pointer dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   aria-label="Sort products"
                 >
+                  <option value="random">Random</option>
                   <option value="newest">Newest First</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
@@ -765,6 +768,7 @@ const Storefront = () => {
                   </div>
                   <div className="grid grid-cols-1 gap-2">
                     {[
+                      { value: 'random', label: 'Random' },
                       { value: 'newest', label: 'Newest First' },
                       { value: 'price-low', label: 'Price: Low to High' },
                       { value: 'price-high', label: 'Price: High to Low' },
