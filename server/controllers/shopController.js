@@ -76,6 +76,8 @@ exports.getMyShop = asyncHandler(async (req, res) => {
 
 // Helper used for public shop lookup by slug
 const loadPublicShopWithProducts = async (criteria) => {
+  console.log('🔍 loadPublicShopWithProducts called with criteria:', criteria);
+  
   // Find shop regardless of isActive status - all shops should be viewable
   const shop = await Shop.findOne(criteria)
     .populate({
@@ -84,6 +86,22 @@ const loadPublicShopWithProducts = async (criteria) => {
     });
 
   if (!shop) {
+    console.log('❌ No shop found with criteria:', criteria);
+    return null;
+  }
+
+  console.log('✅ Shop found:', {
+    id: shop._id,
+    name: shop.shopName,
+    slug: shop.slug,
+    isActive: shop.isActive,
+    hasOwner: !!shop.owner,
+    ownerId: shop.owner?._id
+  });
+
+  // Check if owner exists (critical - shop cannot function without owner)
+  if (!shop.owner) {
+    console.log('❌ CRITICAL: Shop has no owner! Shop:', shop.shopName, 'ID:', shop._id);
     return null;
   }
 
