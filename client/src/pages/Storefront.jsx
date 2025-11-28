@@ -89,28 +89,49 @@ const Storefront = () => {
   }, [shop?.theme?.mode]);
 
   const applyShopPayload = (shopData) => {
-    console.log('📦 applyShopPayload received:', shopData);
+    console.log('📦 applyShopPayload received:', JSON.stringify(shopData, null, 2));
     
-    // Handle both response structures: direct {shop, products} or nested {data: {shop, products}}
-    const actualData = shopData.data || shopData;
-    console.log('📦 actualData:', actualData);
+    // Try multiple paths to find shop and products
+    let shop = null;
+    let products = [];
     
-    const shop = actualData.shop || actualData;
-    console.log('🏪 shop extracted:', shop);
+    // Path 1: { data: { shop, products } }
+    if (shopData?.data?.shop) {
+      shop = shopData.data.shop;
+      products = shopData.data.products || [];
+      console.log('✅ Found via data.shop path');
+    }
+    // Path 2: { shop, products }
+    else if (shopData?.shop) {
+      shop = shopData.shop;
+      products = shopData.products || [];
+      console.log('✅ Found via shop path');
+    }
+    // Path 3: Direct shop object
+    else if (shopData?.shopName) {
+      shop = shopData;
+      products = [];
+      console.log('✅ Found as direct shop object');
+    }
     
-    const products = actualData.products || [];
-    console.log('📦 products extracted:', products);
+    console.log('🏪 Final shop:', shop);
+    console.log('📦 Final products:', products);
 
     if (!shop || typeof shop !== 'object' || !shop.shopName) {
-      console.error('❌ Invalid shop object:', { shop, actualData, shopData });
+      console.error('❌ Invalid shop object after all attempts:', { 
+        shopData, 
+        shop,
+        hasData: !!shopData?.data,
+        hasShop: !!shopData?.shop,
+        hasShopName: !!shopData?.shopName
+      });
       setError('Shop data is invalid');
       return;
     }
 
     if (!Array.isArray(products)) {
-      console.error('❌ Products is not an array:', { products, actualData });
-      setError('Shop data is invalid');
-      return;
+      console.warn('⚠️ Products is not an array, converting:', products);
+      products = [];
     }
 
     const shopCurrency = shop.paymentSettings?.currency || 'NGN';
@@ -126,9 +147,15 @@ const Storefront = () => {
     try {
       console.log('🔍 Fetching shop with slug:', slugParam);
       const response = await shopAPI.getShopBySlug(slugParam);
-      console.log('✅ Full API response:', response);
+      console.log('✅ Full API response:', JSON.stringify(response, null, 2));
+      console.log('✅ response.data:', JSON.stringify(response.data, null, 2));
+      console.log('✅ response.data.data:', JSON.stringify(response.data?.data, null, 2));
       
-      applyShopPayload(response);
+      // Axios wraps the response in a data property, so we need response.data
+      const payload = response.data !== undefined ? response.data : response;
+      console.log('📦 Using payload:', JSON.stringify(payload, null, 2));
+      
+      applyShopPayload(payload);
     } catch (err) {
       console.error('❌ Error fetching shop:', err);
       console.error('Error response:', err.response?.data);
