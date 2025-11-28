@@ -21,7 +21,11 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('❌ ErrorBoundary caught an error:', error);
+    console.error('❌ Error message:', error?.message);
+    console.error('❌ Error stack:', error?.stack);
+    console.error('❌ Error info:', errorInfo);
+    console.error('❌ Component stack:', errorInfo?.componentStack);
     
     // Check if it's a chunk loading error (deployment issue)
     const isChunkError = 
@@ -33,7 +37,7 @@ class ErrorBoundary extends Component {
     
     if (isChunkError) {
       // Auto-reload on chunk errors (new deployment)
-      console.log('Chunk load error detected, refreshing page...');
+      console.log('⚠️ Chunk load error detected, refreshing page...');
       // Clear cache
       if ('caches' in window) {
         caches.keys().then(names => {

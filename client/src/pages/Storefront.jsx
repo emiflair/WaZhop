@@ -12,9 +12,9 @@ import { convertProductPrice, formatPrice } from '../utils/currency';
 import { CATEGORY_SUGGESTIONS, toLabel } from '../utils/categories';
 
 const Storefront = () => {
-  console.log('🚀 Storefront component loaded');
+  console.log('🚀🚀🚀 STOREFRONT COMPONENT LOADED 🚀🚀🚀');
   const { slug } = useParams();
-  console.log('🔑 URL slug:', slug);
+  console.log('🔑🔑🔑 URL SLUG:', slug);
   const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);

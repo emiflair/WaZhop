@@ -10,8 +10,19 @@ if (import.meta.env.PROD) {
   performanceMonitor.init();
 }
 
+// Temporarily disable service worker for debugging - unregister existing ones
+console.log('🔧 Service Worker temporarily disabled for debugging');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      console.log('🗑️ Unregistering service worker:', registration.scope);
+      registration.unregister();
+    });
+  });
+}
+
 // Register service worker for offline support and caching
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if (false && 'serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
