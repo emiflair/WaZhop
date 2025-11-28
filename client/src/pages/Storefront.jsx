@@ -89,12 +89,29 @@ const Storefront = () => {
   }, [shop?.theme?.mode]);
 
   const applyShopPayload = (shopData) => {
-    const shopCurrency = shopData.paymentSettings?.currency || 'NGN';
-    const convertedProducts = shopData.products.map((product) =>
+    // Handle both response structures: direct {shop, products} or nested {data: {shop, products}}
+    const actualData = shopData.data || shopData;
+    const shop = actualData.shop || actualData;
+    const products = actualData.products || [];
+
+    if (!shop) {
+      console.error('❌ No shop data in response:', shopData);
+      setError('Shop data is invalid');
+      return;
+    }
+
+    if (!Array.isArray(products)) {
+      console.error('❌ Products is not an array:', products);
+      setError('Shop data is invalid');
+      return;
+    }
+
+    const shopCurrency = shop.paymentSettings?.currency || 'NGN';
+    const convertedProducts = products.map((product) =>
       convertProductPrice(product, shopCurrency)
     );
 
-    setShop(shopData.shop || shopData);
+    setShop(shop);
     setProducts(convertedProducts);
   };
 
@@ -104,11 +121,7 @@ const Storefront = () => {
       const response = await shopAPI.getShopBySlug(slugParam);
       console.log('✅ Full API response:', response);
       
-      // Extract the data object from {success: true, data: {shop, products}}
-      const shopData = response.data || response;
-      console.log('✅ Shop data extracted:', shopData);
-      
-      applyShopPayload(shopData);
+      applyShopPayload(response);
     } catch (err) {
       console.error('❌ Error fetching shop:', err);
       console.error('Error response:', err.response?.data);
