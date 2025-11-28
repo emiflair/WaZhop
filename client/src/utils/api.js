@@ -167,7 +167,7 @@ export const authAPI = {
 export const shopAPI = {
   getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}&_t=${Date.now()}`),
   getMyShops: () => api.get(`/shops/my/shops?_t=${Date.now()}`),
-  getShopBySlug: (slug) => api.get(`/shops/${encodeURIComponent(slug)}`),
+  getShopBySlug: (slug) => api.get(`/shops/${slug}`),
   createShop: (data) => api.post('/shops', data),
   deleteShop: (id) => api.delete(`/shops/${id}`),
   updateShop: (data, shopId) => api.put(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`, data),
