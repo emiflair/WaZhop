@@ -106,7 +106,7 @@ export default function Marketplace() {
       const effectiveMaxPrice = maxPriceOverride ?? priceRange.max
       const params = {
         page: reset ? 1 : page,
-        limit: 24,
+        limit: 48,
         ...(effectiveSort ? { sort: effectiveSort } : {}),
         ...(effectiveCategory !== 'all' && { category: effectiveCategory }),
         ...(effectiveSearch && { search: effectiveSearch }),
@@ -156,22 +156,22 @@ export default function Marketplace() {
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
       
-      // Load more when user is 80% down the page
+      // Load more when user is 70% down the page for smoother experience
       const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
       
-      if (scrollPercentage > 0.8 && products.length >= 12) {
-        loadMore();
+      if (scrollPercentage > 0.7) {
+        setPage(prev => prev + 1);
       }
     };
 
-    // Throttle scroll event to once per second
+    // Throttle scroll event to once every 500ms for better performance
     let scrollTimeout;
     const throttledScroll = () => {
       if (!scrollTimeout) {
         scrollTimeout = setTimeout(() => {
           handleScroll();
           scrollTimeout = null;
-        }, 1000);
+        }, 500);
       }
     };
 
@@ -499,15 +499,6 @@ export default function Marketplace() {
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                       <span className="text-sm font-medium">Loading more products...</span>
                     </div>
-                  </div>
-                )}
-
-                {/* Manual Load More button (fallback) */}
-                {hasMore && !loading && (
-                  <div className="text-center mt-12 mb-8">
-                    <button onClick={loadMore} disabled={loading} className="btn btn-primary px-8">
-                      Load More
-                    </button>
                   </div>
                 )}
               </>

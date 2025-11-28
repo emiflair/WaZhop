@@ -94,10 +94,17 @@ const loadPublicShopWithProducts = async (criteria) => {
     await shop.save();
   }
 
+  // Fetch all active products for the shop
   const products = await Product.find({
     shop: shop._id,
     isActive: true
-  }).sort({ position: 1, createdAt: -1 });
+  });
+
+  // Randomize products using Fisher-Yates shuffle for variety
+  for (let i = products.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [products[i], products[j]] = [products[j], products[i]];
+  }
 
   await shop.incrementViews();
 
