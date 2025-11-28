@@ -89,19 +89,26 @@ const Storefront = () => {
   }, [shop?.theme?.mode]);
 
   const applyShopPayload = (shopData) => {
+    console.log('📦 applyShopPayload received:', shopData);
+    
     // Handle both response structures: direct {shop, products} or nested {data: {shop, products}}
     const actualData = shopData.data || shopData;
+    console.log('📦 actualData:', actualData);
+    
     const shop = actualData.shop || actualData;
+    console.log('🏪 shop extracted:', shop);
+    
     const products = actualData.products || [];
+    console.log('📦 products extracted:', products);
 
-    if (!shop) {
-      console.error('❌ No shop data in response:', shopData);
+    if (!shop || typeof shop !== 'object' || !shop.shopName) {
+      console.error('❌ Invalid shop object:', { shop, actualData, shopData });
       setError('Shop data is invalid');
       return;
     }
 
     if (!Array.isArray(products)) {
-      console.error('❌ Products is not an array:', products);
+      console.error('❌ Products is not an array:', { products, actualData });
       setError('Shop data is invalid');
       return;
     }
