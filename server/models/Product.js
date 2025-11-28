@@ -83,7 +83,6 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-
   stock: {
     type: Number,
     default: null, // null means unlimited/not tracked
