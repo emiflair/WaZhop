@@ -12,7 +12,9 @@ import { convertProductPrice, formatPrice } from '../utils/currency';
 import { CATEGORY_SUGGESTIONS, toLabel } from '../utils/categories';
 
 const Storefront = () => {
+  console.log('🚀 Storefront component loaded');
   const { slug } = useParams();
+  console.log('🔑 URL slug:', slug);
   const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
@@ -271,6 +273,7 @@ const Storefront = () => {
   const fontFamily = shop.theme?.font ? fontStacks[shop.theme.font] : undefined;
 
   const renderGridCard = (product) => {
+    const condition = product.condition;
     const discountPercent = product.comparePrice && product.comparePrice > product.price
       ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
       : 0;
