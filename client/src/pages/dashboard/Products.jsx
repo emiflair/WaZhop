@@ -21,6 +21,7 @@ import ProductPreviewModal from '../../components/ProductPreviewModal';
 import { CATEGORY_SUGGESTIONS, toLabel, getSubcategories, getCategoryLabel } from '../../utils/categories';
 import FlutterwavePayment from '../../components/FlutterwavePayment';
 import useDetectedCountry from '../../hooks/useDetectedCountry';
+import { DEFAULT_COUNTRY_CODE } from '../../utils/location';
 
 const Products = () => {
   const { user } = useAuth();
@@ -36,13 +37,14 @@ const Products = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [previewProduct, setPreviewProduct] = useState(null);
   const [boostModal, setBoostModal] = useState({ open: false, product: null });
-  const [boostForm, setBoostForm] = useState({ hours: 5, state: '', area: '' });
+  const [boostForm, setBoostForm] = useState({ hours: 5, state: '', area: '', country: getDefaultCountry() });
   const [boostConfirmModal, setBoostConfirmModal] = useState({ open: false, product: null });
   const [quickAddMode, setQuickAddMode] = useState(false);
   const [bulkUploadMode, setBulkUploadMode] = useState(false);
   const [bulkProducts, setBulkProducts] = useState([]);
 
   const {
+    countryCode: sellerCountryCode,
     countryName: sellerCountryName,
     regionLabel: sellerRegionLabel,
     regions: sellerRegions,
@@ -56,6 +58,8 @@ const Products = () => {
     || ''
   );
 
+  const getDefaultCountry = () => sellerCountryCode || DEFAULT_COUNTRY_CODE;
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -67,6 +71,7 @@ const Products = () => {
     tags: '',
     inStock: true,
     sku: '',
+    locationCountry: getDefaultCountry(),
     locationState: '',
     locationArea: ''
   });
@@ -92,18 +97,31 @@ const Products = () => {
   }, [products, searchTerm, filterStatus]);
 
   useEffect(() => {
-    if (!sellerRegions || sellerRegions.length === 0) return;
+    const hasRegions = sellerRegions && sellerRegions.length > 0;
+    const defaultRegion = hasRegions ? (sellerDefaultRegion || sellerRegions[0]) : '';
+
     setFormData((prev) => {
-      if (prev.locationState) return prev;
-      const defaultRegion = sellerDefaultRegion || sellerRegions[0];
-      return { ...prev, locationState: defaultRegion };
+      const updates = {};
+      if (!prev.locationCountry && sellerCountryCode) {
+        updates.locationCountry = sellerCountryCode;
+      }
+      if (!prev.locationState && defaultRegion) {
+        updates.locationState = defaultRegion;
+      }
+      return Object.keys(updates).length ? { ...prev, ...updates } : prev;
     });
+
     setBoostForm((prev) => {
-      if (prev.state) return prev;
-      const defaultRegion = sellerDefaultRegion || sellerRegions[0];
-      return { ...prev, state: defaultRegion };
+      const updates = {};
+      if (!prev.country && sellerCountryCode) {
+        updates.country = sellerCountryCode;
+      }
+      if (!prev.state && defaultRegion) {
+        updates.state = defaultRegion;
+      }
+      return Object.keys(updates).length ? { ...prev, ...updates } : prev;
     });
-  }, [sellerRegions, sellerDefaultRegion]);
+  }, [sellerRegions, sellerDefaultRegion, sellerCountryCode]);
 
   const fetchSubscription = async () => {
     try {
@@ -309,6 +327,7 @@ const Products = () => {
           subcategory: formData.subcategory || null,
           tags: [],
           inStock: true,
+          locationCountry: formData.locationCountry || getDefaultCountry(),
           locationState: formData.locationState || getDefaultRegion(),
           locationArea: user?.shopDetails?.locationArea || ''
         };
@@ -333,6 +352,7 @@ const Products = () => {
         tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
         inStock: formData.inStock,
         sku: formData.sku || '',
+        locationCountry: formData.locationCountry || getDefaultCountry(),
         locationState: formData.locationState || null,
         locationArea: formData.locationArea || null,
         variants: variants.length > 0 ? variants : undefined,
@@ -402,6 +422,7 @@ const Products = () => {
         price: '',
         category: '',
         subcategory: '',
+        locationCountry: getDefaultCountry(),
         locationState: getDefaultRegion(),
         locationArea: user?.shopDetails?.locationArea || '',
         image: file,
@@ -434,7 +455,8 @@ const Products = () => {
         toast.error('Please fill Name, Price, Category, and add an image for at least one product');
         setUploading(false);
         return;
-      }      const promises = validProducts.map(async (bulkProduct) => {
+      }
+      const promises = validProducts.map(async (bulkProduct) => {
         try {
           const productData = {
             name: bulkProduct.name,
@@ -444,8 +466,9 @@ const Products = () => {
             subcategory: bulkProduct.subcategory || null,
             tags: [],
             inStock: true,
+            locationCountry: bulkProduct.locationCountry || getDefaultCountry(),
             locationState: bulkProduct.locationState || getDefaultRegion(),
-            locationArea: user?.shopDetails?.locationArea || ''
+            locationArea: bulkProduct.locationArea || ''
           };
           
           return await productAPI.createProduct(productData, [bulkProduct.image]);
@@ -494,6 +517,7 @@ const Products = () => {
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku || '',
+      locationCountry: product.locationCountry || product.boost?.country || getDefaultCountry(),
       locationState: product.locationState || getDefaultRegion(),
       locationArea: product.locationArea || ''
     });
@@ -536,6 +560,7 @@ const Products = () => {
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku ? `${product.sku}-copy` : '',
+      locationCountry: product.locationCountry || product.boost?.country || getDefaultCountry(),
       locationState: product.locationState || getDefaultRegion(),
       locationArea: product.locationArea || ''
     });
@@ -560,7 +585,13 @@ const Products = () => {
     
     setBoostModal({ open: true, product });
     const defaultRegion = sellerDefaultRegion || (sellerRegions && sellerRegions[0]) || getDefaultRegion();
-    setBoostForm((prev) => ({ ...prev, area: '', state: defaultRegion, hours: 5 }));
+    setBoostForm((prev) => ({
+      ...prev,
+      area: '',
+      state: defaultRegion,
+      country: sellerCountryCode || prev.country || getDefaultCountry(),
+      hours: 5
+    }));
     try {
       const status = await productAPI.getBoostStatus(product._id);
       if (status?.active) {
@@ -579,6 +610,7 @@ const Products = () => {
         hours: Number(boostForm.hours), 
         state: boostForm.state, 
         area: boostForm.area,
+        country: boostForm.country || sellerCountryCode || getDefaultCountry(),
         transactionId: paymentData.transactionId,
         amount: paymentData.amount
       };
@@ -690,6 +722,7 @@ const Products = () => {
       tags: '',
       inStock: true,
       sku: '',
+      locationCountry: getDefaultCountry(),
       locationState: getDefaultRegion(),
       locationArea: ''
     });

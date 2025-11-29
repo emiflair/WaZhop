@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import useDetectedCountry from '../../hooks/useDetectedCountry';
+import { DEFAULT_COUNTRY_CODE } from '../../utils/location';
 
 const Subscription = () => {
   const { user, updateUser } = useAuth();
@@ -55,6 +56,7 @@ const Subscription = () => {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
 
   const {
+    countryCode: sellerCountryCode,
     countryName: sellerCountryName,
     regionLabel: sellerRegionLabel,
     regions: sellerRegions,
@@ -1024,7 +1026,8 @@ const Subscription = () => {
                         productId: boostProductId,
                         boostHours: Number(boostHours),
                         state: boostState,
-                        area: boostArea
+                        area: boostArea,
+                        country: sellerCountryCode || DEFAULT_COUNTRY_CODE
                       }}
                       returnUrl="/dashboard/subscription"
                       onSuccess={async (paymentData) => {
@@ -1037,6 +1040,7 @@ const Subscription = () => {
                             hours: Number(boostHours), 
                             state: boostState, 
                             area: boostArea,
+                            country: sellerCountryCode || DEFAULT_COUNTRY_CODE,
                             transactionId: paymentData.transactionId,
                             txRef: paymentData.txRef
                           });

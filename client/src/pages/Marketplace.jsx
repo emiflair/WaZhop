@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid } from 'react-icons/fi'
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
@@ -12,6 +12,8 @@ import toast from 'react-hot-toast'
 // Product details now open on a dedicated page, not a modal
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import useDetectedCountry from '../hooks/useDetectedCountry'
+import { COUNTRY_REGION_MAP, getCountryMeta } from '../utils/location'
 
 // Marketplace hero slider configuration. Replace the background values or provide an `image`
 // property when marketing banners are ready. Each slide supports either a background gradient
@@ -82,6 +84,53 @@ export default function Marketplace() {
   })
   const navigate = useNavigate()
 
+  const {
+    countryCode: detectedCountryCode,
+    countryName: detectedCountryName
+  } = useDetectedCountry()
+
+  const [countryCode, setCountryCode] = useState(detectedCountryCode || '')
+  const manualCountrySelection = useRef(false)
+  const manualRegionSelection = useRef(false)
+
+  useEffect(() => {
+    if (!detectedCountryCode || manualCountrySelection.current) return
+    manualRegionSelection.current = false
+    setCountryCode(detectedCountryCode)
+  }, [detectedCountryCode])
+
+  useEffect(() => {
+    if (!detectedCountryCode || manualCountrySelection.current) return
+    fetchProducts(true, { country: detectedCountryCode })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detectedCountryCode])
+
+  const selectedCountryMeta = useMemo(() => {
+    if (!countryCode) {
+      return {
+        code: '',
+        name: '',
+        regionLabel: 'State/Region',
+        regions: [],
+        defaultRegion: ''
+      }
+    }
+    return getCountryMeta(countryCode)
+  }, [countryCode])
+
+  const supportedCountries = useMemo(() => {
+    const entries = Object.values(COUNTRY_REGION_MAP).map(({ code, name }) => ({ code, name }))
+    if (countryCode && !entries.some((entry) => entry.code === countryCode)) {
+      entries.push({ code: countryCode, name: detectedCountryName || countryCode })
+    }
+    return entries.sort((a, b) => a.name.localeCompare(b.name))
+  }, [countryCode, detectedCountryName])
+
+  const regionLabel = selectedCountryMeta.regionLabel || 'State/Region'
+  const regionOptions = selectedCountryMeta.regions || []
+  const selectedCountryName = selectedCountryMeta.name || ''
+  const defaultRegion = selectedCountryMeta.defaultRegion || ''
+
   const fetchProducts = useCallback(async (reset = false, overrides = {}) => {
     try {
       setLoading(true)
@@ -92,7 +141,8 @@ export default function Marketplace() {
         area: areaOverride,
         sort: sortOverride,
         minPrice: minPriceOverride,
-        maxPrice: maxPriceOverride
+        maxPrice: maxPriceOverride,
+        country: countryOverride
       } = overrides
 
       const effectiveCategory = categoryOverride ?? category
@@ -104,12 +154,14 @@ export default function Marketplace() {
       const effectiveArea = areaOverride ?? area
       const effectiveMinPrice = minPriceOverride ?? priceRange.min
       const effectiveMaxPrice = maxPriceOverride ?? priceRange.max
+      const effectiveCountry = countryOverride ?? countryCode
       const params = {
         page: reset ? 1 : page,
         limit: 48,
         ...(effectiveSort ? { sort: effectiveSort } : {}),
         ...(effectiveCategory !== 'all' && { category: effectiveCategory }),
         ...(effectiveSearch && { search: effectiveSearch }),
+        ...(effectiveCountry && { country: effectiveCountry }),
         ...(effectiveState && { state: effectiveState }),
         ...(effectiveArea && { area: effectiveArea }),
         ...(effectiveMinPrice && { minPrice: effectiveMinPrice }),
@@ -132,12 +184,25 @@ export default function Marketplace() {
     } finally {
       setLoading(false)
     }
-  }, [page, category, debouncedSearch, sortBy, priceRange, ngState, area])
+  }, [page, category, debouncedSearch, sortBy, priceRange, ngState, area, countryCode])
 
   useEffect(() => {
     fetchProducts(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, sortBy, debouncedSearch])
+
+  useEffect(() => {
+    if (!regionOptions.length) {
+      setNgState('')
+      return
+    }
+    setNgState((prev) => {
+      if (prev && regionOptions.includes(prev)) return prev
+      if (manualRegionSelection.current && !prev) return prev
+      const fallback = defaultRegion || regionOptions[0]
+      return fallback
+    })
+  }, [regionOptions, defaultRegion])
 
   // When page changes (and not a reset), load more
   useEffect(() => {
@@ -190,7 +255,7 @@ export default function Marketplace() {
       setRecentSearches(updated)
       localStorage.setItem('recentSearches', JSON.stringify(updated))
     }
-    fetchProducts(true, { search: searchInput })
+    fetchProducts(true, { search: searchInput, country: countryCode, state: ngState, area, minPrice: priceRange.min, maxPrice: priceRange.max, sort: sortBy, category })
     setShowDiscoveryPanel(false)
   }
 
@@ -200,11 +265,27 @@ export default function Marketplace() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleCountryChange = (value) => {
+    manualCountrySelection.current = true
+    manualRegionSelection.current = false
+    setCountryCode(value)
+    setNgState('')
+    setArea('')
+  }
+
+  const handleRegionChange = (value) => {
+    manualRegionSelection.current = true
+    setNgState(value)
+  }
+
   const clearFilters = () => {
     setCategory('all')
     setSortBy('')
     setSearchInput('')
     setPriceRange({ min: '', max: '' })
+    manualCountrySelection.current = false
+    manualRegionSelection.current = false
+    setCountryCode(detectedCountryCode || '')
     setNgState('')
     setArea('')
     setPage(1)
@@ -230,7 +311,7 @@ export default function Marketplace() {
 
   const handleClearAll = () => {
     clearFilters()
-    fetchProducts(true, { search: '', category: 'all', state: '', area: '', sort: '', minPrice: '', maxPrice: '' })
+    fetchProducts(true, { search: '', category: 'all', country: '', state: '', area: '', sort: '', minPrice: '', maxPrice: '' })
     setShowDiscoveryPanel(false)
   }
 
@@ -552,7 +633,7 @@ export default function Marketplace() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Category</label>
                     <select
@@ -567,17 +648,41 @@ export default function Marketplace() {
                     </select>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">State</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Country</label>
                     <select
-                      value={ngState}
-                      onChange={(e) => setNgState(e.target.value)}
+                      value={countryCode}
+                      onChange={(e) => handleCountryChange(e.target.value)}
                       className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                     >
-                      <option value="">All States</option>
-                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map(s => (
-                        <option key={s} value={s}>{s}</option>
+                      <option value="">All Countries</option>
+                      {supportedCountries.map(({ code, name }) => (
+                        <option key={code} value={code}>{name}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">{`${regionLabel}${selectedCountryName ? ` (${selectedCountryName})` : ''}`}</label>
+                    {regionOptions.length > 0 ? (
+                      <select
+                        value={ngState}
+                        onChange={(e) => handleRegionChange(e.target.value)}
+                        className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                      >
+                        <option value="">All Locations</option>
+                        {regionOptions.map((region) => (
+                          <option key={region} value={region}>{region}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={ngState}
+                        onChange={(e) => handleRegionChange(e.target.value)}
+                        placeholder={`State or region${selectedCountryName ? ` in ${selectedCountryName}` : ''}`}
+                        className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                        style={{ fontSize: '16px' }}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -605,7 +710,7 @@ export default function Marketplace() {
                       type="text"
                       value={area}
                       onChange={(e) => setArea(e.target.value)}
-                      placeholder="Area (e.g., V.I.)"
+                        placeholder={selectedCountryName ? `Area in ${selectedCountryName}` : 'City or area'}
                       className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                       style={{ fontSize: '16px' }}
                     />
