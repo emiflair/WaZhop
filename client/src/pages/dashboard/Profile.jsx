@@ -5,10 +5,13 @@ import { authAPI, userAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { FaUser, FaEnvelope, FaWhatsapp, FaLock, FaExclamationTriangle, FaCheckCircle, FaShieldAlt, FaQrcode, FaKey } from 'react-icons/fa';
 import { TouchButton } from '../../components/mobile';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../../utils/helpers';
+import useDefaultDialCode from '../../hooks/useDefaultDialCode';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const defaultDialCode = useDefaultDialCode();
 
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -48,12 +51,22 @@ const Profile = () => {
       setProfileData({
         name: user.name || '',
         email: user.email || '',
-        whatsappNumber: user.whatsappNumber || ''
+        whatsappNumber: user.whatsapp || ''
       });
       // Set 2FA status from user object
       setTwoFAEnabled(user.twoFactorEnabled || false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!defaultDialCode) return;
+    setProfileData((prev) => {
+      if (prev.whatsappNumber && prev.whatsappNumber.trim()) {
+        return prev;
+      }
+      return { ...prev, whatsappNumber: defaultDialCode };
+    });
+  }, [defaultDialCode]);
 
   // Validate password strength
   useEffect(() => {
@@ -94,10 +107,27 @@ const Profile = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     
+    if (!profileData.whatsappNumber || !isValidAfricanPhone(profileData.whatsappNumber)) {
+      toast.error('Please provide a valid phone number with country code (e.g., +233201234567)');
+      return;
+    }
+
+    const normalizedWhatsapp = normalizeAfricanPhoneNumber(profileData.whatsappNumber);
+    if (!normalizedWhatsapp) {
+      toast.error('Please provide a valid phone number with country code (e.g., +233201234567)');
+      return;
+    }
+
     try {
       setLoading(true);
-      const data = await authAPI.updateProfile(profileData);
+      const payload = {
+        name: profileData.name,
+        email: profileData.email,
+        whatsapp: normalizedWhatsapp
+      };
+      const data = await authAPI.updateProfile(payload);
       updateUser(data.user);
+      setProfileData((prev) => ({ ...prev, whatsappNumber: normalizedWhatsapp }));
       toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -419,23 +449,18 @@ const Profile = () => {
                 WhatsApp Number *
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium border-r border-gray-300 dark:border-gray-600 pr-3">
-                  <span className="text-xl">🇳🇬</span>
-                  <span>+234</span>
-                </span>
                 <input
                   type="tel"
                   name="whatsappNumber"
                   value={profileData.whatsappNumber}
                   onChange={handleProfileChange}
-                  className="input pl-28"
-                  placeholder="8012345678"
+                  className="input"
+                  placeholder="e.g., +233201234567"
                   required
-                  maxLength={10}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Enter your 10-digit phone number (e.g., 8012345678)
+                Include country code (e.g., +233201234567 or +2348012345678)
               </p>
             </div>
 

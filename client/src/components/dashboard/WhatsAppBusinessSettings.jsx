@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FaWhatsapp, FaSync, FaCheck, FaTimes } from 'react-icons/fa';
 import api from '../../utils/api';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../../utils/helpers';
+import useDefaultDialCode from '../../hooks/useDefaultDialCode';
 
 export default function WhatsAppBusinessSettings({ shop, onUpdate }) {
   const [settings, setSettings] = useState({
@@ -16,6 +18,17 @@ export default function WhatsAppBusinessSettings({ shop, onUpdate }) {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(shop?.whatsappBusiness?.catalogSyncedAt);
   const [message, setMessage] = useState('');
+  const defaultDialCode = useDefaultDialCode();
+
+  useEffect(() => {
+    if (!defaultDialCode) return;
+    setSettings((prev) => {
+      if (prev.whatsappNumber && prev.whatsappNumber.trim()) {
+        return prev;
+      }
+      return { ...prev, whatsappNumber: defaultDialCode };
+    });
+  }, [defaultDialCode]);
 
   const handleSyncCatalog = async () => {
     try {
@@ -44,13 +57,37 @@ export default function WhatsAppBusinessSettings({ shop, onUpdate }) {
 
   const handleSaveSettings = async () => {
     try {
+      if (settings.whatsappNumber && !isValidAfricanPhone(settings.whatsappNumber)) {
+        setMessage({
+          type: 'error',
+          text: 'Enter a valid phone number with country code (e.g., +233201234567)'
+        });
+        return;
+      }
+
+      const normalizedNumber = settings.whatsappNumber
+        ? normalizeAfricanPhoneNumber(settings.whatsappNumber)
+        : '';
+
+      if (settings.whatsappNumber && !normalizedNumber) {
+        setMessage({
+          type: 'error',
+          text: 'Enter a valid phone number with country code (e.g., +233201234567)'
+        });
+        return;
+      }
+
       const response = await api.put(`/shops/${shop._id}`, {
-        whatsappNumber: settings.whatsappNumber,
+        whatsappNumber: normalizedNumber,
         'whatsappBusiness.enabled': settings.enabled,
         'whatsappBusiness.automatedMessages': settings.automatedMessages
       });
       
       if (response.data) {
+        setSettings((prev) => ({
+          ...prev,
+          whatsappNumber: normalizedNumber
+        }));
         setMessage({
           type: 'success',
           text: 'WhatsApp settings saved successfully!'
@@ -104,11 +141,11 @@ export default function WhatsAppBusinessSettings({ shop, onUpdate }) {
             type="tel"
             value={settings.whatsappNumber}
             onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
-            placeholder="+234801234567"
+            placeholder="e.g., +233201234567"
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Use international format (e.g., +234801234567)
+            Use international format (e.g., +233201234567 or +2348012345678)
           </p>
         </div>
 

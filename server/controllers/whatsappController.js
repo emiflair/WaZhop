@@ -3,6 +3,7 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const whatsappService = require('../utils/whatsapp');
+const { normalizePhoneNumber } = require('../utils/helpers');
 
 // @desc    Send WhatsApp message to customer
 // @route   POST /api/whatsapp/send-message
@@ -23,12 +24,14 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   }
 
   // Validate phone number format
-  if (!to || !to.match(/^\+?[1-9]\d{1,14}$/)) {
+  const normalizedTo = normalizePhoneNumber(to);
+
+  if (!normalizedTo) {
     res.status(400);
-    throw new Error('Invalid phone number format. Use international format (e.g., +2348012345678)');
+    throw new Error('Invalid phone number format. Use international format (e.g., +233201234567)');
   }
 
-  const result = await whatsappService.sendMessage(to, message);
+  const result = await whatsappService.sendMessage(normalizedTo, message);
 
   if (result.success) {
     res.json({
@@ -72,8 +75,15 @@ exports.sendOrderConfirmation = asyncHandler(async (req, res) => {
     trackingUrl: `${process.env.CLIENT_URL}/orders/${order._id}`
   };
 
+  const normalizedPhone = normalizePhoneNumber(order.customer.phone);
+
+  if (!normalizedPhone) {
+    res.status(400);
+    throw new Error('Customer phone number is invalid. Update the order with a valid international number.');
+  }
+
   const result = await whatsappService.sendOrderConfirmation(
-    order.customer.phone,
+    normalizedPhone,
     orderDetails
   );
 
@@ -114,8 +124,15 @@ exports.sendOrderStatus = asyncHandler(async (req, res) => {
     throw new Error('WhatsApp Business API is only available for Premium users');
   }
 
+  const normalizedPhone = normalizePhoneNumber(order.customer.phone);
+
+  if (!normalizedPhone) {
+    res.status(400);
+    throw new Error('Customer phone number is invalid. Update the order with a valid international number.');
+  }
+
   const result = await whatsappService.sendOrderStatusUpdate(
-    order.customer.phone,
+    normalizedPhone,
     order._id,
     status,
     additionalInfo

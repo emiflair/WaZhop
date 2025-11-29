@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { productAPI, authAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../utils/helpers';
+import useDefaultDialCode from '../hooks/useDefaultDialCode';
+import useDetectedCountry from '../hooks/useDetectedCountry';
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState('monthly'); // 'monthly' or 'yearly'
@@ -14,13 +17,14 @@ const Pricing = () => {
   const isBuyer = isAuthenticated && user?.role === 'buyer';
   const navigate = useNavigate();
   const location = useLocation();
+  const defaultDialCode = useDefaultDialCode();
   // Boost modal state
   const [boostOpen, setBoostOpen] = useState(false);
   const [myProducts, setMyProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [boostHours, setBoostHours] = useState(5);
   const [boostProductId, setBoostProductId] = useState('');
-  const [boostState, setBoostState] = useState('Lagos');
+  const [boostState, setBoostState] = useState('');
   const [boostArea, setBoostArea] = useState('');
   const BOOST_RATE = 400;
 
@@ -29,6 +33,12 @@ const Pricing = () => {
   const [upgradeWhatsapp, setUpgradeWhatsapp] = useState('');
   const [upgradeReferral, setUpgradeReferral] = useState('');
   const [savingUpgrade, setSavingUpgrade] = useState(false);
+  const {
+    countryName: sellerCountryName,
+    regionLabel: sellerRegionLabel,
+    regions: sellerRegions,
+    defaultRegion: sellerDefaultRegion
+  } = useDetectedCountry(upgradeWhatsapp || user?.whatsapp);
 
   const plans = [
     {
@@ -129,6 +139,11 @@ const Pricing = () => {
     load();
   }, [boostOpen]);
 
+  useEffect(() => {
+    if (!sellerRegions || sellerRegions.length === 0) return;
+    setBoostState((prev) => prev || sellerDefaultRegion || sellerRegions[0]);
+  }, [sellerRegions, sellerDefaultRegion]);
+
   // Auto-open the upgrade modal when arriving with ?upgrade=seller and user is a buyer
   useEffect(() => {
     try {
@@ -141,6 +156,16 @@ const Pricing = () => {
       console.warn('Failed to parse upgrade query param', e);
     }
   }, [location.search, isBuyer]);
+
+    useEffect(() => {
+      if (!defaultDialCode) return;
+      setUpgradeWhatsapp((prev) => {
+        if (prev && prev.trim()) {
+          return prev;
+        }
+        return defaultDialCode;
+      });
+    }, [defaultDialCode]);
 
   const openBoostFlow = () => {
     // If not authenticated, go to login
@@ -330,12 +355,22 @@ const Pricing = () => {
                 </div>
                 {/* Location targeting */}
                 <div>
-                  <label className="label">State (Nigeria)</label>
-                  <select className="input" value={boostState} onChange={(e) => setBoostState(e.target.value)}>
-                    {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+                  <label className="label">{`${sellerRegionLabel || 'State/Region'}${sellerCountryName ? ` (${sellerCountryName})` : ''}`}</label>
+                  {sellerRegions && sellerRegions.length > 0 ? (
+                    <select className="input" value={boostState} onChange={(e) => setBoostState(e.target.value)}>
+                      {sellerRegions.map((region) => (
+                        <option key={region} value={region}>{region}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="input"
+                      type="text"
+                      value={boostState}
+                      onChange={(e) => setBoostState(e.target.value)}
+                      placeholder="Enter state or region"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="label">Area (optional)</label>
@@ -368,11 +403,11 @@ const Pricing = () => {
                 <input
                   className="input"
                   type="tel"
-                  placeholder="+234 801 234 5678"
+                  placeholder="e.g., +233201234567"
                   value={upgradeWhatsapp}
                   onChange={(e) => setUpgradeWhatsapp(e.target.value)}
                 />
-                <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +234 for Nigeria)</p>
+                <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +233201234567 or +2348012345678)</p>
               </div>
               <div>
                 <label className="label">Referral Code <span className="text-gray-400 text-xs">(optional)</span></label>
@@ -389,9 +424,18 @@ const Pricing = () => {
                 <button
                   onClick={async () => {
                     if (!upgradeWhatsapp) { toast.error('Enter your WhatsApp number'); return; }
+                    if (!isValidAfricanPhone(upgradeWhatsapp)) {
+                      toast.error('Enter a valid phone number with country code (e.g., +233201234567).');
+                      return;
+                    }
+                    const normalized = normalizeAfricanPhoneNumber(upgradeWhatsapp);
+                    if (!normalized) {
+                      toast.error('Enter a valid phone number with country code (e.g., +233201234567).');
+                      return;
+                    }
                     try {
                       setSavingUpgrade(true);
-                      const payload = { whatsapp: upgradeWhatsapp };
+                      const payload = { whatsapp: normalized };
                       if (upgradeReferral && upgradeReferral.trim()) {
                         payload.referralCode = upgradeReferral.trim();
                       }

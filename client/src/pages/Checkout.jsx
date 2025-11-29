@@ -7,11 +7,15 @@ import Footer from '../components/Footer';
 import { useCart } from '../hooks/useCart';
 import { orderAPI, couponAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../utils/helpers';
+import useDetectedCountry from '../hooks/useDetectedCountry';
+import useDefaultDialCode from '../hooks/useDefaultDialCode';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { cart, getTotalPrice, clearCart } = useCart();
+  const defaultDialCode = useDefaultDialCode();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1); // 1: Customer Info, 2: Shipping, 3: Review & Pay
@@ -28,6 +32,13 @@ export default function Checkout() {
     email: user?.email || '',
     phone: user?.phone || ''
   });
+
+  const {
+    countryName: detectedCountryName,
+    regionLabel: detectedRegionLabel,
+    regions: detectedRegions,
+    defaultRegion: detectedDefaultRegion
+  } = useDetectedCountry(customerInfo.phone || user?.whatsapp);
 
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
@@ -47,6 +58,35 @@ export default function Checkout() {
       navigate('/');
     }
   }, [cart, navigate]);
+
+  useEffect(() => {
+    if (!defaultDialCode) return;
+    setCustomerInfo((prev) => {
+      if (prev.phone && prev.phone.trim()) {
+        return prev;
+      }
+      return { ...prev, phone: defaultDialCode };
+    });
+  }, [defaultDialCode]);
+
+  useEffect(() => {
+    setShippingAddress((prev) => {
+      const updates = { ...prev };
+      let hasChange = false;
+
+      if (detectedCountryName && (!prev.country || prev.country === 'Nigeria')) {
+        updates.country = detectedCountryName;
+        hasChange = true;
+      }
+
+      if (detectedRegions && detectedRegions.length > 0 && (!prev.state || !detectedRegions.includes(prev.state))) {
+        updates.state = detectedDefaultRegion || detectedRegions[0];
+        hasChange = true;
+      }
+
+      return hasChange ? updates : prev;
+    });
+  }, [detectedCountryName, detectedRegions, detectedDefaultRegion]);
 
   // Group cart items by shop
   const groupedCart = cart.reduce((acc, item) => {
@@ -131,6 +171,20 @@ export default function Checkout() {
     if (!customerInfo.phone.trim()) {
       setError('Please enter your phone number');
       return false;
+    }
+    if (!isValidAfricanPhone(customerInfo.phone)) {
+      setError('Please enter a valid phone number with country code (e.g., +233201234567)');
+      return false;
+    }
+
+    const normalized = normalizeAfricanPhoneNumber(customerInfo.phone);
+    if (!normalized) {
+      setError('Please enter a valid phone number with country code (e.g., +233201234567)');
+      return false;
+    }
+
+    if (normalized !== customerInfo.phone) {
+      setCustomerInfo((prev) => ({ ...prev, phone: normalized }));
     }
     setError('');
     return true;
@@ -378,7 +432,7 @@ export default function Checkout() {
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="+234 800 000 0000"
+                      placeholder="e.g., +233201234567"
                     />
                   </div>
                 </div>
@@ -419,21 +473,33 @@ export default function Checkout() {
                         value={shippingAddress.city}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Lagos"
+                        placeholder="Enter city"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        State *
+                        {(detectedRegionLabel || 'State') + ' *'}
                       </label>
-                      <input
-                        type="text"
-                        value={shippingAddress.state}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Lagos State"
-                      />
+                      {detectedRegions && detectedRegions.length > 0 ? (
+                        <select
+                          value={shippingAddress.state}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          {detectedRegions.map((region) => (
+                            <option key={region} value={region}>{region}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={shippingAddress.state}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Enter state or region"
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -447,7 +513,7 @@ export default function Checkout() {
                         value={shippingAddress.country}
                         onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Nigeria"
+                        placeholder={detectedCountryName || 'Enter country'}
                       />
                     </div>
 

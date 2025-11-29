@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import ProductPreviewModal from '../../components/ProductPreviewModal';
 import { CATEGORY_SUGGESTIONS, toLabel, getSubcategories, getCategoryLabel } from '../../utils/categories';
 import FlutterwavePayment from '../../components/FlutterwavePayment';
+import useDetectedCountry from '../../hooks/useDetectedCountry';
 
 const Products = () => {
   const { user } = useAuth();
@@ -35,11 +36,25 @@ const Products = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [previewProduct, setPreviewProduct] = useState(null);
   const [boostModal, setBoostModal] = useState({ open: false, product: null });
-  const [boostForm, setBoostForm] = useState({ hours: 5, state: 'Lagos', area: '' });
+  const [boostForm, setBoostForm] = useState({ hours: 5, state: '', area: '' });
   const [boostConfirmModal, setBoostConfirmModal] = useState({ open: false, product: null });
   const [quickAddMode, setQuickAddMode] = useState(false);
   const [bulkUploadMode, setBulkUploadMode] = useState(false);
   const [bulkProducts, setBulkProducts] = useState([]);
+
+  const {
+    countryName: sellerCountryName,
+    regionLabel: sellerRegionLabel,
+    regions: sellerRegions,
+    defaultRegion: sellerDefaultRegion
+  } = useDetectedCountry(user?.whatsapp);
+
+  const getDefaultRegion = () => (
+    user?.shopDetails?.locationState
+    || sellerDefaultRegion
+    || (sellerRegions && sellerRegions[0])
+    || ''
+  );
 
   // Form state
   const [formData, setFormData] = useState({
@@ -52,7 +67,7 @@ const Products = () => {
     tags: '',
     inStock: true,
     sku: '',
-    locationState: 'Lagos',
+    locationState: '',
     locationArea: ''
   });
   const [images, setImages] = useState([]);
@@ -75,6 +90,20 @@ const Products = () => {
     filterProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products, searchTerm, filterStatus]);
+
+  useEffect(() => {
+    if (!sellerRegions || sellerRegions.length === 0) return;
+    setFormData((prev) => {
+      if (prev.locationState) return prev;
+      const defaultRegion = sellerDefaultRegion || sellerRegions[0];
+      return { ...prev, locationState: defaultRegion };
+    });
+    setBoostForm((prev) => {
+      if (prev.state) return prev;
+      const defaultRegion = sellerDefaultRegion || sellerRegions[0];
+      return { ...prev, state: defaultRegion };
+    });
+  }, [sellerRegions, sellerDefaultRegion]);
 
   const fetchSubscription = async () => {
     try {
@@ -280,7 +309,7 @@ const Products = () => {
           subcategory: formData.subcategory || null,
           tags: [],
           inStock: true,
-          locationState: user?.shopDetails?.locationState || 'Lagos',
+          locationState: formData.locationState || getDefaultRegion(),
           locationArea: user?.shopDetails?.locationArea || ''
         };
         
@@ -373,6 +402,8 @@ const Products = () => {
         price: '',
         category: '',
         subcategory: '',
+        locationState: getDefaultRegion(),
+        locationArea: user?.shopDetails?.locationArea || '',
         image: file,
         imagePreview: URL.createObjectURL(file)
       }));
@@ -413,7 +444,7 @@ const Products = () => {
             subcategory: bulkProduct.subcategory || null,
             tags: [],
             inStock: true,
-            locationState: user?.shopDetails?.locationState || 'Lagos',
+            locationState: bulkProduct.locationState || getDefaultRegion(),
             locationArea: user?.shopDetails?.locationArea || ''
           };
           
@@ -463,7 +494,7 @@ const Products = () => {
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku || '',
-      locationState: product.locationState || 'Lagos',
+      locationState: product.locationState || getDefaultRegion(),
       locationArea: product.locationArea || ''
     });
     
@@ -505,7 +536,7 @@ const Products = () => {
       tags: product.tags?.join(', ') || '',
       inStock: product.inStock,
       sku: product.sku ? `${product.sku}-copy` : '',
-      locationState: product.locationState || 'Lagos',
+      locationState: product.locationState || getDefaultRegion(),
       locationArea: product.locationArea || ''
     });
     
@@ -518,11 +549,6 @@ const Products = () => {
     setShowModal(true);
   };
 
-  // Nigeria states list for targeting
-  const NG_STATES = [
-    'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'
-  ];
-
   const openBoost = async (product) => {
     // Show custom confirmation modal
     setBoostConfirmModal({ open: true, product });
@@ -533,7 +559,8 @@ const Products = () => {
     setBoostConfirmModal({ open: false, product: null });
     
     setBoostModal({ open: true, product });
-    setBoostForm((prev) => ({ ...prev, area: '', state: 'Lagos', hours: 5 }));
+    const defaultRegion = sellerDefaultRegion || (sellerRegions && sellerRegions[0]) || getDefaultRegion();
+    setBoostForm((prev) => ({ ...prev, area: '', state: defaultRegion, hours: 5 }));
     try {
       const status = await productAPI.getBoostStatus(product._id);
       if (status?.active) {
@@ -663,7 +690,7 @@ const Products = () => {
       tags: '',
       inStock: true,
       sku: '',
-      locationState: 'Lagos',
+      locationState: getDefaultRegion(),
       locationArea: ''
     });
     setImages([]);
@@ -1756,18 +1783,29 @@ const Products = () => {
                 {/* Location Targeting */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="label text-sm sm:text-base">State (Nigeria) *</label>
-                    <select
-                      required
-                      className="input text-sm sm:text-base"
-                      value={formData.locationState}
-                      onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
-                    >
-                      {NG_STATES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">Select the state buyers should see this product in search.</p>
+                    <label className="label text-sm sm:text-base">{`${sellerRegionLabel || 'State/Region'}${sellerCountryName ? ` (${sellerCountryName})` : ''} *`}</label>
+                    {sellerRegions && sellerRegions.length > 0 ? (
+                      <select
+                        required
+                        className="input text-sm sm:text-base"
+                        value={formData.locationState}
+                        onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
+                      >
+                        {sellerRegions.map((region) => (
+                          <option key={region} value={region}>{region}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        required
+                        type="text"
+                        value={formData.locationState}
+                        onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
+                        className="input text-sm sm:text-base"
+                        placeholder="Enter state or region"
+                      />
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">Select the primary region buyers should see for this product.</p>
                   </div>
                   <div>
                     <label className="label text-sm sm:text-base">Area (Optional)</label>
@@ -1994,16 +2032,26 @@ const Products = () => {
                 </select>
               </div>
               <div>
-                <label className="label">State (Nigeria)</label>
-                <select
-                  className="input"
-                  value={boostForm.state}
-                  onChange={(e) => setBoostForm({ ...boostForm, state: e.target.value })}
-                >
-                  {NG_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <label className="label">{`${sellerRegionLabel || 'State/Region'}${sellerCountryName ? ` (${sellerCountryName})` : ''}`}</label>
+                {sellerRegions && sellerRegions.length > 0 ? (
+                  <select
+                    className="input"
+                    value={boostForm.state}
+                    onChange={(e) => setBoostForm({ ...boostForm, state: e.target.value })}
+                  >
+                    {sellerRegions.map((region) => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="input"
+                    type="text"
+                    value={boostForm.state}
+                    onChange={(e) => setBoostForm({ ...boostForm, state: e.target.value })}
+                    placeholder="Enter state or region"
+                  />
+                )}
               </div>
               <div>
                 <label className="label">Area (optional)</label>

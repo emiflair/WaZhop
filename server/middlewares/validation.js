@@ -1,7 +1,7 @@
 const {
   body, param, query, validationResult
 } = require('express-validator');
-const { isValidNigerianPhone } = require('../utils/helpers');
+const { isValidAfricanPhone } = require('../utils/helpers');
 
 // Validation error handler
 exports.handleValidationErrors = (req, res, next) => {
@@ -47,11 +47,10 @@ exports.validateRegister = [
     .custom((value) => {
       if (typeof value !== 'string') return false;
       const trimmed = value.trim();
-      // Accept standard E.164 (+2348012345678) OR common NG local formats (08012345678 / 8012345678)
-      const e164 = /^\+?[1-9]\d{1,14}$/;
-      return e164.test(trimmed.replace(/\s/g, '')) || isValidNigerianPhone(trimmed);
+      // Accept African numbers (with backwards-compatible Nigerian local formats)
+      return isValidAfricanPhone(trimmed);
     })
-    .withMessage('Please provide a valid WhatsApp number (e.g., +2348012345678 or 8012345678)'),
+    .withMessage('Please provide a valid WhatsApp number (e.g., +233201234567 or +2348012345678)'),
 
   body('role')
     .optional()

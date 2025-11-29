@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Shop = require('../models/Shop');
 const Product = require('../models/Product');
-const { asyncHandler, calculatePlanExpiry } = require('../utils/helpers');
+const { asyncHandler, calculatePlanExpiry, normalizePhoneNumber } = require('../utils/helpers');
 
 // @desc    Get subscription information
 // @route   GET /api/users/subscription
@@ -500,10 +500,27 @@ exports.switchToSeller = asyncHandler(async (req, res) => {
   }
 
   // Validate WhatsApp number
-  if (!whatsappNumber || !/^\+?[1-9]\d{1,14}$/.test(whatsappNumber)) {
+  if (!whatsappNumber) {
     return res.status(400).json({
       success: false,
       message: 'Please provide a valid WhatsApp number with country code'
+    });
+  }
+
+  const normalizedNumber = normalizePhoneNumber(whatsappNumber);
+
+  if (!normalizedNumber) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid WhatsApp number with country code'
+    });
+  }
+
+  const phoneInUse = await User.findOne({ whatsapp: normalizedNumber, _id: { $ne: req.user.id } });
+  if (phoneInUse) {
+    return res.status(400).json({
+      success: false,
+      message: 'WhatsApp number is already in use'
     });
   }
 
@@ -517,7 +534,7 @@ exports.switchToSeller = asyncHandler(async (req, res) => {
 
   // Update user to seller
   user.role = 'seller';
-  user.whatsapp = whatsappNumber;
+  user.whatsapp = normalizedNumber;
   user.plan = plan;
 
   // Set plan expiry for paid plans

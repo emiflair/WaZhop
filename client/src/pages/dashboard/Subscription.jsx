@@ -20,6 +20,7 @@ import {
   FaDatabase
 } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
+import useDetectedCountry from '../../hooks/useDetectedCountry';
 
 const Subscription = () => {
   const { user, updateUser } = useAuth();
@@ -48,14 +49,26 @@ const Subscription = () => {
   const [boostLoading, setBoostLoading] = useState(false);
   const BOOST_RATE = 400;
   // Location targeting for boost
-  const [boostState, setBoostState] = useState('Lagos');
+  const [boostState, setBoostState] = useState('');
   const [boostArea, setBoostArea] = useState('');
   // Payment state
   const [paymentInitiated, setPaymentInitiated] = useState(false);
 
+  const {
+    countryName: sellerCountryName,
+    regionLabel: sellerRegionLabel,
+    regions: sellerRegions,
+    defaultRegion: sellerDefaultRegion
+  } = useDetectedCountry(user?.whatsapp);
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (!sellerRegions || sellerRegions.length === 0) return;
+    setBoostState((prev) => prev || sellerDefaultRegion || sellerRegions[0]);
+  }, [sellerRegions, sellerDefaultRegion]);
 
   // Pre-select plan from URL parameter if present - moved after plans definition
   // This will be handled in a later useEffect
@@ -961,16 +974,26 @@ const Subscription = () => {
                   </div>
                   {/* Location targeting */}
                   <div>
-                    <label className="label">State (Nigeria)</label>
-                    <select
-                      className="input"
-                      value={boostState}
-                      onChange={(e) => setBoostState(e.target.value)}
-                    >
-                      {['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'].map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                    <label className="label">{`${sellerRegionLabel || 'State/Region'}${sellerCountryName ? ` (${sellerCountryName})` : ''}`}</label>
+                    {sellerRegions && sellerRegions.length > 0 ? (
+                      <select
+                        className="input"
+                        value={boostState}
+                        onChange={(e) => setBoostState(e.target.value)}
+                      >
+                        {sellerRegions.map((region) => (
+                          <option key={region} value={region}>{region}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        className="input"
+                        value={boostState}
+                        onChange={(e) => setBoostState(e.target.value)}
+                        placeholder="Enter state or region"
+                      />
+                    )}
                   </div>
                   <div>
                     <label className="label">Area (optional)</label>

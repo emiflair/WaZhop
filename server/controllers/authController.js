@@ -51,6 +51,9 @@ exports.register = asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, message: 'WhatsApp number is required for sellers' });
     }
     normalizedWhatsApp = formatWhatsAppNumber(String(whatsapp));
+    if (!normalizedWhatsApp) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid WhatsApp number' });
+    }
     const existingPhone = await User.findOne({ whatsapp: normalizedWhatsApp });
     if (existingPhone) {
       return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });
@@ -320,6 +323,9 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   // If updating whatsapp, normalize and check uniqueness
   if (fieldsToUpdate.whatsapp) {
     const normalized = normalizePhoneNumber(fieldsToUpdate.whatsapp);
+    if (!normalized) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid WhatsApp number' });
+    }
     const existingPhone = await User.findOne({
       whatsapp: normalized,
       _id: { $ne: req.user.id }
@@ -364,6 +370,9 @@ exports.upgradeToSeller = asyncHandler(async (req, res) => {
 
   // Normalize and check uniqueness
   const normalized = normalizePhoneNumber(String(whatsapp));
+  if (!normalized) {
+    return res.status(400).json({ success: false, message: 'Please provide a valid WhatsApp number' });
+  }
   const existingPhone = await User.findOne({ whatsapp: normalized });
   if (existingPhone) {
     return res.status(400).json({ success: false, message: 'WhatsApp number is already in use' });

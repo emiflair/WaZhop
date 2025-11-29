@@ -1,3 +1,5 @@
+import { isValidAfricanPhone } from './helpers';
+
 /**
  * Form Validation Utilities
  * Common validation functions for form fields
@@ -99,7 +101,7 @@ export const getPasswordStrength = (password) => {
 };
 
 /**
- * Validate phone number (Nigerian format)
+ * Validate phone number (African international formats)
  * @param {string} phone - Phone number to validate
  * @returns {string|null} Error message or null if valid
  */
@@ -108,14 +110,8 @@ export const validatePhone = (phone) => {
     return 'Phone number is required';
   }
 
-  // Remove spaces and dashes
-  const cleaned = phone.replace(/[\s-]/g, '');
-  
-  // Nigerian phone format: starts with +234 or 0, followed by 10 digits
-  const phoneRegex = /^(\+234|0)[7-9][0-1]\d{8}$/;
-  
-  if (!phoneRegex.test(cleaned)) {
-    return 'Please enter a valid Nigerian phone number';
+  if (!isValidAfricanPhone(phone)) {
+    return 'Please enter a valid phone number with country code (e.g., +233201234567)';
   }
 
   return null;

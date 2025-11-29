@@ -230,7 +230,7 @@ const ErrorHandlingExamples = () => {
               label="WhatsApp Number"
               error={getFieldError('phone')}
               touched={touched.phone}
-              helperText="Format: +234XXXXXXXXXX or 0XXXXXXXXXX"
+              helperText="Use international format (e.g., +233201234567)"
               required
             >
               <input
@@ -240,7 +240,7 @@ const ErrorHandlingExamples = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={`input ${getFieldError('phone') && touched.phone ? 'border-red-500' : ''}`}
-                placeholder="+234XXXXXXXXXX"
+                placeholder="e.g., +233201234567"
               />
             </FormField>
 

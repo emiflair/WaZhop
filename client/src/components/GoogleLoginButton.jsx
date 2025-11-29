@@ -1,8 +1,10 @@
 import { GoogleLogin } from '@react-oauth/google';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { FaArrowLeft, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../utils/helpers';
+import useDefaultDialCode from '../hooks/useDefaultDialCode';
 
 const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   const { googleLogin } = useAuth();
@@ -12,6 +14,17 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   const [sellerStep, setSellerStep] = useState(false);
   const [sellerWhatsapp, setSellerWhatsapp] = useState('');
   const [modalError, setModalError] = useState('');
+  const defaultDialCode = useDefaultDialCode();
+
+  useEffect(() => {
+    if (!showModal || !defaultDialCode) return;
+    setSellerWhatsapp((prev) => {
+      if (prev && prev.trim()) {
+        return prev;
+      }
+      return defaultDialCode;
+    });
+  }, [defaultDialCode, showModal]);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -24,22 +37,6 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     setSellerWhatsapp('');
     setModalError('');
     setLoading(false);
-  };
-
-  // Normalizes NG numbers and returns +234XXXXXXXXXX if valid
-  const formatSellerWhatsapp = (value) => {
-    if (!value) return null;
-    let digits = value.replace(/\D/g, '');
-    if (!digits) return null;
-
-    if (digits.startsWith('234')) {
-      digits = digits.slice(3);
-    } else if (digits.startsWith('0')) {
-      digits = digits.slice(1);
-    }
-
-    if (digits.length !== 10) return null;
-    return `+234${digits}`;
   };
 
   const submitGoogleLogin = async (chosenRole, whatsappValue, overrideToken) => {
@@ -131,12 +128,16 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
   };
 
   const handleSellerSubmit = () => {
-    const formatted = formatSellerWhatsapp(sellerWhatsapp);
-    if (!formatted) {
-      setModalError('Enter a valid WhatsApp number (10 digits after 0).');
+    if (!sellerWhatsapp || !isValidAfricanPhone(sellerWhatsapp)) {
+      setModalError('Enter a valid phone number with country code (e.g., +233201234567).');
       return;
     }
-    submitGoogleLogin('seller', formatted);
+    const normalized = normalizeAfricanPhoneNumber(sellerWhatsapp);
+    if (!normalized) {
+      setModalError('Enter a valid phone number with country code (e.g., +233201234567).');
+      return;
+    }
+    submitGoogleLogin('seller', normalized);
   };
 
   const closeModal = () => {
@@ -242,7 +243,7 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                   <div>
                     <h4 className="text-base font-semibold text-gray-900 dark:text-white">Provide your WhatsApp number</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      We use WhatsApp to connect sellers with their customers. Enter your 10-digit number (e.g. 8012345678).
+                      We use WhatsApp to connect sellers with their customers. Include your country code (e.g., +233201234567).
                     </p>
                   </div>
 
@@ -252,14 +253,11 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                         WhatsApp Number
                       </label>
                       <div className="mt-2 flex rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-primary-500 dark:border-gray-700">
-                        <span className="flex items-center gap-2 rounded-l-lg bg-gray-100 px-3 text-sm font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                          NG +234
-                        </span>
                         <input
                           id="google-seller-whatsapp"
                           type="tel"
-                          inputMode="numeric"
-                          placeholder="8012345678"
+                          inputMode="tel"
+                          placeholder="e.g., +233201234567"
                           value={sellerWhatsapp}
                           onChange={(event) => setSellerWhatsapp(event.target.value)}
                           onKeyDown={(event) => {
@@ -268,9 +266,8 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
                               handleSellerSubmit();
                             }
                           }}
-                          className="flex-1 rounded-r-lg border-0 bg-transparent px-3 py-2 text-gray-900 outline-none placeholder:text-gray-400 focus:outline-none dark:text-white"
+                          className="flex-1 rounded-lg border-0 bg-transparent px-3 py-2 text-gray-900 outline-none placeholder:text-gray-400 focus:outline-none dark:text-white"
                           disabled={loading}
-                          maxLength={10}
                         />
                       </div>
                     </div>

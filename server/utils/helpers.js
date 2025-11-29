@@ -1,5 +1,57 @@
 const jwt = require('jsonwebtoken');
 
+const AFRICAN_DIAL_CODES = [
+  '290', // Saint Helena & Ascension
+  '291', // Eritrea
+  '27', // South Africa
+  '20', // Egypt
+  '211', '212', '213', '216', '218', // Northern Africa
+  '220', '221', '222', '223', '224', '225', '226', '227', '228', '229',
+  '230', '231', '232', '233', '234', '235', '236', '237', '238', '239',
+  '240', '241', '242', '243', '244', '245', '246', '247', '248', '249',
+  '250', '251', '252', '253', '254', '255', '256', '257', '258',
+  '260', '261', '262', '263', '264', '265', '266', '267', '268', '269'
+];
+
+const SORTED_AFRICAN_DIAL_CODES = [...AFRICAN_DIAL_CODES].sort((a, b) => b.length - a.length);
+
+const sanitizePhoneInput = (value = '') => value.replace(/[^+\d]/g, '');
+
+const normalizeAfricanPhoneNumber = (phone) => {
+  if (!phone) return null;
+
+  let cleaned = sanitizePhoneInput(phone);
+
+  if (!cleaned) return null;
+
+  if (cleaned.startsWith('00')) {
+    cleaned = cleaned.substring(2);
+  }
+
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  }
+
+  // Backwards compatibility: support legacy local formats that began with 0 or had 10 digits (assume NG)
+  if (cleaned.startsWith('0') && cleaned.length > 1) {
+    cleaned = `234${cleaned.substring(1)}`;
+  } else if (cleaned.length === 10) {
+    cleaned = `234${cleaned}`;
+  }
+
+  if (!/^\d{6,14}$/.test(cleaned)) {
+    return null;
+  }
+
+  const dialCode = SORTED_AFRICAN_DIAL_CODES.find((code) => cleaned.startsWith(code));
+
+  if (!dialCode) {
+    return null;
+  }
+
+  return `+${cleaned}`;
+};
+
 // Generate JWT token
 exports.generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, {
   expiresIn: process.env.JWT_EXPIRE || '30d'
@@ -65,48 +117,19 @@ exports.formatPrice = (price, currency = 'NGN') => {
   return `${symbols[currency] || '₦'}${price.toLocaleString()}`;
 };
 
-// Validate Nigerian phone number
-exports.isValidNigerianPhone = (phone) => {
-  // Accepts formats like: +2348012345678, 2348012345678, 08012345678
-  const regex = /^(\+?234|0)?[789]\d{9}$/;
-  return regex.test(phone.replace(/\s/g, ''));
-};
+exports.isValidAfricanPhone = (phone) => !!normalizeAfricanPhoneNumber(phone);
 
-// Format phone number for WhatsApp (stores with +234 prefix)
-exports.formatWhatsAppNumber = (phone) => {
-  if (!phone) return null;
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, '');
+// Backwards compatible alias for legacy imports
+exports.isValidNigerianPhone = (phone) => exports.isValidAfricanPhone(phone);
 
-  // Add country code if not present
-  if (cleaned.startsWith('0')) {
-    cleaned = `234${cleaned.substring(1)}`;
-  } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
-    // 10-digit number without country code
-    cleaned = `234${cleaned}`;
-  } else if (!cleaned.startsWith('234')) {
-    cleaned = `234${cleaned}`;
-  }
+// Format phone number for WhatsApp (stores in E.164 format, e.g. +233201234567)
+exports.formatWhatsAppNumber = (phone) => normalizeAfricanPhoneNumber(phone);
 
-  return `+${cleaned}`;
-};
+// Normalize phone number for uniqueness checks (E.164 format)
+exports.normalizePhoneNumber = (phone) => normalizeAfricanPhoneNumber(phone);
 
-// Normalize phone number for uniqueness check (returns +234xxxxxxxxxx format)
-exports.normalizePhoneNumber = (phone) => {
-  if (!phone) return null;
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, '');
-
-  // Add country code if not present
-  if (cleaned.startsWith('0')) {
-    cleaned = `234${cleaned.substring(1)}`;
-  } else if (!cleaned.startsWith('234') && cleaned.length === 10) {
-    // If exactly 10 digits without country code, assume Nigerian
-    cleaned = `234${cleaned}`;
-  }
-
-  return `+${cleaned}`;
-};
+exports.normalizeAfricanPhoneNumber = normalizeAfricanPhoneNumber;
+exports.AFRICAN_DIAL_CODES = AFRICAN_DIAL_CODES;
 
 // Paginate results
 exports.paginate = (page = 1, limit = 20) => {

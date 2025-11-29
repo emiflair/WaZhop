@@ -1,21 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTimes, FaWhatsapp } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { userAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../utils/helpers';
+import useDefaultDialCode from '../hooks/useDefaultDialCode';
 
 const BuyerToSellerUpgrade = ({ onClose }) => {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { updateUser } = useAuth();
+  const defaultDialCode = useDefaultDialCode();
+
+  useEffect(() => {
+    if (!defaultDialCode) return;
+    setWhatsappNumber((prev) => {
+      if (prev && prev.trim()) {
+        return prev;
+      }
+      return defaultDialCode;
+    });
+  }, [defaultDialCode]);
 
   const handleWhatsAppSubmit = async (e) => {
     e.preventDefault();
     
-    if (!whatsappNumber || !/^\+?[1-9]\d{1,14}$/.test(whatsappNumber)) {
-      toast.error('Please enter a valid WhatsApp number with country code');
+    if (!whatsappNumber || !isValidAfricanPhone(whatsappNumber)) {
+      toast.error('Please enter a valid phone number with country code (e.g., +233201234567)');
+      return;
+    }
+
+    const normalized = normalizeAfricanPhoneNumber(whatsappNumber);
+    if (!normalized) {
+      toast.error('Please enter a valid phone number with country code (e.g., +233201234567)');
       return;
     }
     
@@ -23,7 +42,7 @@ const BuyerToSellerUpgrade = ({ onClose }) => {
 
     try {
       // Switch to seller with free plan by default
-      const response = await userAPI.switchToSeller(whatsappNumber, 'free');
+      const response = await userAPI.switchToSeller(normalized, 'free');
       
       if (response.success) {
         updateUser(response.user);
@@ -70,14 +89,14 @@ const BuyerToSellerUpgrade = ({ onClose }) => {
                   type="tel"
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="+234XXXXXXXXXX"
+                  placeholder="e.g., +233201234567"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
                   required
                   disabled={loading}
                 />
               </div>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Include country code (e.g., +234 for Nigeria)
+                Include country code (e.g., +233201234567 or +2348012345678)
               </p>
             </div>
 

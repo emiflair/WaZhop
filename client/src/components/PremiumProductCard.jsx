@@ -24,6 +24,10 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
 
   const handleNegotiateOnWhatsApp = () => {
     const phoneNumber = formatWhatsAppNumber(shop.owner?.whatsapp || shop.socialLinks?.whatsapp);
+    if (!phoneNumber) {
+      console.warn('WhatsApp number not available for shop negotiation.');
+      return;
+    }
     const message = encodeURIComponent(
       `Hi ${shop.shopName}, I'm interested in your ${product.name}. Can we discuss the price?`
     );

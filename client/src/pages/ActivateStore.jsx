@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiMail, FiPhone, FiLock, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { storeActivationAPI } from '../utils/api';
+import { normalizeAfricanPhoneNumber, isValidAfricanPhone } from '../utils/helpers';
+import useDefaultDialCode from '../hooks/useDefaultDialCode';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function ActivateStore() {
   const { shopId, token } = useParams();
   const navigate = useNavigate();
+  const defaultDialCode = useDefaultDialCode();
   
   const [verifying, setVerifying] = useState(true);
   const [storeInfo, setStoreInfo] = useState(null);
@@ -24,6 +27,16 @@ export default function ActivateStore() {
   useEffect(() => {
     verifyToken();
   }, [shopId, token]);
+
+  useEffect(() => {
+    if (!defaultDialCode) return;
+    setFormData((prev) => {
+      if (prev.whatsapp && prev.whatsapp.trim()) {
+        return prev;
+      }
+      return { ...prev, whatsapp: defaultDialCode };
+    });
+  }, [defaultDialCode]);
 
   const verifyToken = async () => {
     try {
@@ -50,8 +63,8 @@ export default function ActivateStore() {
     // Phone validation
     if (!formData.whatsapp) {
       newErrors.whatsapp = 'WhatsApp number is required';
-    } else if (!/^(\+234|0)[789]\d{9}$/.test(formData.whatsapp.replace(/\s/g, ''))) {
-      newErrors.whatsapp = 'Invalid Nigerian phone number';
+    } else if (!isValidAfricanPhone(formData.whatsapp)) {
+      newErrors.whatsapp = 'Enter a valid phone number with country code (e.g., +233201234567)';
     }
 
     // Password validation
@@ -80,9 +93,16 @@ export default function ActivateStore() {
     setLoading(true);
 
     try {
+      const normalizedWhatsApp = normalizeAfricanPhoneNumber(formData.whatsapp);
+      if (!normalizedWhatsApp) {
+        setErrors((prev) => ({ ...prev, whatsapp: 'Enter a valid phone number with country code (e.g., +233201234567)' }));
+        setLoading(false);
+        return;
+      }
+
       const response = await storeActivationAPI.activateStore(shopId, token, {
         email: formData.email.trim(),
-        whatsapp: formData.whatsapp.trim(),
+        whatsapp: normalizedWhatsApp,
         password: formData.password
       });
 
@@ -243,9 +263,14 @@ export default function ActivateStore() {
                   className={`w-full pl-10 pr-4 py-3 border ${
                     errors.whatsapp ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   } rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                  placeholder="+234 xxx xxx xxxx"
+                  placeholder="e.g., +233201234567"
                 />
               </div>
+              {!errors.whatsapp && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Include country code (e.g., +233201234567 or +2348012345678)
+                </p>
+              )}
               {errors.whatsapp && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.whatsapp}</p>
               )}

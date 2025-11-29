@@ -301,7 +301,7 @@ import {
 } from '../utils/validation';
 
 // Phone
-validatePhone('+2348012345678');
+validatePhone('+233201234567');
 
 // URL
 validateUrl('https://example.com', true);
