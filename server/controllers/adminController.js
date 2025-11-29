@@ -4,6 +4,8 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { asyncHandler } = require('../utils/helpers');
 
+const DEFAULT_MANUAL_PLAN_DAYS = parseInt(process.env.DEFAULT_MANUAL_PLAN_DAYS || '10', 10);
+
 // @desc    Get platform statistics
 // @route   GET /api/admin/stats
 // @access  Admin only
@@ -224,13 +226,33 @@ exports.updateUserPlan = asyncHandler(async (req, res) => {
 
   user.plan = plan;
 
-  if (plan !== 'free' && duration) {
-    const durationDays = parseInt(duration);
-    user.planExpiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+  if (plan !== 'free') {
+    let durationDays;
+
+    if (duration) {
+      durationDays = parseInt(duration, 10);
+
+      if (Number.isNaN(durationDays) || durationDays <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid duration value'
+        });
+      }
+    } else {
+      durationDays = DEFAULT_MANUAL_PLAN_DAYS;
+    }
+
+    const expiryDate = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+
+    user.planExpiry = expiryDate;
     user.subscriptionStatus = 'active';
-  } else if (plan === 'free') {
+    user.lastBillingDate = new Date();
+    user.autoRenew = false;
+  } else {
     user.planExpiry = null;
-    user.subscriptionStatus = 'none';
+    user.subscriptionStatus = 'expired';
+    user.lastBillingDate = null;
+    user.autoRenew = false;
   }
 
   await user.save();
