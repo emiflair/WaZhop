@@ -112,6 +112,36 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  savedPaymentMethod: {
+    cardToken: {
+      type: String,
+      default: null
+    },
+    cardLast4: {
+      type: String,
+      default: null
+    },
+    cardType: {
+      type: String,
+      default: null
+    },
+    cardExpiry: {
+      type: String,
+      default: null
+    },
+    paymentGateway: {
+      type: String,
+      default: null
+    },
+    lastChargeId: {
+      type: String,
+      default: null
+    },
+    lastChargeDate: {
+      type: Date,
+      default: null
+    }
+  },
   subscriptionStatus: {
     type: String,
     enum: ['active', 'expired', 'cancelled'],
