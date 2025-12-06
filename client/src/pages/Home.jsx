@@ -75,8 +75,8 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <SEO
-        title="Your Own Digital Shop in Minutes. Sell Anywhere, Anytime | Wazhop"
-        description="Wazhop gives you a fully customizable digital shop with your own brand, logo, and style. Reach customers instantly on WhatsApp and grow your business from home."
+        title="Create Your WhatsApp Shop in Minutes"
+        description="Build a fully customizable digital shop with your own brand, logo, and style. Reach customers instantly on WhatsApp and grow your business from home."
         keywords="WhatsApp shop, online store, e-commerce, sell online, WhatsApp business, digital shop, custom storefront"
         type="website"
       />

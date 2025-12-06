@@ -374,7 +374,7 @@ export default function Marketplace() {
   return (
     <>
       <SEO
-        title="Marketplace - Discover Products from Top Sellers"
+        title="Marketplace"
         description="Browse thousands of products from verified sellers. Best prices, trusted reviews, instant WhatsApp orders."
       />
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
