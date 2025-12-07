@@ -1,19 +1,15 @@
-import { Link } from 'react-router-dom';
-import logoBlack from '/wazhoplogo/logoblack.PNG.png';
-import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 
 // Shared layout for Login/Register with orange gradient art panel on the left (md+)
 // and content card on the right. Keeps things accessible and mobile-first.
 const AuthLayout = ({ title, subtitle, aside, children, footer, altLink }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-accent-50 dark:from-gray-900 dark:to-gray-950">
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Top nav with brand */}
-        <div className="flex items-center justify-between mb-8 pt-safe">
-          <Link to="/" className="flex-shrink-0 flex items-center -ml-14">
-            <img src={logoBlack} alt="WaZhop" className="h-20 md:h-20 lg:h-24 w-auto object-contain dark:hidden" />
-            <img src={logoWhite} alt="WaZhop" className="h-20 md:h-20 lg:h-24 w-auto object-contain hidden dark:block" />
-          </Link>
+      <div
+        className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 5rem)' }}
+      >
+        {/* Top nav spacer for layout consistency */}
+        <div className="flex items-center justify-end mb-8">
           {altLink}
         </div>
 

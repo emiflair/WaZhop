@@ -1,14 +1,26 @@
 import axios from 'axios';
 import { parseApiError, logError } from './errorHandler';
+import { Capacitor } from '@capacitor/core';
+import { CapacitorHttp } from '@capacitor/core';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const isNative = Capacitor.isNativePlatform();
+const nativeHttpAvailable = isNative && Capacitor.isPluginAvailable('CapacitorHttp');
+let disableNativeHttp = false;
 
-console.log('🔌 API URL:', API_URL); // Debug log
+// Debug logging
+console.log('🔌 API Configuration:', {
+  API_URL,
+  mode: import.meta.env.MODE,
+  isNative,
+  nativeHttpAvailable,
+  platform: Capacitor.getPlatform()
+});
 
 // Request deduplication map
 const pendingRequests = new Map();
 
-// Create axios instance
+// Create axios instance for web
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -24,6 +36,136 @@ const api = axios.create({
  */
 function getRequestKey(config) {
   return `${config.method}-${config.url}-${JSON.stringify(config.params || {})}`;
+}
+
+/**
+ * Native HTTP request using CapacitorHttp (bypasses CORS)
+ */
+async function nativeRequest(config) {
+  const token = localStorage.getItem('token');
+  let url = config.url?.startsWith('http') ? config.url : `${API_URL}${config.url}`;
+  const axiosFallback = async ({ disableNative = false, reason } = {}) => {
+    if (disableNative && !disableNativeHttp) {
+      console.warn('⚠️ Disabling CapacitorHttp for subsequent requests due to native failure');
+      disableNativeHttp = true;
+    }
+
+    if (reason) {
+      console.info(`📶 Using axios fallback on native platform (${reason})`);
+    } else {
+      console.info('📶 Using axios fallback on native platform');
+    }
+
+    const response = await axios.request({
+      url,
+      method: config.method?.toUpperCase() || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...config.headers
+      },
+      data: config.data,
+      params: config.params,
+      timeout: config.timeout,
+      responseType: config.responseType || 'json',
+      withCredentials: config.withCredentials
+    });
+
+    return {
+      data: response.data,
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      config
+    };
+  };
+
+  const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+  const isMultipart = config.headers?.['Content-Type']?.toLowerCase?.().includes('multipart/form-data');
+
+  if (isFormData || isMultipart) {
+    console.warn('🗂️ Multipart/FormData detected, using axios fallback on native platform');
+    return axiosFallback({ reason: 'multipart-formdata' });
+  }
+  
+  // Convert params to query string if present
+  if (config.params) {
+    const queryParams = new URLSearchParams();
+    Object.entries(config.params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, String(value));
+      }
+    });
+    const queryString = queryParams.toString();
+    if (queryString) {
+      url += (url.includes('?') ? '&' : '?') + queryString;
+    }
+  }
+
+  if (!nativeHttpAvailable || disableNativeHttp) {
+    return axiosFallback({ reason: nativeHttpAvailable ? 'native-disabled' : 'plugin-missing' });
+  }
+  
+  const options = {
+    url,
+    method: config.method?.toUpperCase() || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...config.headers
+    },
+    responseType: config.responseType || 'json'
+  };
+
+  // Only add data for non-GET requests
+  if (config.data && options.method !== 'GET') {
+    options.data = config.data;
+  }
+
+  console.log('📱 Native HTTP Request:', options.method, url);
+
+  try {
+    const response = await CapacitorHttp.request(options);
+    console.log('📱 Native HTTP Response:', response.status);
+
+    let normalizedData = response.data;
+    if (typeof normalizedData === 'string' && normalizedData.length) {
+      try {
+        normalizedData = JSON.parse(normalizedData);
+      } catch (parseError) {
+        console.warn('⚠️ Unable to parse native HTTP response as JSON:', parseError.message);
+      }
+    }
+    
+    // Transform to axios-like response
+    return {
+      data: normalizedData,
+      status: response.status,
+      statusText: response.status === 200 ? 'OK' : 'Error',
+      headers: response.headers,
+      config
+    };
+  } catch (error) {
+    console.error('📱 Native HTTP Error:', error);
+
+    if (error?.code === 'UNIMPLEMENTED' || error?.message?.toLowerCase?.().includes('not implemented')) {
+      return axiosFallback({ disableNative: true, reason: 'plugin-unimplemented' });
+    }
+
+    if (error?.status === 0) {
+      return axiosFallback({ reason: 'status-0' });
+    }
+
+    throw {
+      response: {
+        status: error.status || 0,
+        data: error.data || {},
+        headers: error.headers || {}
+      },
+      message: error.message || 'Network request failed',
+      config
+    };
+  }
 }
 
 // Request interceptor to add token and handle deduplication
@@ -93,6 +235,19 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    // Enhanced error logging
+    console.error('❌ API Error:', {
+      message: error.message,
+      url: error.config?.url,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      responseData: error.response?.data,
+      isNetworkError: error.message === 'Network Error',
+      code: error.code
+    });
+    
     // Handle deduplicated requests
     if (error._isDeduplicated) {
       return error.response;
@@ -145,63 +300,86 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * API wrapper that uses native HTTP on mobile, axios on web
+ */
+const shouldUseNativeHttp = () => isNative && nativeHttpAvailable && !disableNativeHttp;
+
+const callNative = (method, url, data, config = {}) =>
+  nativeRequest({ ...config, url, data, method }).then((response) => response.data);
+
+const apiWrapper = {
+  request: (config) => (shouldUseNativeHttp() ? callNative(config.method || 'get', config.url, config.data, config) : api.request(config)),
+  get: (url, config = {}) => (shouldUseNativeHttp() ? callNative('get', url, undefined, config) : api.get(url, config)),
+  post: (url, data, config = {}) => (shouldUseNativeHttp() ? callNative('post', url, data, config) : api.post(url, data, config)),
+  put: (url, data, config = {}) => (shouldUseNativeHttp() ? callNative('put', url, data, config) : api.put(url, data, config)),
+  delete: (url, config = {}) => (shouldUseNativeHttp() ? callNative('delete', url, undefined, config) : api.delete(url, config)),
+  patch: (url, data, config = {}) => (shouldUseNativeHttp() ? callNative('patch', url, data, config) : api.patch(url, data, config))
+};
+
 // Auth endpoints
 export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  googleAuth: (data) => api.post('/auth/google', data),
-  requestEmailVerificationPublic: (email) => api.post('/auth/request-email-verification-public', { email }),
-  getMe: () => api.get('/auth/me'),
-  updateProfile: (data) => api.put('/auth/profile', data),
-  changePassword: (data) => api.put('/auth/change-password', data),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+  register: (data) => apiWrapper.post('/auth/register', data),
+  login: (data) => apiWrapper.post('/auth/login', data),
+  googleAuth: (data) => apiWrapper.post('/auth/google', data),
+  requestEmailVerificationPublic: (email) => apiWrapper.post('/auth/request-email-verification-public', { email }),
+  getMe: () => apiWrapper.get('/auth/me'),
+  updateProfile: (data) => apiWrapper.put('/auth/profile', data),
+  changePassword: (data) => apiWrapper.put('/auth/change-password', data),
+  forgotPassword: (email) => apiWrapper.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => apiWrapper.post('/auth/reset-password', { token, password }),
   upgradeToSeller: (payload) => {
     // Backward compatible: allow passing a string (whatsapp) or an object { whatsapp, referralCode }
     const body = typeof payload === 'string' ? { whatsapp: payload } : payload;
-    return api.put('/auth/upgrade-to-seller', body);
+    return apiWrapper.put('/auth/upgrade-to-seller', body);
   }
 };
 
 // Shop endpoints
 export const shopAPI = {
-  getMyShop: (shopId) => api.get(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}&_t=${Date.now()}`),
-  getMyShops: () => api.get(`/shops/my/shops?_t=${Date.now()}`),
-  getShopBySlug: (slug) => api.get(`/shops/${slug}`),
-  createShop: (data) => api.post('/shops', data),
-  deleteShop: (id) => api.delete(`/shops/${id}`),
-  updateShop: (data, shopId) => api.put(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`, data),
-  updateTheme: (data, shopId) => api.put(`/shops/my/theme${shopId ? `?shopId=${shopId}` : ''}`, data),
-  getAvailableThemes: () => api.get('/shops/themes'),
+  getMyShop: (shopId) =>
+    apiWrapper.get('/shops/my/shop', {
+      params: {
+        ...(shopId ? { shopId } : {}),
+        _t: Date.now(),
+      },
+    }),
+  getMyShops: () => apiWrapper.get(`/shops/my/shops?_t=${Date.now()}`),
+  getShopBySlug: (slug) => apiWrapper.get(`/shops/${slug}`),
+  createShop: (data) => apiWrapper.post('/shops', data),
+  deleteShop: (id) => apiWrapper.delete(`/shops/${id}`),
+  updateShop: (data, shopId) => apiWrapper.put(`/shops/my/shop${shopId ? `?shopId=${shopId}` : ''}`, data),
+  updateTheme: (data, shopId) => apiWrapper.put(`/shops/my/theme${shopId ? `?shopId=${shopId}` : ''}`, data),
+  getAvailableThemes: () => apiWrapper.get('/shops/themes'),
   uploadLogo: (file) => {
     const formData = new FormData();
     formData.append('logo', file);
-    return api.post('/shops/my/logo', formData, {
+    return apiWrapper.post('/shops/my/logo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
   uploadBanner: (file) => {
     const formData = new FormData();
     formData.append('banner', file);
-    return api.post('/shops/my/banner', formData, {
+    return apiWrapper.post('/shops/my/banner', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  deleteImage: (type) => api.delete(`/shops/my/image/${type}`),
+  deleteImage: (type) => apiWrapper.delete(`/shops/my/image/${type}`),
   // Domain management
-  setCustomDomain: (domain, shopId) => api.put(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`, { domain }),
-  verifyCustomDomain: (shopId) => api.post(`/shops/my/domain/verify${shopId ? `?shopId=${shopId}` : ''}`),
-  removeCustomDomain: (shopId) => api.delete(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`),
+  setCustomDomain: (domain, shopId) => apiWrapper.put(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`, { domain }),
+  verifyCustomDomain: (shopId) => apiWrapper.post(`/shops/my/domain/verify${shopId ? `?shopId=${shopId}` : ''}`),
+  removeCustomDomain: (shopId) => apiWrapper.delete(`/shops/my/domain${shopId ? `?shopId=${shopId}` : ''}`),
 };
 
 // Product endpoints
 export const productAPI = {
-  getMyProducts: () => api.get(`/products/my/products?_t=${Date.now()}`),
-  getProduct: (id) => api.get(`/products/${id}`),
-  getRelatedProducts: (id, limit = 6) => api.get(`/products/${id}/related?limit=${limit}`),
-  getMarketplaceProducts: (params) => api.get('/products/marketplace', { params }),
-  getBoostStatus: (id) => api.get(`/products/${id}/boost`),
-  boostProduct: (id, data) => api.put(`/products/${id}/boost`, data),
+  getMyProducts: () => apiWrapper.get(`/products/my/products?_t=${Date.now()}`),
+  getProduct: (id) => apiWrapper.get(`/products/${id}`),
+  getRelatedProducts: (id, limit = 6) => apiWrapper.get(`/products/${id}/related?limit=${limit}`),
+  getMarketplaceProducts: (params) => apiWrapper.get('/products/marketplace', { params }),
+  getBoostStatus: (id) => apiWrapper.get(`/products/${id}/boost`),
+  boostProduct: (id, data) => apiWrapper.put(`/products/${id}/boost`, data),
   createProduct: (data, images) => {
     const formData = new FormData();
     Object.keys(data).forEach((key) => {
@@ -214,51 +392,60 @@ export const productAPI = {
     if (images && images.length > 0) {
       images.forEach((image) => formData.append('images', image));
     }
-    return api.post('/products', formData, {
+    return apiWrapper.post('/products', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
-  updateProduct: (id, data) => api.put(`/products/${id}`, data),
-  deleteProduct: (id) => api.delete(`/products/${id}`),
+  updateProduct: (id, data) => apiWrapper.put(`/products/${id}`, data),
+  deleteProduct: (id) => apiWrapper.delete(`/products/${id}`),
   uploadImages: (id, images) => {
     const formData = new FormData();
     images.forEach((image) => formData.append('images', image));
-    return api.post(`/products/${id}/images`, formData, {
+    return apiWrapper.post(`/products/${id}/images`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
   deleteImage: (productId, imageId) =>
-    api.delete(`/products/${productId}/images/${imageId}`),
+    apiWrapper.delete(`/products/${productId}/images/${imageId}`),
   reorderProducts: (productIds) =>
-    api.put('/products/my/reorder', { productIds }),
-  trackClick: (id) => api.post(`/products/${id}/click`),
+    apiWrapper.put('/products/my/reorder', { productIds }),
+  trackClick: (id) => apiWrapper.post(`/products/${id}/click`),
 };
 
 // User/Subscription endpoints
 export const userAPI = {
-  getSubscription: () => api.get('/users/subscription'),
-  upgradePlan: (plan, duration, billingPeriod, couponCode) => api.post('/users/upgrade', { 
+  getSubscription: () => apiWrapper.get('/users/subscription'),
+  upgradePlan: (plan, duration, billingPeriod, couponCode) => apiWrapper.post('/users/upgrade', { 
     plan, 
     duration, 
     billingPeriod,
     couponCode 
   }),
-  verifyPaymentAndUpgrade: (data) => api.post('/subscription/verify-payment', data),
-  downgradePlan: (plan, extra = {}) => api.post('/users/downgrade', { plan, ...extra }),
-  switchToSeller: (whatsappNumber, plan) => api.post('/users/switch-to-seller', { whatsappNumber, plan }),
-  setup2FA: () => api.post('/auth/2fa/setup'),
-  verify2FA: (token) => api.post('/auth/2fa/verify', { token }),
-  disable2FA: (password, token) => api.post('/auth/2fa/disable', { password, token }),
-  get2FAStatus: () => api.get('/auth/2fa/status'),
+  verifyPaymentAndUpgrade: (data) => apiWrapper.post('/subscription/verify-payment', data),
+  downgradePlan: (plan, extra = {}) => apiWrapper.post('/users/downgrade', { plan, ...extra }),
+  switchToSeller: (whatsappNumber, plan) => apiWrapper.post('/users/switch-to-seller', { whatsappNumber, plan }),
+  setup2FA: () => apiWrapper.post('/auth/2fa/setup'),
+  verify2FA: (token) => apiWrapper.post('/auth/2fa/verify', { token }),
+  disable2FA: (password, token) => apiWrapper.post('/auth/2fa/disable', { password, token }),
+  get2FAStatus: () => apiWrapper.get('/auth/2fa/status'),
+  getAdminUsers: () => apiWrapper.get('/users/admin/all'),
+  updateAdminUser: (userId, payload) => apiWrapper.patch(`/users/admin/${userId}`, payload)
+};
+
+export const subscriptionAPI = {
+  getStatus: () => apiWrapper.get('/subscription/status'),
+  renew: (payload = {}) => apiWrapper.post('/subscription/renew', payload),
+  toggleAutoRenew: (autoRenew) => apiWrapper.patch('/subscription/auto-renew', { autoRenew }),
+  cancel: () => apiWrapper.post('/subscription/cancel')
 };
 
 // Review endpoints
 export const reviewAPI = {
-  getProductReviews: (productId, params) => api.get(`/reviews/product/${productId}`, { params }),
+  getProductReviews: (productId, params) => apiWrapper.get(`/reviews/product/${productId}`, { params }),
   createReview: (data) => {
     // Support both JSON and multipart with a single image
     if (data instanceof FormData) {
-      return api.post('/reviews', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return apiWrapper.post('/reviews', data, { headers: { 'Content-Type': 'multipart/form-data' } });
     }
     if (data && data.imageFile) {
       const formData = new FormData();
@@ -267,92 +454,98 @@ export const reviewAPI = {
         if (value !== undefined && value !== null) formData.append(key, value);
       });
       formData.append('image', data.imageFile);
-      return api.post('/reviews', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return apiWrapper.post('/reviews', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     }
-    return api.post('/reviews', data);
+    return apiWrapper.post('/reviews', data);
   },
-  getMyShopReviews: (shopId, params) => api.get(`/reviews/shop/my${shopId ? `?shopId=${shopId}` : ''}`, { params }),
-  approveReview: (id, isApproved) => api.put(`/reviews/${id}/approve`, { isApproved }),
-  deleteReview: (id) => api.delete(`/reviews/${id}`),
-  markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
+  getMyShopReviews: (shopId, params) => apiWrapper.get(`/reviews/shop/my${shopId ? `?shopId=${shopId}` : ''}`, { params }),
+  approveReview: (id, isApproved) => apiWrapper.put(`/reviews/${id}/approve`, { isApproved }),
+  deleteReview: (id) => apiWrapper.delete(`/reviews/${id}`),
+  markHelpful: (id) => apiWrapper.post(`/reviews/${id}/helpful`),
 };
 
 // Order endpoints
 export const orderAPI = {
-  createOrder: (data) => api.post('/orders', data),
-  getMyOrders: () => api.get('/orders/my-orders'),
-  getOrderById: (id) => api.get(`/orders/${id}`),
-  getShopOrders: (shopId, params) => api.get(`/orders/shop/${shopId}`, { params }),
-  getOrderStats: (shopId) => api.get(`/orders/shop/${shopId}/stats`),
-  updateOrderStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
-  cancelOrder: (id) => api.patch(`/orders/${id}/cancel`),
+  createOrder: (data) => apiWrapper.post('/orders', data),
+  getMyOrders: () => apiWrapper.get('/orders/my-orders'),
+  getOrderById: (id) => apiWrapper.get(`/orders/${id}`),
+  getShopOrders: (shopId, params) => apiWrapper.get(`/orders/shop/${shopId}`, { params }),
+  getOrderStats: (shopId) => apiWrapper.get(`/orders/shop/${shopId}/stats`),
+  updateOrderStatus: (id, status) => apiWrapper.patch(`/orders/${id}/status`, { status }),
+  cancelOrder: (id) => apiWrapper.patch(`/orders/${id}/cancel`),
 };
 
 // Coupon endpoints
 export const couponAPI = {
-  create: (data) => api.post('/coupons', data),
-  getAll: () => api.get('/coupons'),
-  getStats: () => api.get('/coupons/stats'),
-  validate: (code, plan) => api.post('/coupons/validate', { code, plan }),
-  apply: (code, plan) => api.post('/coupons/apply', { code, plan }),
-  validateProduct: (code) => api.post('/coupons/validate-product', { code }),
-  toggle: (id) => api.patch(`/coupons/${id}/toggle`),
-  delete: (id) => api.delete(`/coupons/${id}`),
+  create: (data) => apiWrapper.post('/coupons', data),
+  getAll: () => apiWrapper.get('/coupons'),
+  getStats: () => apiWrapper.get('/coupons/stats'),
+  validate: (code, plan) => apiWrapper.post('/coupons/validate', { code, plan }),
+  apply: (code, plan) => apiWrapper.post('/coupons/apply', { code, plan }),
+  validateProduct: (code) => apiWrapper.post('/coupons/validate-product', { code }),
+  toggle: (id, isActive) => apiWrapper.patch(`/coupons/${id}/toggle`, { isActive }),
+  delete: (id) => apiWrapper.delete(`/coupons/${id}`),
 };
 
 // Admin endpoints
 export const adminAPI = {
-  getStats: () => api.get('/admin/stats'),
-  getAllUsers: (params) => api.get('/admin/users', { params }),
-  updateUserRole: (id, role) => api.patch(`/admin/users/${id}/role`, { role }),
-  toggleUserStatus: (id) => api.patch(`/admin/users/${id}/status`),
-  updateUserPlan: (id, plan, duration) => api.patch(`/admin/users/${id}/plan`, { plan, duration }),
-  deleteUser: (id) => api.delete(`/admin/users/${id}`),
-  getAllShops: (params) => api.get('/admin/shops', { params }),
-  deleteShop: (id) => api.delete(`/admin/shops/${id}`),
-  getAllProducts: (params) => api.get('/admin/products', { params }),
-  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
-  getAllOrders: (params) => api.get('/admin/orders', { params }),
-  updateOrderStatus: (id, status) => api.patch(`/admin/orders/${id}/status`, { status }),
-  getAnalytics: () => api.get('/admin/analytics'),
-  getRevenue: () => api.get('/admin/revenue'),
-  getActivity: (limit) => api.get('/admin/activity', { params: { limit } }),
+  getStats: () => apiWrapper.get('/admin/stats'),
+  getAllUsers: (params) => apiWrapper.get('/admin/users', { params }),
+  updateUserRole: (id, role) => apiWrapper.patch(`/admin/users/${id}/role`, { role }),
+  toggleUserStatus: (id) => apiWrapper.patch(`/admin/users/${id}/status`),
+  updateUserPlan: (id, plan, duration) => apiWrapper.patch(`/admin/users/${id}/plan`, { plan, duration }),
+  deleteUser: (id) => apiWrapper.delete(`/admin/users/${id}`),
+  getAllShops: (params) => apiWrapper.get('/admin/shops', { params }),
+  deleteShop: (id) => apiWrapper.delete(`/admin/shops/${id}`),
+  getAllProducts: (params) => apiWrapper.get('/admin/products', { params }),
+  deleteProduct: (id) => apiWrapper.delete(`/admin/products/${id}`),
+  getAllOrders: (params) => apiWrapper.get('/admin/orders', { params }),
+  updateOrderStatus: (id, status) => apiWrapper.patch(`/admin/orders/${id}/status`, { status }),
+  getAnalytics: () => apiWrapper.get('/admin/analytics'),
+  getRevenue: () => apiWrapper.get('/admin/revenue'),
+  getActivity: (limit) => apiWrapper.get('/admin/activity', { params: { limit } }),
 };
 
 // Admin Create Store endpoints
 export const adminCreateAPI = {
-  createTemporaryStore: (data) => api.post('/admin/create-store', data),
-  getTemporaryStores: () => api.get('/admin/create-store/temporary'),
-  addProductToTempStore: (shopId, formData) => api.post(`/admin/create-store/${shopId}/products`, formData, {
+  createTemporaryStore: (data) => apiWrapper.post('/admin/create-store', data),
+  getTemporaryStores: () => apiWrapper.get('/admin/create-store/temporary'),
+  addProductToTempStore: (shopId, formData) => apiWrapper.post(`/admin/create-store/${shopId}/products`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  deleteTemporaryStore: (shopId) => api.delete(`/admin/create-store/${shopId}`),
+  deleteTemporaryStore: (shopId) => apiWrapper.delete(`/admin/create-store/${shopId}`),
+};
+
+export const adminSettingsAPI = {
+  get: () => apiWrapper.get('/settings/admin'),
+  update: (payload) => apiWrapper.put('/settings/admin', payload)
 };
 
 // Store Activation endpoints
 export const storeActivationAPI = {
-  verifyActivationToken: (shopId, token) => api.get(`/activate-store/verify/${shopId}/${token}`),
-  activateStore: (shopId, token, data) => api.post(`/activate-store/${shopId}/${token}`, data),
+  verifyActivationToken: (shopId, token) => apiWrapper.get(`/activate-store/verify/${shopId}/${token}`),
+  activateStore: (shopId, token, data) => apiWrapper.post(`/activate-store/${shopId}/${token}`, data),
 };
 
 export const paymentAPI = {
   // Track payment initiation
-  initiatePayment: (data) => api.post('/payments/initiate', data),
+  initiatePayment: (data) => apiWrapper.post('/payments/initiate', data),
   
   // Update payment status (cancelled, failed, etc.)
   updatePaymentStatus: (transactionRef, data) => 
-    api.patch(`/payments/${transactionRef}/status`, data),
+    apiWrapper.patch(`/payments/${transactionRef}/status`, data),
   
   // Get payment history
-  getPaymentHistory: (params) => api.get('/payments/history', { params }),
+  getPaymentHistory: (params) => apiWrapper.get('/payments/history', { params }),
   
   // Get payment analytics
   getPaymentAnalytics: (days = 30) => 
-    api.get('/payments/analytics', { params: { days } }),
+    apiWrapper.get('/payments/analytics', { params: { days } }),
   
   // Get specific transaction details
   getTransactionDetails: (transactionRef) => 
-    api.get(`/payments/${transactionRef}`),
+    apiWrapper.get(`/payments/${transactionRef}`),
 };
 
 export default api;
+export { apiWrapper };

@@ -163,8 +163,15 @@ const buildAllowedOrigins = () => {
     );
   }
 
-  // Always include common local dev ports
-  const localList = ['http://localhost:3000', 'http://localhost:5173'];
+  // Always include common local dev ports and mobile app origins
+  const localList = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:8100', // Ionic dev server
+    'capacitor://localhost',
+    'ionic://localhost',
+    'http://localhost' // Generic localhost without port
+  ];
 
   // De-duplicate
   return Array.from(new Set([...localList, ...envList]));
@@ -173,6 +180,11 @@ const buildAllowedOrigins = () => {
 exports.corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = buildAllowedOrigins();
+
+    // Log origin for debugging (remove in production)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🌐 CORS check - Origin:', origin);
+    }
 
     // Allow requests with no origin (mobile apps, Postman, server-to-server)
     if (!origin) return callback(null, true);
@@ -219,6 +231,7 @@ exports.helmetConfig = {
         'https://wazhop.ng',
         'https://www.wazhop.ng',
         'https://*.wazhop.ng',
+        'capacitor://localhost',
         ...buildAllowedOrigins()
       ].filter(Boolean),
       frameSrc: ["'self'"],

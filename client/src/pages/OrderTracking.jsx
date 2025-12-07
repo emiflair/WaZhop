@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FiPackage, FiMapPin, FiMail, FiPhone, FiArrowLeft, FiXCircle } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { orderAPI } from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -75,7 +74,6 @@ export default function OrderTracking() {
         <div className="flex-grow flex items-center justify-center">
           <LoadingSpinner />
         </div>
-        <Footer />
       </div>
     );
   }
@@ -98,7 +96,6 @@ export default function OrderTracking() {
             </button>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -370,7 +367,6 @@ export default function OrderTracking() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { FiCheckCircle, FiPackage, FiMail, FiPhone } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 export default function OrderConfirmation() {
   const location = useLocation();
@@ -211,7 +210,6 @@ export default function OrderConfirmation() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

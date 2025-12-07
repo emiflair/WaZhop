@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiEdit, FiTrash2, FiMail, FiCalendar, FiUsers, FiX } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import toast from 'react-hot-toast';
+import { userAPI } from '../../utils/api';
+import { parseApiError } from '../../utils/errorHandler';
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,15 +26,16 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/admin/all`);
-      const data = await response.json();
-      
+      const data = await userAPI.getAdminUsers();
+
       if (data.success) {
         setUsers(data.data);
         setStats(data.stats);
+      } else {
+        toast.error(data.message || 'Failed to load users');
       }
     } catch (error) {
-      toast.error('Failed to load users');
+      toast.error(parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -68,23 +71,17 @@ export default function AdminUsers() {
     if (!editingUser) return;
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/admin/${editingUser._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
-      });
+      const data = await userAPI.updateAdminUser(editingUser._id, editForm);
 
-      const data = await response.json();
-      
       if (data.success) {
-        toast.success('User subscription updated successfully!');
+        toast.success(data.message || 'User subscription updated successfully!');
         setEditingUser(null);
-        fetchUsers(); // Refresh the list
+        fetchUsers();
       } else {
         toast.error(data.message || 'Failed to update user');
       }
     } catch (error) {
-      toast.error('Failed to update user');
+      toast.error(parseApiError(error));
     }
   };
 

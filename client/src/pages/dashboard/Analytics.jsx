@@ -42,10 +42,16 @@ const Analytics = () => {
         shopAPI.getMyShop(),
         productAPI.getMyProducts(),
       ]);
-      setShopData(shopData);
-      setProducts(productsData);
+      console.log('📊 Analytics - Shop data:', shopData);
+      console.log('📊 Analytics - Products data:', productsData);
+      setShopData(shopData || {});
+      setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error('❌ Error fetching analytics:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      // Set empty data instead of null to prevent error screen from showing
+      setShopData({});
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -72,14 +78,16 @@ const Analytics = () => {
     );
   }
 
+
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl">
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-            <p className="text-gray-600 mt-1">Track your shop&apos;s performance and insights</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Track your shop&apos;s performance and insights</p>
           </div>
           
           {/* Time Range Selector */}

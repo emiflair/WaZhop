@@ -5,8 +5,8 @@ import DashboardLayout from '../components/DashboardLayout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { FiCheck, FiRefreshCw, FiCreditCard, FiAlertCircle } from 'react-icons/fi';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { subscriptionAPI } from '../utils/api';
+import { parseApiError } from '../utils/errorHandler';
 
 const SubscriptionManagement = () => {
   const { user, token, updateUser } = useAuth();
@@ -19,14 +19,8 @@ const SubscriptionManagement = () => {
   const fetchSubscription = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/subscription/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const data = await subscriptionAPI.getStatus();
 
-      const data = await response.json();
-      
       if (data.success) {
         setSubscription(data.data);
       } else {
@@ -34,7 +28,7 @@ const SubscriptionManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
-      toast.error('Failed to load subscription status');
+      toast.error(parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -51,16 +45,8 @@ const SubscriptionManagement = () => {
   const handleRenew = async () => {
     try {
       setProcessing(true);
-      const response = await fetch(`${API_URL}/subscription/renew`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const data = await subscriptionAPI.renew();
 
-      const data = await response.json();
-      
       if (data.success) {
         toast.success(data.message);
         setSubscription(data.data);
@@ -71,7 +57,7 @@ const SubscriptionManagement = () => {
       }
     } catch (error) {
       console.error('Error renewing subscription:', error);
-      toast.error('Failed to renew subscription');
+      toast.error(parseApiError(error));
     } finally {
       setProcessing(false);
     }
@@ -81,17 +67,8 @@ const SubscriptionManagement = () => {
   const handleToggleAutoRenew = async () => {
     try {
       setProcessing(true);
-      const response = await fetch(`${API_URL}/subscription/auto-renew`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ autoRenew: !subscription.autoRenew })
-      });
+      const data = await subscriptionAPI.toggleAutoRenew(!subscription.autoRenew);
 
-      const data = await response.json();
-      
       if (data.success) {
         toast.success(data.message);
         setSubscription({ ...subscription, autoRenew: data.data.autoRenew });
@@ -100,7 +77,7 @@ const SubscriptionManagement = () => {
       }
     } catch (error) {
       console.error('Error toggling auto-renewal:', error);
-      toast.error('Failed to update auto-renewal');
+      toast.error(parseApiError(error));
     } finally {
       setProcessing(false);
     }
@@ -114,16 +91,8 @@ const SubscriptionManagement = () => {
 
     try {
       setProcessing(true);
-      const response = await fetch(`${API_URL}/subscription/cancel`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const data = await subscriptionAPI.cancel();
 
-      const data = await response.json();
-      
       if (data.success) {
         toast.success(data.message);
         setSubscription(data.data);
@@ -132,7 +101,7 @@ const SubscriptionManagement = () => {
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      toast.error('Failed to cancel subscription');
+      toast.error(parseApiError(error));
     } finally {
       setProcessing(false);
     }

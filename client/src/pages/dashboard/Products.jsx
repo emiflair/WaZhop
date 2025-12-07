@@ -37,7 +37,7 @@ const Products = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [previewProduct, setPreviewProduct] = useState(null);
   const [boostModal, setBoostModal] = useState({ open: false, product: null });
-  const [boostForm, setBoostForm] = useState({ hours: 5, state: '', area: '', country: getDefaultCountry() });
+  const [boostForm, setBoostForm] = useState({ hours: 5, state: '', area: '', country: '' });
   const [boostConfirmModal, setBoostConfirmModal] = useState({ open: false, product: null });
   const [quickAddMode, setQuickAddMode] = useState(false);
   const [bulkUploadMode, setBulkUploadMode] = useState(false);
@@ -71,7 +71,7 @@ const Products = () => {
     tags: '',
     inStock: true,
     sku: '',
-    locationCountry: getDefaultCountry(),
+    locationCountry: '',
     locationState: '',
     locationArea: ''
   });

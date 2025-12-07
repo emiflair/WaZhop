@@ -68,13 +68,9 @@ const ReferralProgram = () => {
         };
       }
       
-      // Validate critical fields
-      if (!data.referralCode) {
-        console.error('❌ Missing referral code in response:', data);
-        toast.error('Invalid referral data - missing code');
-        setReferralData(null);
-        setLoading(false);
-        return;
+      // Initialize referredUsers if missing
+      if (!data.referredUsers) {
+        data.referredUsers = [];
       }
       
       console.log('✅ Setting referral data:', data);
@@ -85,14 +81,33 @@ const ReferralProgram = () => {
       console.error('Error name:', err.name);
       console.error('Error message:', err.message);
       console.error('Error stack:', err.stack);
+      console.error('Error response:', err.response);
       console.error('Error details:', {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
-        config: err.config
+        statusText: err.response?.statusText,
+        config: err.config?.url
       });
-      toast.error(err.response?.data?.message || err.message || 'Failed to load referral data');
-      setReferralData(null);
+      
+      // Show user-friendly error
+      const errorMsg = err.response?.data?.message || err.message || 'Network error';
+      toast.error(`Failed to load: ${errorMsg}`);
+      
+      // Set default data instead of null to prevent error screen
+      setReferralData({
+        referralCode: 'ERROR',
+        referralLink: `Error: ${errorMsg}`,
+        stats: {
+          totalReferrals: 0,
+          freeReferred: 0,
+          proReferred: 0,
+          premiumReferred: 0,
+          rewardsEarned: 0,
+          rewardsUsed: 0
+        },
+        referredUsers: []
+      });
       setLoading(false);
     }
   };  const copyReferralLink = () => {
@@ -133,14 +148,24 @@ const ReferralProgram = () => {
   if (!referralData) {
     return (
       <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">Failed to load referral data. Please check the browser console for details.</p>
-          <button 
-            onClick={fetchReferralStats}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
-          >
-            Retry
-          </button>
+        <div className="max-w-2xl mx-auto mt-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+            <div className="text-red-500 dark:text-red-400 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Oops! Something went wrong</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
+            </p>
+            <button
+              onClick={fetchReferralStats}
+              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </DashboardLayout>
     );

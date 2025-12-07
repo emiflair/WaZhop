@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiDownload, FiChevronDown, FiChevronUp, FiSmartphone } from 'react-icons/fi';
-import logoBlack from '/wazhoplogo/logoblack.PNG.png';
-import logoWhite from '/wazhoplogo/Logowhite.PNG.png';
 import { FaApple, FaAndroid, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { Capacitor } from '@capacitor/core';
 
 const InstallPWA = ({ onClose }) => {
+  // Capacitor-native shells already ship as an app, so skip the PWA prompt entirely
+  if (Capacitor?.isNativePlatform?.() && Capacitor.isNativePlatform()) {
+    return null;
+  }
+
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
@@ -131,10 +135,10 @@ const InstallPWA = ({ onClose }) => {
         />
         
         <div className="flex items-center gap-3 relative z-10">
-          {/* Brand lockup: icon + aZhop (chip to match navbar look on gradient) */}
-          <div className="flex items-center space-x-2 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg px-2 py-1 shadow-sm">
-            <img src={logoBlack} alt="WaZhop logo" className="h-20 w-auto object-contain dark:hidden" decoding="async" loading="eager" />
-            <img src={logoWhite} alt="WaZhop logo" className="h-20 w-auto object-contain hidden dark:block" decoding="async" loading="eager" />
+          {/* Minimal brand chip to avoid web-style logos */}
+          <div className="flex items-center gap-2 flex-shrink-0 bg-white/95 dark:bg-gray-800 rounded-lg px-3 py-2 shadow-sm">
+            <FiSmartphone className="text-blue-600 dark:text-blue-300" size={24} />
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">WaZhop</span>
           </div>
           
           {/* Content */}
@@ -183,13 +187,14 @@ const InstallPWA = ({ onClose }) => {
           {/* Sheet */}
           <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl border-t border-gray-200 dark:border-gray-800 p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
             <div className="flex items-start gap-3">
-              <img src={logoBlack} alt="WaZhop logo" className="h-20 w-auto object-contain dark:hidden" />
-              <img src={logoWhite} alt="WaZhop logo" className="h-20 w-auto object-contain hidden dark:block" />
+              <div className="h-20 w-20 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <FiSmartphone className="text-blue-600 dark:text-blue-300" size={28} />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="flex items-center space-x-0">
-                      <span className="-ml-0.5 text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">WaZhop</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">WaZhop</span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Free • Shopping</p>
                   </div>

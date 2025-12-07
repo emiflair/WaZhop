@@ -500,7 +500,7 @@ const Storefront = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 safe-bottom" style={fontFamily ? { fontFamily } : undefined}>
       {/* Header/Banner - Mobile Optimized */}
       <div
-        className="relative h-40 sm:h-48 md:h-64 pt-safe"
+        className="relative h-56 sm:h-64 md:h-80 lg:h-96 pt-safe"
         style={{
           background: shop.banner?.url
             ? `url(${shop.banner.url}) center/cover`
@@ -510,8 +510,8 @@ const Storefront = () => {
         {/* Back Button - Top Left */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute left-3 sm:left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all touch-target"
-          style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+          className="fixed left-3 sm:left-4 z-30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-2 sm:p-3 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all touch-target"
+          style={{ top: 'calc(3rem + env(safe-area-inset-top))' }}
           aria-label="Go back"
         >
           <FiArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
@@ -521,7 +521,7 @@ const Storefront = () => {
         {shop.showWatermark && (
           <div 
             className="absolute right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm dark:text-gray-200 shadow-md"
-            style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+            style={{ top: 'calc(3rem + env(safe-area-inset-top))' }}
           >
             Powered by <span className="font-semibold text-primary-600 dark:text-primary-400">WaZhop</span>
           </div>
@@ -531,7 +531,7 @@ const Storefront = () => {
         <button
           onClick={() => setIsCartOpen(true)}
           className="fixed right-3 sm:right-4 z-30 bg-white dark:bg-gray-800 shadow-lg rounded-full touch-target hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-all"
-          style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}
+          style={{ top: 'calc(6rem + env(safe-area-inset-top))' }}
           aria-label="View cart"
         >
           <FiShoppingCart size={22} className="sm:w-6 sm:h-6 dark:text-gray-200" />

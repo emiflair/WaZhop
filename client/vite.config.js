@@ -34,6 +34,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Ensure base path is set correctly for Capacitor
+  base: './',
   build: {
     // Optimize chunk splitting for better caching and parallel loading
     rollupOptions: {

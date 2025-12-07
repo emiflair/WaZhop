@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { FiTag, FiPlus, FiTrash2, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/AdminLayout';
+import { couponAPI } from '../../utils/api';
+import { parseApiError } from '../../utils/errorHandler';
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -24,22 +26,15 @@ export default function AdminCoupons() {
 
   const fetchCoupons = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCoupons(data.coupons || []);
+      const data = await couponAPI.getAll();
+      if (data?.coupons) {
+        setCoupons(data.coupons);
       } else {
-        toast.error('Failed to load coupons');
+        toast.error(data?.message || 'Failed to load coupons');
       }
     } catch (error) {
       console.error('Fetch coupons error:', error);
-      toast.error('Error loading coupons');
+      toast.error(parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -47,15 +42,8 @@ export default function AdminCoupons() {
 
   const fetchCouponStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      const data = await couponAPI.getStats();
+      if (data?.stats) {
         setCouponStats(data.stats);
       }
     } catch (error) {
@@ -73,27 +61,17 @@ export default function AdminCoupons() {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          code: newCoupon.code.trim().toUpperCase(),
-          discountType: newCoupon.discountType,
-          discountValue: parseFloat(newCoupon.discountValue),
-          validUntil: newCoupon.expiryDate || null,
-          maxUses: newCoupon.maxUses ? parseInt(newCoupon.maxUses) : null,
-          applicablePlans: newCoupon.applicablePlans
-        })
+      const data = await couponAPI.create({
+        code: newCoupon.code.trim().toUpperCase(),
+        discountType: newCoupon.discountType,
+        discountValue: parseFloat(newCoupon.discountValue),
+        validUntil: newCoupon.expiryDate || null,
+        maxUses: newCoupon.maxUses ? parseInt(newCoupon.maxUses) : null,
+        applicablePlans: newCoupon.applicablePlans
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Coupon created successfully!');
+      if (data?.coupon) {
+        toast.success(data.message || 'Coupon created successfully!');
         setShowCreateModal(false);
         setNewCoupon({
           code: '',
@@ -107,38 +85,30 @@ export default function AdminCoupons() {
         fetchCoupons();
         fetchCouponStats();
       } else {
-        toast.error(data.message || 'Failed to create coupon');
+        toast.error(data?.message || 'Failed to create coupon');
       }
     } catch (error) {
       console.error('Create coupon error:', error);
-      toast.error('Error creating coupon');
+      toast.error(parseApiError(error));
     }
   };
 
   const handleToggleCoupon = async (id, currentStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/${id}/toggle`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ isActive: !currentStatus })
-      });
+      const data = await couponAPI.toggle(id, !currentStatus);
 
-      if (response.ok) {
+      if (data?.coupon) {
         setCoupons(coupons.map(c => 
           c.id === id ? { ...c, isActive: !currentStatus } : c
         ));
-        toast.success(`Coupon ${!currentStatus ? 'activated' : 'deactivated'}`);
+        toast.success(data.message || `Coupon ${!currentStatus ? 'activated' : 'deactivated'}`);
         fetchCouponStats();
       } else {
-        toast.error('Failed to toggle coupon');
+        toast.error(data?.message || 'Failed to toggle coupon');
       }
     } catch (error) {
       console.error('Toggle coupon error:', error);
-      toast.error('Error toggling coupon');
+      toast.error(parseApiError(error));
     }
   };
 
@@ -146,24 +116,19 @@ export default function AdminCoupons() {
     if (!confirm('Are you sure you want to delete this coupon?')) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const data = await couponAPI.delete(id);
 
-      if (response.ok) {
-        setCoupons(coupons.filter(c => c.id !== id));
-        toast.success('Coupon deleted');
-        fetchCouponStats();
-      } else {
-        toast.error('Failed to delete coupon');
+      if (data?.success === false) {
+        toast.error(data.message || 'Failed to delete coupon');
+        return;
       }
+
+        setCoupons(coupons.filter(c => c.id !== id));
+        toast.success(data?.message || 'Coupon deleted');
+        fetchCouponStats();
     } catch (error) {
       console.error('Delete coupon error:', error);
-      toast.error('Error deleting coupon');
+      toast.error(parseApiError(error));
     }
   };
 

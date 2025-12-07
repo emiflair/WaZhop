@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { FiShoppingBag, FiZap, FiCheck, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { FaPalette, FaWhatsapp, FaDollarSign, FaUsers } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
@@ -427,7 +426,6 @@ const Home = () => {
       </section>
 
       <MobileBottomNav />
-      <Footer />
     </div>
   );
 };

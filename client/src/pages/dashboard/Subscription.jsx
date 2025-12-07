@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import { userAPI, productAPI, shopAPI } from '../../utils/api';
+import { userAPI, productAPI, shopAPI, subscriptionAPI, couponAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import FlutterwavePayment from '../../components/FlutterwavePayment';
 import { 
@@ -22,6 +22,7 @@ import {
 import { FiX } from 'react-icons/fi';
 import useDetectedCountry from '../../hooks/useDetectedCountry';
 import { DEFAULT_COUNTRY_CODE } from '../../utils/location';
+import { parseApiError } from '../../utils/errorHandler';
 
 const Subscription = () => {
   const { user, updateUser } = useAuth();
@@ -302,24 +303,10 @@ const Subscription = () => {
     try {
       setCouponValidating(true);
       setCouponError('');
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/coupons/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          code: couponCode.trim(), 
-          plan: selectedPlan.id 
-        })
-      });
+      const data = await couponAPI.validate(couponCode.trim(), selectedPlan.id);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Invalid coupon code');
+      if (!data?.valid) {
+        throw new Error(data?.message || 'Invalid coupon code');
       }
 
       setCouponData(data.coupon);
@@ -329,7 +316,7 @@ const Subscription = () => {
       setShowPreviewModal(true);
     } catch (error) {
       console.error('Error validating coupon:', error);
-      setCouponError(error.message);
+      setCouponError(error.message || parseApiError(error));
       setCouponData(null);
     } finally {
       setCouponValidating(false);
@@ -599,18 +586,7 @@ const Subscription = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-                        const response = await fetch(`${API_URL}/subscription/renew`, {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({
-                            isYearly: billingInfo.isYearly
-                          })
-                        });
-                        const data = await response.json();
+                        const data = await subscriptionAPI.renew({ isYearly: billingInfo.isYearly });
                         if (data.success) {
                           toast.success(data.message);
                           fetchData();
@@ -620,7 +596,7 @@ const Subscription = () => {
                         }
                       } catch (error) {
                         console.error('Error renewing:', error);
-                        toast.error('Failed to renew subscription');
+                        toast.error(parseApiError(error));
                       }
                     }}
                     className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center"
@@ -640,16 +616,7 @@ const Subscription = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-                        const response = await fetch(`${API_URL}/subscription/auto-renew`, {
-                          method: 'PATCH',
-                          headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({ autoRenew: !user?.autoRenew })
-                        });
-                        const data = await response.json();
+                        const data = await subscriptionAPI.toggleAutoRenew(!user?.autoRenew);
                         if (data.success) {
                           toast.success(data.message);
                           updateUser({ ...user, autoRenew: data.data.autoRenew });
@@ -658,7 +625,7 @@ const Subscription = () => {
                         }
                       } catch (error) {
                         console.error('Error toggling auto-renewal:', error);
-                        toast.error('Failed to update auto-renewal');
+                        toast.error(parseApiError(error));
                       }
                     }}
                     className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${

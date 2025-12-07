@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import { FiCheck } from 'react-icons/fi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -468,7 +467,6 @@ const Pricing = () => {
       )}
 
       <MobileBottomNav />
-      <Footer />
     </div>
   );
 };

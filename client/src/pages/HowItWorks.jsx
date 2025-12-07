@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 
@@ -142,7 +141,6 @@ const HowItWorks = () => {
         </div>
       </div>
       <MobileBottomNav />
-      <Footer />
     </div>
   );
 };

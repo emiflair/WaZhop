@@ -87,7 +87,7 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 3rem)' }}>
             <div className="flex items-center gap-2">
               <FiShoppingCart size={20} className="sm:w-6 sm:h-6" />
               <h2 className="text-lg sm:text-xl font-bold">Shopping Cart</h2>

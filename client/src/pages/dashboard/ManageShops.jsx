@@ -31,8 +31,13 @@ const ManageShops = () => {
   const currentLimit = planLimits[user?.plan] || planLimits.free;
 
   useEffect(() => {
+    console.log('🏪 ManageShops mounted');
     fetchShops();
   }, []);
+
+  useEffect(() => {
+    console.log('🏪 ManageShops render state:', { loading, shopCount: shops.length });
+  }, [loading, shops.length]);
 
   const fetchShops = async () => {
     try {

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { FiUser, FiMapPin, FiCreditCard, FiPackage, FiArrowLeft, FiTag } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { useCart } from '../hooks/useCart';
 import { orderAPI, couponAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -789,7 +788,6 @@ export default function Checkout() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

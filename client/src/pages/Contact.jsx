@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import { FiMail, FiMapPin } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -63,7 +62,6 @@ const Contact = () => {
         </div>
       </div>
       <MobileBottomNav />
-      <Footer />
     </div>
   );
 };

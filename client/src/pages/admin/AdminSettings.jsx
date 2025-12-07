@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FiSave, FiMail, FiGlobe, FiDatabase, FiShield, FiCreditCard } from 'react-icons/fi';
 import AdminLayout from '../../components/AdminLayout';
 import toast from 'react-hot-toast';
+import { adminSettingsAPI } from '../../utils/api';
+import { parseApiError } from '../../utils/errorHandler';
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,7 @@ export default function AdminSettings() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/settings/admin`);
-      const data = await response.json();
+      const data = await adminSettingsAPI.get();
       
       if (data.success) {
         const s = data.data;
@@ -90,9 +91,11 @@ export default function AdminSettings() {
           enableReferrals: s.features.enableReferrals,
           maintenanceMode: s.features.maintenanceMode
         });
+      } else {
+        toast.error(data.message || 'Failed to load settings');
       }
     } catch (error) {
-      toast.error('Failed to load settings');
+      toast.error(parseApiError(error));
     } finally {
       setLoading(false);
     }
@@ -108,22 +111,16 @@ export default function AdminSettings() {
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/settings/admin`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      });
+      const data = await adminSettingsAPI.update(settings);
 
-      const data = await response.json();
-      
       if (data.success) {
-        toast.success('Settings saved successfully!');
-        fetchSettings(); // Refresh to get masked keys
+        toast.success(data.message || 'Settings saved successfully!');
+        fetchSettings();
       } else {
         toast.error(data.message || 'Failed to save settings');
       }
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error(parseApiError(error));
     } finally {
       setSaving(false);
     }

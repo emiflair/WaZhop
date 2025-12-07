@@ -1,53 +1,26 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { FiSearch, FiFilter, FiX, FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid } from 'react-icons/fi'
+import { FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid, FiMapPin, FiChevronDown, FiSearch, FiCamera, FiMenu } from 'react-icons/fi'
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
 import { productAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { useDebounce } from '../hooks/useDebounce'
 import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
 import MobileBottomNav from '../components/MobileBottomNav'
 import SEO from '../components/SEO'
 import toast from 'react-hot-toast'
 // Product details now open on a dedicated page, not a modal
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import useDetectedCountry from '../hooks/useDetectedCountry'
 import { COUNTRY_REGION_MAP, getCountryMeta } from '../utils/location'
+import MarketplaceSearchScreen from '../components/mobile/MarketplaceSearchScreen'
 
-// Marketplace hero slider configuration. Replace the background values or provide an `image`
-// property when marketing banners are ready. Each slide supports either a background gradient
-// or a hosted image URL.
-const HERO_SLIDES = [
-  {
-    id: 'marketplace-banner-1',
-    image: '/wazhopbanner/Banner1.PNG'
-  },
-  {
-    id: 'marketplace-banner-2',
-    image: '/wazhopbanner/Banner2.PNG'
-  },
-  {
-    id: 'marketplace-banner-3',
-    image: '/wazhopbanner/Banner3.PNG'
-  },
-  {
-    id: 'marketplace-banner-4',
-    image: '/wazhopbanner/Banner4.PNG'
-  },
-  {
-    id: 'marketplace-banner-5',
-    image: '/wazhopbanner/Banner5.PNG'
-  },
-  {
-    id: 'marketplace-banner-6',
-    image: '/wazhopbanner/Banner6.PNG'
-  }
-]
+const CATEGORY_OPTIONS = Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map((key) => ({
+  key,
+  label: getCategoryLabel(key)
+}))
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
-  const { isAuthenticated } = useAuth()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -57,12 +30,12 @@ export default function Marketplace() {
   const [category, setCategory] = useState('all')
   // Empty sort means backend default (featured: boosted first)
   const [sortBy, setSortBy] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [ngState, setNgState] = useState('')
   const [area, setArea] = useState('')
   const [showDiscoveryPanel, setShowDiscoveryPanel] = useState(false)
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [showStickyHeader, setShowStickyHeader] = useState(false)
+  const scrollTimeout = useRef(null)
   const [trendingCategories] = useState([
     { name: 'All Categories', category: 'all', icon: FiGrid },
     { name: 'Fashion', category: 'fashion', icon: FaTshirt },
@@ -83,6 +56,7 @@ export default function Marketplace() {
     return saved ? JSON.parse(saved) : []
   })
   const navigate = useNavigate()
+  const cameraInputRef = useRef(null)
 
   const {
     countryCode: detectedCountryCode,
@@ -131,6 +105,23 @@ export default function Marketplace() {
   const selectedCountryName = selectedCountryMeta.name || ''
   const defaultRegion = selectedCountryMeta.defaultRegion || ''
 
+  const locationParts = useMemo(() => {
+    const parts = []
+    const trimmedArea = area?.trim()
+    const trimmedState = ngState?.trim()
+    const trimmedCountry = (selectedCountryName || detectedCountryName || '').trim()
+
+    if (trimmedArea) parts.push(trimmedArea)
+    if (trimmedState && trimmedState !== trimmedArea) parts.push(trimmedState)
+    if (trimmedCountry && !parts.includes(trimmedCountry)) parts.push(trimmedCountry)
+
+    return parts
+  }, [area, ngState, selectedCountryName, detectedCountryName])
+
+  const deliveryAddress = locationParts.join(', ')
+  const hasDeliveryAddress = deliveryAddress.length > 0
+  const deliverySubtitle = hasDeliveryAddress ? 'Tap to update your delivery location' : 'Tap to set your delivery location'
+
   const fetchProducts = useCallback(async (reset = false, overrides = {}) => {
     try {
       setLoading(true)
@@ -167,6 +158,7 @@ export default function Marketplace() {
         ...(effectiveMinPrice && { minPrice: effectiveMinPrice }),
         ...(effectiveMaxPrice && { maxPrice: effectiveMaxPrice })
       }
+      console.log('🔍 Fetching products with params:', params)
       const response = await productAPI.getMarketplaceProducts(params)
       console.log('📦 Marketplace API response:', response)
       // Handle response format: response.data or direct array
@@ -180,6 +172,13 @@ export default function Marketplace() {
       // Infer hasMore from page size
       setHasMore(items.length === (params.limit || 24))
     } catch (err) {
+      console.error('❌ Marketplace fetch error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response,
+        request: err.request,
+        config: err.config
+      })
       toast.error(err.userMessage || 'Failed to load products')
     } finally {
       setLoading(false)
@@ -327,6 +326,28 @@ export default function Marketplace() {
     setShowDiscoveryPanel(false)
   }
 
+  const handleCameraClick = (event) => {
+    event.stopPropagation()
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click()
+    }
+  }
+
+  const handleCameraChange = (event) => {
+    const [file] = event.target.files || []
+    if (!file) return
+
+    toast.success('Photo captured — processing image search...')
+    // TODO: Implement image search API call
+    // For now, just show a message
+    setTimeout(() => {
+      toast('Image search feature coming soon!', { icon: '📷' })
+    }, 1000)
+
+    // Reset input
+    event.target.value = ''
+  }
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     const handleOpenFilters = () => setShowDiscoveryPanel(true)
@@ -363,12 +384,37 @@ export default function Marketplace() {
     }
   }, [showDiscoveryPanel])
 
+  // Scroll listener to show sticky header when scrolling stops
   useEffect(() => {
-    if (HERO_SLIDES.length <= 1) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)
-    }, 7000)
-    return () => clearInterval(timer)
+    if (typeof window === 'undefined') return
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      
+      // Clear existing timeout
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current)
+      }
+
+      // Hide immediately when scrolling
+      setShowStickyHeader(false)
+
+      // Show after scrolling stops for 150ms and scrolled past the original sections
+      if (scrollY > 200) {
+        scrollTimeout.current = setTimeout(() => {
+          setShowStickyHeader(true)
+        }, 150)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current)
+      }
+    }
   }, [])
 
   return (
@@ -377,85 +423,195 @@ export default function Marketplace() {
         title="Marketplace - Discover Products from Top Sellers"
         description="Browse thousands of products from verified sellers. Best prices, trusted reviews, instant WhatsApp orders."
       />
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Hidden camera input */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleCameraChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
         <Navbar />
 
-        {/* Hero Slider Section */}
-        <section className="relative text-white overflow-hidden bg-gradient-to-r from-primary-500 to-orange-600 dark:from-primary-700 dark:to-orange-800">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0VjI2aDhWMThoLTh2LThoOHYtOGgtOHY4SDEwdjhIOHY4aDJ2OEg4djhoMnY4aC04djhoOHY4aDh2LThoOHY4aDh2LThoOHYtOGgtOHYtOGg4di04ek0zNCAxOHY4aC04di04aDh6bTAgMTZ2OGgtOHYtOGg4eiIvPjwvZz48L2c+PC9zdmc+')] opacity-10 pointer-events-none"></div>
-          <div className="relative z-10 pt-4 md:pt-6 pb-0 px-0">
-            <div className="max-w-6xl mx-auto flex flex-col gap-1 md:gap-2 px-4">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white tracking-tight text-center select-none">
-                Discover Amazing Products
-              </h2>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight text-center">
-                Shop from <span className="text-white/80">Verified</span> Sellers
-              </h1>
-            </div>
+        {/* Sticky Header that appears when scrolling stops */}
+        <div className={`md:hidden fixed left-0 right-0 z-40 transition-all duration-300 ${showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`} style={{ top: 'calc(env(safe-area-inset-top) + 66px)' }}>
+          {/* Deliver To Section */}
+          <div className="bg-gradient-to-b from-[#37475A] to-[#232F3E] border-b border-gray-600/50 px-3 py-2">
+            <button
+              type="button"
+              onClick={openDiscoveryPanel}
+              className="w-full flex items-center justify-between rounded-lg bg-gray-600/30 px-3 py-2 text-left transition hover:bg-gray-600/40"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-500/40 text-white">
+                  <FiMapPin className="h-3 w-3" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-medium uppercase tracking-wider text-gray-300">Deliver to</span>
+                  <span className="text-xs font-bold text-white truncate max-w-[150px]">
+                    {hasDeliveryAddress ? deliveryAddress : 'Set address'}
+                  </span>
+                </div>
+              </div>
+              <FiChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
+          </div>
 
-            {/* Full-width banner - mobile simple, desktop full-bleed */}
-            <div className="relative mt-3 sm:mt-4 md:mt-6 h-56 sm:h-64 md:h-[500px] lg:h-[600px] xl:h-[650px]">
-              {/* Mobile: Simple centered banner */}
-              <div className="md:hidden relative h-full w-full rounded-none overflow-hidden bg-transparent">
-                {HERO_SLIDES.map((slide, index) => {
-                  const isActive = index === currentSlide
+          {/* Categories */}
+          <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 py-2">
+            <div className="overflow-x-auto scrollbar-hide px-3">
+              <div className="flex gap-3 pb-1">
+                {trendingCategories.map((item, i) => {
+                  const Icon = item.icon
                   return (
-                    <div
-                      key={slide.id}
-                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                      style={{
-                        backgroundImage: slide.image ? `url(${slide.image})` : slide.background || '#111827',
-                        backgroundSize: 'cover',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center'
-                      }}
+                    <button
+                      key={i}
+                      onClick={() => selectCategory(item.category)}
+                      className="flex flex-col items-center gap-1 flex-shrink-0"
                     >
-                      <div className="absolute inset-0 bg-black/5" />
-                    </div>
+                      <div
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${
+                          category === item.category
+                            ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-md'
+                            : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-5 h-5 transition-colors duration-300 ${
+                            category === item.category
+                              ? 'text-white'
+                              : 'text-primary-600 dark:text-primary-400'
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`text-[9px] font-medium text-center leading-tight max-w-[50px] ${
+                          category === item.category
+                            ? 'text-primary-600 dark:text-primary-400'
+                            : 'text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                    </button>
                   )
                 })}
               </div>
-
-              {/* Desktop: Full-width banner covering both sides */}
-              <div className="hidden md:block relative h-full w-full overflow-hidden">
-                {HERO_SLIDES.map((slide, index) => {
-                  const isActive = index === currentSlide
-                  return (
-                    <div
-                      key={slide.id}
-                      className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                      style={{
-                        backgroundImage: slide.image ? `url(${slide.image})` : slide.background || '#111827',
-                        backgroundSize: 'cover',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-black/5" />
-                    </div>
-                  )
-                })}
-
-                {/* Autoplay handles slide changes; no manual controls to keep layout clean */}
-              </div>
-
-              {!isAuthenticated && (
-                <Link
-                  to="/register?role=seller"
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-full bg-white/95 text-primary-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                  Start Selling
-                </Link>
-              )}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Trending Categories Section */}
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-          <div className="app-container py-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300">Trending Categories</h3>
+        {/* Fixed Search Bar + Categories as one unit */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50 -mt-safe pt-safe">
+          {/* Background that extends behind status bar */}
+          <div className="absolute inset-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"></div>
+          
+          {/* Content stays below status bar */}
+          <div className="relative">
+            {/* Search bar */}
+            <div className="px-3 flex items-center gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 65px)', paddingBottom: '12px' }}>
+              <button
+                onClick={openDiscoveryPanel}
+                className="flex-1 flex items-center gap-3 h-11 rounded-md bg-gray-100 dark:bg-gray-800 px-3.5 shadow-sm active:bg-gray-200 dark:active:bg-gray-700 transition"
+              >
+                <FiSearch size={20} className="text-gray-600 dark:text-gray-400" />
+                <span className="flex-1 text-left text-[15px] text-gray-600 dark:text-gray-400">
+                  Search WaZhop
+                </span>
+                <button
+                  onClick={handleCameraClick}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition"
+                  aria-label="Search by image"
+                  type="button"
+                >
+                  <FiCamera size={20} className="text-gray-600 dark:text-gray-400" />
+                </button>
+              </button>
+              <button
+                onClick={() => {
+                  const event = new CustomEvent('toggleMobileMenu');
+                  window.dispatchEvent(event);
+                }}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition flex-shrink-0"
+                aria-label="Open menu"
+              >
+                <FiMenu size={24} />
+              </button>
+            </div>
+
+            {/* Categories inside fixed header */}
+            <div className="px-3 pb-3">
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-4">
+                  {trendingCategories.map((item, i) => {
+                    const Icon = item.icon
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => selectCategory(item.category)}
+                        className="flex flex-col items-center gap-2 flex-shrink-0"
+                      >
+                        <div
+                          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                            category === item.category
+                              ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-lg shadow-primary-500/30 scale-105'
+                              : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10 dark:from-primary-500/20 dark:to-orange-500/20'
+                          }`}
+                        >
+                          <Icon
+                            className={`w-6 h-6 transition-colors duration-300 ${
+                              category === item.category
+                                ? 'text-white'
+                                : 'text-primary-600 dark:text-primary-400'
+                            }`}
+                          />
+                        </div>
+                        <span
+                          className={`text-[10px] font-medium text-center leading-tight max-w-[60px] transition-colors duration-300 ${
+                            category === item.category
+                              ? 'text-primary-600 dark:text-primary-400'
+                              : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Deliver To + Categories Section */}
+        <div className="hidden md:block bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+          <div className="app-container py-3">
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={openDiscoveryPanel}
+                className="w-full flex items-center justify-between rounded-lg bg-gray-600/30 md:bg-gray-100 px-3 py-2.5 text-left transition hover:bg-gray-600/40 md:hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:md:bg-gray-800 dark:md:hover:bg-gray-700"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-500/40 md:bg-gray-200 text-white md:text-gray-900 dark:md:bg-gray-700 dark:md:text-gray-100">
+                    <FiMapPin className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-gray-300 md:text-gray-500 dark:md:text-gray-400">Deliver to</span>
+                    <span className="text-sm font-bold text-white md:text-gray-900 dark:md:text-white">
+                      {hasDeliveryAddress ? deliveryAddress : 'Set delivery address'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="hidden text-xs text-gray-500 dark:text-gray-400 sm:inline">{deliverySubtitle}</span>
+                  <FiChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                </div>
+              </button>
             </div>
 
             {/* Desktop: Grid layout with 2 rows */}
@@ -540,10 +696,13 @@ export default function Marketplace() {
           </div>
         </div>
 
+        {/* Spacer for fixed header with categories */}
+        <div className="md:hidden" style={{ height: 'calc(env(safe-area-inset-top) + 120px)' }}></div>
+
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
         {/* Products Grid */}
-        <div className="flex-1 py-5 pb-24 md:pb-8">
+        <div className="flex-1 pt-0 sm:pt-4 pb-24 md:pb-8">
           <div className="container-custom">
             {loading && page === 1 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
@@ -587,176 +746,35 @@ export default function Marketplace() {
           </div>
         </div>
 
-        <Footer />
+        <MobileBottomNav />
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-
       {showDiscoveryPanel && (
-        <div className="fixed inset-0 z-[1050] flex items-center justify-center px-4 sm:px-6 py-6">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowDiscoveryPanel(false)}
-          />
-          <div className="relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Marketplace Search</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Filter by category, location or keywords in one place.</p>
-              </div>
-              <button
-                onClick={() => setShowDiscoveryPanel(false)}
-                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                aria-label="Close filters"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="px-4 sm:px-6 py-5 space-y-5 max-h-[80vh] overflow-y-auto">
-              <form onSubmit={handleSearch} className="space-y-4">
-                <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search products, categories..."
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                    style={{ fontSize: '16px' }}
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                  />
-                  {searchInput && searchInput !== debouncedSearch && (
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide animate-pulse">
-                      updating…
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Category</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                    >
-                      <option value="all">All Categories</option>
-                      {Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map(cat => (
-                        <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Country</label>
-                    <select
-                      value={countryCode}
-                      onChange={(e) => handleCountryChange(e.target.value)}
-                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                    >
-                      <option value="">All Countries</option>
-                      {supportedCountries.map(({ code, name }) => (
-                        <option key={code} value={code}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">{`${regionLabel}${selectedCountryName ? ` (${selectedCountryName})` : ''}`}</label>
-                    {regionOptions.length > 0 ? (
-                      <select
-                        value={ngState}
-                        onChange={(e) => handleRegionChange(e.target.value)}
-                        className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                      >
-                        <option value="">All Locations</option>
-                        {regionOptions.map((region) => (
-                          <option key={region} value={region}>{region}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={ngState}
-                        onChange={(e) => handleRegionChange(e.target.value)}
-                        placeholder={`State or region${selectedCountryName ? ` in ${selectedCountryName}` : ''}`}
-                        className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                        style={{ fontSize: '16px' }}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Sort</label>
-                  <select
-                    id="marketplace-sort-select"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                  >
-                    <option value="">Featured (Boosted first)</option>
-                    <option value="-createdAt">Newest First</option>
-                    <option value="price">Price: Low to High</option>
-                    <option value="-price">Price: High to Low</option>
-                    <option value="-views">Most Popular</option>
-                    <option value="-clicks">Trending</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div className="sm:col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Area</label>
-                    <input
-                      type="text"
-                      value={area}
-                      onChange={(e) => setArea(e.target.value)}
-                        placeholder={selectedCountryName ? `Area in ${selectedCountryName}` : 'City or area'}
-                      className="input text-sm sm:text-base bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                      style={{ fontSize: '16px' }}
-                    />
-                  </div>
-                  <div className="sm:col-span-1 flex items-end">
-                    <button
-                      type="submit"
-                      className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition"
-                    >
-                      Apply Filters
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
-                  <button
-                    type="button"
-                    onClick={handleClearAll}
-                    className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300"
-                  >
-                    Clear all
-                  </button>
-                  <span className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500">Powered by WaZhop Marketplace</span>
-                </div>
-              </form>
-
-              {recentSearches.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Recent searches</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {recentSearches.map((term) => (
-                      <button
-                        key={term}
-                        type="button"
-                        onClick={() => handleRecentSearchClick(term)}
-                        className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm text-gray-700 dark:text-gray-200 hover:bg-primary-600 hover:text-white dark:hover:bg-primary-500 transition"
-                      >
-                        {term}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <MarketplaceSearchScreen
+          onClose={() => setShowDiscoveryPanel(false)}
+          onSubmit={handleSearch}
+          onClearAll={handleClearAll}
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          debouncedSearch={debouncedSearch}
+          category={category}
+          onCategoryChange={setCategory}
+          categories={CATEGORY_OPTIONS}
+          countryCode={countryCode}
+          onCountryChange={handleCountryChange}
+          supportedCountries={supportedCountries}
+          regionLabel={regionLabel}
+          selectedCountryName={selectedCountryName}
+          regionOptions={regionOptions}
+          ngState={ngState}
+          onRegionChange={handleRegionChange}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          area={area}
+          onAreaChange={setArea}
+          recentSearches={recentSearches}
+          onRecentSearchClick={handleRecentSearchClick}
+        />
       )}
 
       {/* Product detail opens on a separate page now */}

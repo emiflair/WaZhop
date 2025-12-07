@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import AuthLayout from '../components/AuthLayout';
 import MobileBottomNav from '../components/MobileBottomNav';
 import GoogleLoginButton from '../components/GoogleLoginButton';
+import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,7 +22,21 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: '', password: '', general: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
 
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
   const from = location.state?.from?.pathname || '/';
+
+  // Handle input touch for iOS - remove readonly and focus
+  const handleInputTouch = (e) => {
+    if (Capacitor.isNativePlatform()) {
+      e.preventDefault();
+      const input = e.currentTarget;
+      input.removeAttribute('readonly');
+      setTimeout(() => {
+        input.focus();
+      }, 50);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -110,15 +126,23 @@ const Login = () => {
               <FaEnvelope />
             </span>
             <input
+              ref={emailRef}
               id="email"
               name="email"
               type="email"
               required
+              readOnly={Capacitor.isNativePlatform()}
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck="false"
               className={`input pl-10 ${touched.email && errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
               onBlur={handleBlur}
+              onTouchStart={handleInputTouch}
             />
             {touched.email && errors.email ? (
               <p className="text-sm text-red-600 mt-1">{errors.email}</p>
@@ -133,14 +157,21 @@ const Login = () => {
               <FaLock />
             </span>
             <input
+              ref={passwordRef}
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
               required
+              readOnly={Capacitor.isNativePlatform()}
+              autoComplete="current-password"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck="false"
               className={`input pl-10 pr-10 ${touched.password && errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
+              onTouchStart={handleInputTouch}
               onBlur={handleBlur}
             />
             <button

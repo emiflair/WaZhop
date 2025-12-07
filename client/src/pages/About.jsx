@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 
 const About = () => {
@@ -48,7 +47,6 @@ const About = () => {
         </div>
       </div>
       <MobileBottomNav />
-      <Footer />
     </div>
   );
 };

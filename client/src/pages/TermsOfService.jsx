@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import MobileBottomNav from '../components/MobileBottomNav';
 
 const TermsOfService = () => {
   return (
@@ -413,7 +413,7 @@ const TermsOfService = () => {
           </div>
         </main>
 
-        <Footer />
+        <MobileBottomNav />
       </div>
     </>
   );
