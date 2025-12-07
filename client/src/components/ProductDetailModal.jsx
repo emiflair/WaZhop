@@ -193,12 +193,13 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-      <div className="product-detail-modal-content bg-white dark:bg-gray-900 dark:text-gray-100 rounded-none sm:rounded-lg max-w-6xl w-full sm:my-8 relative sm:max-h-[90vh] sm:overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="product-detail-modal-content bg-white dark:bg-gray-900 dark:text-gray-100 rounded-none sm:rounded-lg max-w-6xl w-full sm:my-8 relative sm:max-h-[90vh] sm:overflow-y-auto" style={{ marginTop: 'calc(env(safe-area-inset-top) + 3rem)' }}>
         {/* Close button */}
         <button
           onClick={onClose}
-          className="sticky sm:absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="sticky sm:absolute right-2 sm:top-4 sm:right-4 z-10 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
         >
           <FiX size={20} className="sm:w-6 sm:h-6" />
         </button>
@@ -467,7 +468,8 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
                 e.stopPropagation();
                 setShowImageModal(false);
               }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+              className="absolute right-4 text-white hover:text-gray-300 z-10"
+              style={{ top: 'calc(env(safe-area-inset-top) + 3rem)' }}
             >
               <FiX size={32} />
             </button>

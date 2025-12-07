@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { productAPI, shopAPI, reviewAPI } from '../utils/api';
@@ -66,13 +65,16 @@ export default function ProductDetail() {
           setProduct(productData);
           setLoading(false);
           
-          // Load shop if available
+          // Immediately set basic shop data from product (to avoid placeholder delay)
+          if (productData?.shop) {
+            setShop(productData.shop);
+          }
+          
+          // Then fetch complete shop data in background to update with full details
           if (productData?.shop?.slug) {
             shopAPI.getShopBySlug(productData.shop.slug)
               .then(s => setShop(s?.shop || s?.data?.shop || s))
-              .catch(() => setShop(productData.shop));
-          } else if (productData?.shop) {
-            setShop(productData.shop);
+              .catch(() => {}); // Already have basic shop data, so ignore error
           }
           
           
@@ -265,7 +267,7 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
-        <Footer />
+        <MobileBottomNav />
       </div>
     );
   }
@@ -612,7 +614,6 @@ export default function ProductDetail() {
         </div>
 
         <MobileBottomNav />
-        <Footer />
       </div>
 
       {/* Image Lightbox Modal */}
@@ -623,7 +624,8 @@ export default function ProductDetail() {
         >
           <button 
             onClick={() => setShowImageModal(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            className="absolute right-4 text-white hover:text-gray-300 z-10"
+            style={{ top: 'calc(env(safe-area-inset-top) + 3rem)' }}
           >
             <FiX size={32} />
           </button>

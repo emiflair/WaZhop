@@ -60,8 +60,8 @@ const BuyerToSellerUpgrade = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-lg">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">

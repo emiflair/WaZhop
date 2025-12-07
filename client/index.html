@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0" />
     <meta name="description" content="Create your WhatsApp shop in minutes. Customize, share, and sell smarter." />
     <link rel="canonical" href="https://wazhop.ng/" />
     
@@ -44,7 +44,7 @@
     <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#F97316" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="WaZhop" />
   <!-- Use PNG for iOS A2HS (generated prebuild); SVG remains the favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
@@ -106,17 +106,16 @@
     
     <!-- Inline splash styles (no extra network trip) -->
     <style>
-      html, body { height: 100%; }
+      html, body { height: 100%; margin: 0; padding: 0; background: #f9fafb; }
+      html.dark, body.dark { background: #111827; }
       body.splashing { overflow: hidden; }
       :root { --brand: #F97316; }
   /* Keep app hidden while splash is visible */
   body.splashing #root { visibility: hidden; pointer-events: none; }
   #app-splash { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; background: linear-gradient(180deg,#FB923C,#F97316,#EA580C); transition: opacity .35s ease; width: 100vw; height: 100dvh; min-height: 100vh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       #app-splash .splash-inner { display:flex; flex-direction:column; align-items:center; }
-      #app-splash .splash-logo { width: 72px; height: 72px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
-      #app-splash .splash-title { margin-top: 12px; font-family: Inter, ui-sans-serif, system-ui; font-weight: 800; color: #fff; font-size: 24px; letter-spacing: .2px; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
-      #app-splash .splash-spinner { margin-top: 18px; width: 28px; height: 28px; border: 3px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      #app-splash .splash-logo { width: 120px; height: 120px; object-fit: contain; }
+      #app-splash .splash-title { margin-top: 16px; font-family: Inter, ui-sans-serif, system-ui; font-weight: 800; color: #fff; font-size: 28px; letter-spacing: .2px; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
       .dark #app-splash { background: linear-gradient(180deg,#7C2D12,#9A3412,#7C2D12); }
     </style>
     
@@ -155,6 +154,20 @@
     <script>
       // CRITICAL: Safari aggressive cache-busting - runs BEFORE any cached JS loads
       (function() {
+        // Skip all cache-busting for Capacitor apps - they don't have caching issues
+        var isCapacitor = window.location.protocol === 'capacitor:';
+        if (isCapacitor) {
+          console.log('✅ Capacitor: Cache-busting disabled');
+          // Still apply theme
+          try {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+          } catch (e) {
+            document.documentElement.classList.remove('dark');
+          }
+          return;
+        }
+        
         var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
         var BUILD_ID = '__BUILD_TIMESTAMP__'; // Will be replaced during build
         
@@ -224,8 +237,79 @@
   </head>
   <body>
     <script>
-      // Inject splash for marketplace, dashboard, and login/register; storefront is explicitly excluded
       (function() {
+        var isCapacitorShell = window.location.protocol === 'capacitor:' ||
+          (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+
+        if (isCapacitorShell) {
+          console.log('Skipping inline network diagnostics inside Capacitor shell');
+          return;
+        }
+
+        // IMMEDIATE DEBUG - Test multiple endpoints (web only)
+        console.log('🌐 HTML Loaded - Testing Network Access...');
+
+        // Test 1: Public API (should always work)
+        fetch('https://jsonplaceholder.typicode.com/posts/1')
+          .then(function(res) {
+            console.log('✅ Public API works - Status:', res.status);
+            return res.json();
+          })
+          .then(function(data) {
+            console.log('✅ Public API data:', data.title);
+          })
+          .catch(function(err) {
+            console.error('❌ Public API Failed:', err.message);
+          });
+
+        // Test 2: Your backend with XMLHttpRequest (more details)
+        setTimeout(function() {
+          console.log('🔌 Testing WaZhop Backend with XMLHttpRequest...');
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'https://api.wazhop.ng/api/products/marketplace?limit=1', true);
+
+          xhr.onload = function() {
+            console.log('✅ XHR Status:', xhr.status);
+            console.log('✅ XHR Response Headers:', xhr.getAllResponseHeaders());
+            console.log('✅ XHR Response (first 200 chars):', xhr.responseText.substring(0, 200));
+          };
+
+          xhr.onerror = function() {
+            console.error('❌ XHR Error - Network request failed');
+            console.error('Status:', xhr.status);
+            console.error('ReadyState:', xhr.readyState);
+          };
+
+          xhr.ontimeout = function() {
+            console.error('❌ XHR Timeout');
+          };
+
+          xhr.send();
+        }, 1000);
+      })();
+    </script>
+    <script>
+      // HTML splash screen - show only on FIRST page load, not on navigation
+      (function() {
+        // Skip splash on navigation (not first load)
+        if (sessionStorage.getItem('appLoaded')) {
+          console.log('⏭️ Skipping HTML splash - app already loaded');
+          // Ensure splashing class is removed and content is visible
+          document.body.classList.remove('splashing');
+          // Ensure root is visible
+          var root = document.getElementById('root');
+          if (root) {
+            root.style.visibility = 'visible';
+            root.style.pointerEvents = 'auto';
+          }
+          // Failsafe: If any splash element exists, remove it immediately
+          var existingSplash = document.getElementById('app-splash');
+          if (existingSplash) {
+            existingSplash.remove();
+          }
+          return;
+        }
+        
         var path = location.pathname;
         var isMarketplace = path === '/';
         var isLogin = path === '/login' || path === '/register';
@@ -233,30 +317,37 @@
         // Show splash for marketplace (homepage), dashboard, and login/register. Exclude storefronts (/:slug)
         var shouldSplash = isMarketplace || isDashboard || isLogin;
         if (!shouldSplash) return;
+        
+        // Mark app as loaded IMMEDIATELY to prevent re-showing on navigation
+        sessionStorage.setItem('appLoaded', '1');
+        console.log('✅ HTML splash showing for first load');
 
         window.__SPLASH_START = (window.performance && performance.now) ? performance.now() : Date.now();
         document.body.classList.add('splashing');
         var wrap = document.createElement('div');
         wrap.id = 'app-splash';
         wrap.setAttribute('aria-hidden','true');
-        wrap.innerHTML = '<div class="splash-inner">\
-          <img src="/wazhop-icon.svg?v=2" alt="WaZhop logo" class="splash-logo" decoding="async" />\
-          <div class="splash-title">WaZhop</div>\
-          <div class="splash-spinner" role="progressbar" aria-label="Loading" aria-valuetext="Loading"></div>\
-        </div>';
+        wrap.innerHTML = '<div class="splash-inner">\          <img src="/icon-512.png" alt="WaZhop logo" class="splash-logo" decoding="async" />\          <div class="splash-title">WaZhop</div>\        </div>';
         document.currentScript.insertAdjacentElement('afterend', wrap);
         
-        // FAILSAFE: Force remove splash after 3.6 seconds max (above homepage minimum)
-        setTimeout(function() {
+        // FAILSAFE: Force remove splash after 1.5 seconds to ensure content shows quickly
+        var splashTimeout = setTimeout(function() {
+          console.log('⚠️ Failsafe: Removing splash after timeout');
           if (wrap && wrap.parentNode) {
             wrap.style.transition = 'opacity 350ms ease';
             wrap.style.opacity = '0';
             setTimeout(function() {
               try { wrap.remove(); } catch(e) {}
               try { document.body.classList.remove('splashing'); } catch(e) {}
+              console.log('✅ Splash removed by failsafe');
             }, 400);
           }
-        }, 3600);
+        }, 1500);
+        
+        // Allow React to cancel the timeout if it removes splash earlier
+        window.__cancelSplashTimeout = function() {
+          clearTimeout(splashTimeout);
+        };
       })();
     </script>
     <div id="root"></div>

@@ -5,12 +5,35 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host 0.0.0.0 --port 5173",
     "prebuild": "node scripts/generate-icons.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "cap:init": "cap init",
+    "cap:add:ios": "cap add ios",
+    "cap:add:android": "cap add android",
+    "cap:sync": "cap sync",
+    "cap:sync:ios": "cap sync ios",
+    "cap:sync:android": "cap sync android",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android",
+    "cap:run:ios": "cap run ios",
+    "cap:run:android": "cap run android",
+    "cap:run:ios:dev": "concurrently -k -s first -n VITE,IOS \"npm run dev:host\" \"cap run ios --no-build --external --livereload --livereload-url=http://localhost:5173\"",
+    "cap:run:android:dev": "concurrently -k -s first -n VITE,ANDROID \"npm run dev:host\" \"cap run android --no-build --external --livereload --livereload-url=http://10.0.2.2:5173\"",
+    "build:mobile": "npm run build && cap sync"
   },
   "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/keyboard": "^6.0.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@react-oauth/google": "^0.12.2",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
@@ -30,10 +53,13 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.1.2",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^9.0.1",
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -42,6 +68,7 @@
     "sharp": "^0.33.3",
     "tailwindcss": "^3.3.6",
     "terser": "^5.44.1",
+    "typescript": "^5.9.3",
     "vite": "^5.0.8"
   }
 }
