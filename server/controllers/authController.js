@@ -770,9 +770,17 @@ exports.checkGoogleUser = asyncHandler(async (req, res) => {
 
   try {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    
+    // Accept tokens from web, iOS, and Android clients
+    const validAudiences = [
+      process.env.GOOGLE_CLIENT_ID, // Web client
+      process.env.GOOGLE_IOS_CLIENT_ID, // iOS client
+      process.env.GOOGLE_ANDROID_CLIENT_ID, // Android client (when added)
+    ].filter(Boolean); // Remove undefined values
+    
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: validAudiences
     });
 
     const payload = ticket.getPayload();
@@ -849,12 +857,19 @@ exports.googleAuth = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Verify Google token
+    // Verify Google token - support multiple client IDs (web, iOS, Android)
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    
+    // Accept tokens from web, iOS, and Android clients
+    const validAudiences = [
+      process.env.GOOGLE_CLIENT_ID, // Web client
+      process.env.GOOGLE_IOS_CLIENT_ID, // iOS client
+      process.env.GOOGLE_ANDROID_CLIENT_ID, // Android client (when added)
+    ].filter(Boolean); // Remove undefined values
 
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: validAudiences
     });
 
     const payload = ticket.getPayload();
