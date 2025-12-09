@@ -1,18 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiLogOut, FiSearch, FiCamera, FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import { toast } from 'react-hot-toast';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
+  const { theme } = useTheme();
   const isMarketplace = location.pathname === '/';
   const cameraInputRef = useRef(null);
+  const isNativeApp = Capacitor.isNativePlatform();
+
+  // Base padding offsets keep navbar aligned while shrinking web fallback spacing
+  const navPaddingBase = isNativeApp ? 60 : 28;
+  const overlayPaddingBase = isNativeApp ? 60 : 36;
+  const overlayMarketplaceBase = isNativeApp ? 160 : 120;
+  const safeAreaTop = 'env(safe-area-inset-top, 0px)';
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const logoSrc = theme === 'dark'
+    ? '/wazhoplogo/Logowhite.PNG.png'
+    : '/wazhoplogo/logoblack.PNG.png';
 
   // Listen for toggle event from marketplace
   useEffect(() => {
@@ -50,8 +63,6 @@ const Navbar = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('marketplacePhotoCapture', { detail: { file } }));
     }
-
-    toast.success('Photo captured — processing image search');
 
     // Reset input so the same image can be selected again if needed
     event.target.value = '';
@@ -105,8 +116,15 @@ const Navbar = () => {
     }
   };
 
+  const overlayTopPadding = isMarketplace
+    ? `calc(${safeAreaTop} + ${overlayMarketplaceBase}px)`
+    : `calc(${safeAreaTop} + ${overlayPaddingBase}px)`;
+
   return (
-    <nav className="nav-safe-area bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky-safe border-b border-gray-100 dark:border-gray-700 safe-left safe-right" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
+    <nav
+      className="nav-safe-area bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky-safe border-b border-gray-100 dark:border-gray-700 safe-left safe-right w-full overflow-x-hidden"
+      style={{ paddingTop: `calc(${safeAreaTop} + ${navPaddingBase}px)`, maxWidth: '100vw' }}
+    >
         {/* Hidden camera input */}
         <input
           ref={cameraInputRef}
@@ -117,16 +135,35 @@ const Navbar = () => {
           className="hidden"
           aria-hidden="true"
         />
-        <div className="container-custom">
-          <div className="flex flex-nowrap justify-between items-center gap-3 min-h-[56px] md:h-20 w-full">
-            {/* Desktop spacer to keep layout */}
-            <div className="hidden md:block w-[72px] lg:w-[96px]" aria-hidden="true" />
+        <div className={`w-full ${!isNativeApp ? 'max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8' : 'container-custom'}`}>
+          <div className="flex flex-nowrap justify-between items-center gap-2 sm:gap-3 min-h-[56px] md:h-20 w-full overflow-hidden">
+            {/* Mobile brand (web only) */}
+            {!isNativeApp && (
+              <div className="flex items-center md:hidden shrink-0">
+                <Link
+                  to="/"
+                  className="flex items-center"
+                  aria-label="WaZhop home"
+                >
+                  <img src={logoSrc} alt="WaZhop logo" className="h-14 sm:h-16 w-auto max-w-[120px] sm:max-w-[140px] object-contain" />
+                </Link>
+              </div>
+            )}
 
             {/* Mobile: spacer on non-marketplace pages */}
             {!isMarketplace && <div className="md:hidden flex-1" />}
 
             {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center flex-nowrap space-x-1 lg:space-x-2 xl:space-x-3 md:ml-2 lg:ml-4 xl:ml-12">
+          <div className="hidden md:flex items-center flex-nowrap space-x-1 lg:space-x-2 xl:space-x-3">
+            {!isNativeApp && (
+              <Link
+                to="/"
+                className="flex items-center pr-4 lg:pr-6 shrink-0"
+                aria-label="WaZhop home"
+              >
+                <img src={logoSrc} alt="WaZhop logo" className="h-16 lg:h-20 xl:h-24 w-auto max-w-[160px] lg:max-w-[200px] xl:max-w-[220px] object-contain" />
+              </Link>
+            )}
             {menuLinks.map((link) => {
               const active = isActive(link.to);
               return (
@@ -228,7 +265,7 @@ const Navbar = () => {
       {isOpen && (
         <>
           {/* Full Screen Menu */}
-          <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 md:hidden overflow-y-auto" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
+          <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 md:hidden overflow-y-auto" style={{ paddingTop: overlayTopPadding }}>
             <div className="flex flex-col" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
               
               {/* Header with close button */}
@@ -243,86 +280,90 @@ const Navbar = () => {
               </div>
 
               {/* Menu Content */}
-              <div className="flex-1 px-6 pb-6 space-y-3">
+              <div className="flex-1 px-4 pb-4 space-y-1.5">
                 {/* Main navigation links as boxes */}
-                {menuLinks.map((link) => {
-                  const active = isActive(link.to);
-                  return (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      onClick={() => setIsOpen(false)}
-                      className={
-                        `block min-h-[70px] px-6 py-4 rounded-2xl font-semibold text-lg transition flex items-center justify-center text-center ` +
-                        (active
-                          ? 'bg-primary-600 text-white shadow-lg'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600')
-                      }
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-                
+                <div className="grid grid-cols-2 gap-2">
+                  {menuLinks.map((link, index) => {
+                    const active = isActive(link.to);
+                    const isLastOdd = index === menuLinks.length - 1 && menuLinks.length % 2 !== 0;
+                    return (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={() => setIsOpen(false)}
+                        className={
+                          `flex min-h-[44px] px-2.5 py-2 rounded-xl font-semibold text-sm transition items-center justify-center text-center ` +
+                          (active
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600')
+                        }
+                        style={isLastOdd ? { gridColumn: 'span 2' } : undefined}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+
                 {/* Theme box */}
-                <div className="min-h-[70px] px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-between">
-                  <span className="text-lg font-semibold text-gray-800 dark:text-white">Theme</span>
+                <div className="min-h-[44px] px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-800 dark:text-white">Theme</span>
                   <ThemeToggle />
                 </div>
 
                 {/* Quick Links section as boxes */}
-                <div className="pt-3">
-                  <p className="px-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 font-semibold">Quick Links</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link to="/pricing" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                <div className="pt-2">
+                  <p className="px-1 text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 font-semibold">Quick Links</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Link to="/pricing" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       Pricing
                     </Link>
-                    <Link to="/how-it-works" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                    <Link to="/how-it-works" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       How It Works
                     </Link>
-                    <Link to="/register" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                    <Link to="/register" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       Get Started
                     </Link>
-                    <Link to="/about" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                    <Link to="/about" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       About Us
                     </Link>
-                    <Link to="/contact" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                    <Link to="/contact" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       Contact
                     </Link>
-                    <Link to="/privacy-policy" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
+                    <Link to="/privacy-policy" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       Privacy Policy
                     </Link>
-                    <Link to="/terms-of-service" onClick={() => setIsOpen(false)} className="min-h-[60px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition col-span-2">
+                    <Link to="/terms-of-service" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition col-span-3">
                       Terms of Service
                     </Link>
                   </div>
                 </div>
 
                 {/* Connect section as icon boxes */}
-                <div className="pt-3">
-                  <p className="px-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3 font-semibold">Connect</p>
-                  <div className="flex gap-3">
-                    <a href="https://www.facebook.com/share/1CD2GNxUEw/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[60px] rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-blue-600 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
-                      <FiFacebook size={28} className="text-gray-700 dark:text-white" />
+                <div className="pt-2">
+                  <p className="px-1 text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 font-semibold">Connect</p>
+                  <div className="flex gap-2">
+                    <a href="https://www.facebook.com/share/1CD2GNxUEw/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-blue-600 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
+                      <FiFacebook size={24} className="text-gray-700 dark:text-white" />
                     </a>
-                    <a href="https://www.instagram.com/wazhop.ng?igsh=Z2Nqd2w3eTF0bHdo&utm_source=qr" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[60px] rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-pink-600 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
-                      <FiInstagram size={28} className="text-gray-700 dark:text-white" />
+                    <a href="https://www.instagram.com/wazhop.ng?igsh=Z2Nqd2w3eTF0bHdo&utm_source=qr" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-pink-600 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
+                      <FiInstagram size={24} className="text-gray-700 dark:text-white" />
                     </a>
-                    <a href="mailto:support@wazhop.ng" className="flex-1 min-h-[60px] rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
-                      <FiMail size={28} className="text-gray-700 dark:text-white" />
+                    <a href="mailto:support@wazhop.ng" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
+                      <FiMail size={24} className="text-gray-700 dark:text-white" />
                     </a>
                   </div>
                 </div>
 
                 {/* Auth section */}
-                <div className="pt-3">
+                <div className="pt-2">
                   {isAuthenticated ? (
                     <>
                       {(user?.role === 'seller' || user?.role === 'admin') && (
                         <Link
                           to="/dashboard"
                           onClick={() => setIsOpen(false)}
-                          className="block min-h-[70px] px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-3"
+                          className="block min-h-[50px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-2"
                         >
                           Dashboard
                         </Link>
@@ -331,7 +372,7 @@ const Navbar = () => {
                         <Link
                           to="/dashboard?upgrade=seller"
                           onClick={() => setIsOpen(false)}
-                          className="block min-h-[70px] px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-3"
+                          className="block min-h-[50px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-2"
                         >
                           Be a Seller
                         </Link>
@@ -341,9 +382,9 @@ const Navbar = () => {
                           logout();
                           setIsOpen(false);
                         }}
-                        className="w-full min-h-[70px] px-6 py-4 rounded-2xl bg-red-600 text-white font-semibold text-lg hover:bg-red-700 active:bg-red-800 transition flex items-center justify-center space-x-2"
+                        className="w-full min-h-[50px] px-4 py-3 rounded-2xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 active:bg-red-800 transition flex items-center justify-center space-x-2"
                       >
-                        <FiLogOut size={24} />
+                        <FiLogOut size={20} />
                         <span>Logout</span>
                       </button>
                     </>
@@ -352,14 +393,14 @@ const Navbar = () => {
                       <Link
                         to="/login"
                         onClick={() => setIsOpen(false)}
-                        className="block min-h-[70px] px-6 py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-3"
+                        className="block min-h-[50px] px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition mb-2"
                       >
                         Login
                       </Link>
                       <Link
                         to="/register"
                         onClick={() => setIsOpen(false)}
-                        className="block min-h-[70px] px-6 py-4 rounded-2xl bg-primary-600 text-white text-center flex items-center justify-center font-semibold text-lg hover:bg-primary-700 active:bg-primary-800 transition shadow-lg"
+                        className="block min-h-[50px] px-4 py-3 rounded-2xl bg-primary-600 text-white text-center flex items-center justify-center font-semibold text-sm hover:bg-primary-700 active:bg-primary-800 transition shadow"
                       >
                         Get Started
                       </Link>

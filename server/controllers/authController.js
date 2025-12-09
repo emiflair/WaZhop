@@ -13,6 +13,7 @@ const {
 } = require('../utils/helpers');
 const { sendEmail, sendSMS } = require('../utils/notify');
 const PlatformSettings = require('../models/PlatformSettings');
+const { uploadImageSync, deleteImageFromCloudinary } = require('../utils/imageProcessor');
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -292,6 +293,18 @@ exports.getMe = asyncHandler(async (req, res) => {
     .populate({
       path: 'shop',
       match: { owner: req.user.id } // CRITICAL FIX: Only populate shop if user owns it
+    })
+    .populate({
+      path: 'favorites',
+      select: 'name price comparePrice currency images shop inStock averageRating numReviews views moderation status createdAt',
+      populate: {
+        path: 'shop',
+        select: 'shopName slug owner',
+        populate: {
+          path: 'owner',
+          select: 'plan'
+        }
+      }
     });
 
   // Additional safety check: If shop is populated but doesn't belong to user, remove it
@@ -314,11 +327,16 @@ exports.getMe = asyncHandler(async (req, res) => {
 exports.updateProfile = asyncHandler(async (req, res) => {
   const fieldsToUpdate = {
     name: req.body.name,
-    whatsapp: req.body.whatsapp
+    whatsapp: req.body.whatsapp,
+    country: req.body.country
   };
 
   // Remove undefined fields
-  Object.keys(fieldsToUpdate).forEach((key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]);
+  Object.keys(fieldsToUpdate).forEach((key) => {
+    if (fieldsToUpdate[key] === undefined) {
+      delete fieldsToUpdate[key];
+    }
+  });
 
   // If updating whatsapp, normalize and check uniqueness
   if (fieldsToUpdate.whatsapp) {
@@ -336,7 +354,15 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     fieldsToUpdate.whatsapp = normalized;
   }
 
-  const user = await User.findByIdAndUpdate(
+  if (fieldsToUpdate.country) {
+    const normalizedCountry = String(fieldsToUpdate.country).trim();
+    if (normalizedCountry.length < 2) {
+      return res.status(400).json({ success: false, message: 'Please choose a valid country' });
+    }
+    fieldsToUpdate.country = normalizedCountry;
+  }
+
+  await User.findByIdAndUpdate(
     req.user.id,
     fieldsToUpdate,
     {
@@ -345,11 +371,91 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     }
   );
 
+  const user = await User.findById(req.user.id)
+    .select('+twoFactorEnabled')
+    .populate({
+      path: 'shop',
+      match: { owner: req.user.id }
+    })
+    .populate({
+      path: 'favorites',
+      select: 'name price comparePrice currency images shop inStock averageRating numReviews views moderation status createdAt',
+      populate: {
+        path: 'shop',
+        select: 'shopName slug owner',
+        populate: {
+          path: 'owner',
+          select: 'plan'
+        }
+      }
+    });
+
   res.status(200).json({
     success: true,
     data: user,
+    user,
     message: 'Profile updated successfully'
   });
+});
+
+// @desc    Upload or replace profile photo
+// @route   POST /api/auth/profile/avatar
+// @access  Private
+exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No image provided' });
+  }
+
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  try {
+    if (user.profilePicPublicId) {
+      try {
+        await deleteImageFromCloudinary(user.profilePicPublicId);
+      } catch (cleanupError) {
+        console.warn('Failed to delete previous profile image from Cloudinary', cleanupError?.message || cleanupError);
+      }
+    }
+
+    const uploadResult = await uploadImageSync(req.file.buffer, `users/${user._id}`, 'branding');
+
+    user.profilePic = uploadResult.secure_url;
+    user.profilePicPublicId = uploadResult.public_id;
+    await user.save();
+
+    const hydratedUser = await User.findById(user._id)
+      .select('+twoFactorEnabled')
+      .populate({
+        path: 'shop',
+        match: { owner: req.user.id }
+      })
+      .populate({
+        path: 'favorites',
+        select: 'name price comparePrice currency images shop inStock averageRating numReviews views moderation status createdAt',
+        populate: {
+          path: 'shop',
+          select: 'shopName slug owner',
+          populate: {
+            path: 'owner',
+            select: 'plan'
+          }
+        }
+      });
+
+    res.status(200).json({
+      success: true,
+      data: hydratedUser,
+      user: hydratedUser,
+      message: 'Profile photo updated successfully'
+    });
+  } catch (error) {
+    console.error('Failed to upload profile image', error);
+    res.status(500).json({ success: false, message: 'Failed to upload profile photo. Please try again.' });
+  }
 });
 
 // @desc    Upgrade buyer to seller

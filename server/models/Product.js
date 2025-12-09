@@ -1,4 +1,12 @@
 const mongoose = require('mongoose');
+const {
+  SUPPORTED_CURRENCIES,
+  DEFAULT_CURRENCY,
+  DEFAULT_COUNTRY_CODE,
+  getCountryMeta,
+  formatMoney,
+  formatUsdApprox
+} = require('../utils/currency');
 
 const productSchema = new mongoose.Schema({
   shop: {
@@ -30,8 +38,27 @@ const productSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    enum: ['NGN', 'USD', 'GBP', 'EUR'],
-    default: 'NGN'
+    enum: SUPPORTED_CURRENCIES,
+    default: DEFAULT_CURRENCY
+  },
+  priceUSD: {
+    type: Number,
+    default: 0,
+    min: [0, 'Converted USD price cannot be negative']
+  },
+  comparePriceUSD: {
+    type: Number,
+    default: null,
+    min: [0, 'Converted USD compare price cannot be negative']
+  },
+  countryCode: {
+    type: String,
+    uppercase: true,
+    default: DEFAULT_COUNTRY_CODE
+  },
+  countryName: {
+    type: String,
+    default: getCountryMeta(DEFAULT_COUNTRY_CODE).country
   },
   images: [{
     url: {
@@ -218,8 +245,10 @@ productSchema.virtual('primaryImage').get(function () {
 
 // Generate WhatsApp link
 productSchema.methods.getWhatsAppLink = function (whatsappNumber) {
+  const localPrice = formatMoney(this.price, this.currency);
+  const approxUsd = formatUsdApprox(this.priceUSD);
   const message = encodeURIComponent(
-    `Hello! I'm interested in your product: ${this.name}\nPrice: ₦${this.price.toLocaleString()}`
+    `Hello! I'm interested in your product: ${this.name}\nPrice: ${localPrice}${approxUsd ? ` ${approxUsd}` : ''}`
   );
   return `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${message}`;
 };
@@ -244,5 +273,7 @@ productSchema.index({ shop: 1, category: 1, subcategory: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ 'boost.endAt': -1 });
 productSchema.index({ locationState: 1, locationArea: 1 });
+productSchema.index({ currency: 1 });
+productSchema.index({ countryCode: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

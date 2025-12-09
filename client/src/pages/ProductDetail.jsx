@@ -8,7 +8,8 @@ import StarRating from '../components/StarRating';
 import { FiChevronLeft, FiChevronRight, FiPackage, FiCreditCard, FiShare2, FiX } from 'react-icons/fi';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { formatPrice } from '../utils/currency';
+import PriceTag from '../components/PriceTag';
+import { formatPrice, buildPriceDisplay } from '../utils/currency';
 import SingleImageUpload from '../components/SingleImageUpload';
 
 export default function ProductDetail() {
@@ -171,7 +172,8 @@ export default function ProductDetail() {
   }, [product?._id, reviewPage]);
 
   const images = useMemo(() => (Array.isArray(product?.images) ? product.images : []), [product]);
-  const currency = shop?.paymentSettings?.currency || 'NGN';
+  const shopCurrency = shop?.paymentSettings?.currency || 'NGN';
+  const currency = product?.currency || shopCurrency;
   const primaryColor = shop?.theme?.primaryColor || '#16a34a';
 
   const isOutOfStock = !product?.inStock || (product?.stock !== null && product?.stock === 0);
@@ -185,7 +187,9 @@ export default function ProductDetail() {
         toast.error('Seller WhatsApp not available');
         return;
       }
-      const msg = encodeURIComponent(`Hello! I'm interested in your product: ${product?.name}\nPrice: ${formatPrice(product?.price, currency)}`);
+      const priceDisplay = buildPriceDisplay({ price: product?.price, currency, priceUSD: product?.priceUSD });
+      const priceText = priceDisplay.combined || formatPrice(product?.price, currency);
+      const msg = encodeURIComponent(`Hello! I'm interested in your product: ${product?.name}\nPrice: ${priceText}`);
       const link = `https://wa.me/${String(number).replace(/\D/g, '')}?text=${msg}`;
       window.open(link, '_blank');
       try { await productAPI.trackClick(product._id); } catch (e) { /* no-op */ }
@@ -195,10 +199,12 @@ export default function ProductDetail() {
   const handleShareToWhatsApp = () => {
     const productUrl = window.location.href.split('?')[0];
     const desc = typeof product?.description === 'string' ? product.description : '';
+    const priceDisplay = buildPriceDisplay({ price: product?.price, currency, priceUSD: product?.priceUSD });
+    const priceText = priceDisplay.combined || formatPrice(product?.price, currency);
     const shareMessage = encodeURIComponent(
       `Check out this product from ${shop?.shopName || 'this shop'}!\n\n` +
       `${product?.name || ''}\n` +
-      `Price: ${formatPrice(product?.price, currency)}\n\n` +
+      `Price: ${priceText}\n\n` +
       `${desc.substring(0,150)}${desc.length > 150 ? '...' : ''}\n\n` +
       `View here: ${productUrl}`
     );
@@ -398,7 +404,16 @@ export default function ProductDetail() {
             {/* Price and stock */}
             <div className="mb-5">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                <span className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{color: primaryColor}}>{formatPrice(product.price, currency)}</span>
+                <PriceTag
+                  price={product.price}
+                  currency={currency}
+                  priceUSD={product.priceUSD}
+                  layout="inline"
+                  className="flex items-baseline gap-2 flex-wrap"
+                  primaryClassName="text-2xl sm:text-3xl md:text-4xl font-bold"
+                  primaryStyle={{ color: primaryColor }}
+                  convertedClassName="text-sm sm:text-base text-gray-500 dark:text-gray-400"
+                />
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
                     <span className="text-lg sm:text-xl text-gray-400 line-through">{formatPrice(product.comparePrice, currency)}</span>
@@ -528,7 +543,13 @@ export default function ProductDetail() {
                   </div>
                   <div className="p-3">
                     <p className="font-medium text-sm line-clamp-2 mb-1">{rp.name}</p>
-                    <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(rp.price, 'NGN')}</p>
+                    <PriceTag
+                      price={rp.price}
+                      currency={rp.currency || currency}
+                      priceUSD={rp.priceUSD}
+                      primaryClassName="text-primary-600 dark:text-primary-400 font-semibold"
+                      convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+                    />
                   </div>
                 </Link>
               ))}

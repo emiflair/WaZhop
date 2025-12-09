@@ -7,7 +7,10 @@ const {
   getSubscriptionInfo,
   getAllUsers,
   updateUserSubscription,
-  switchToSeller
+  switchToSeller,
+  getFavorites,
+  addFavorite,
+  removeFavorite
 } = require('../controllers/userController');
 const { protect, isAdmin } = require('../middlewares/auth');
 
@@ -16,6 +19,9 @@ router.get('/subscription', protect, getSubscriptionInfo);
 router.post('/upgrade', protect, upgradePlan);
 router.post('/downgrade', protect, downgradePlan);
 router.post('/switch-to-seller', protect, switchToSeller);
+router.get('/favorites', protect, getFavorites);
+router.post('/favorites/:productId', protect, addFavorite);
+router.delete('/favorites/:productId', protect, removeFavorite);
 
 // Admin routes
 router.get('/admin/all', getAllUsers);

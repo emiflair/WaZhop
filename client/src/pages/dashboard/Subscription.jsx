@@ -1052,21 +1052,6 @@ const Subscription = () => {
           </div>
         )}
 
-        {/* Payment Notice */}
-        <div className="card bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700">
-          <div className="flex items-start gap-3">
-            <FaInfoCircle className="text-blue-600 dark:text-blue-400 text-xl mt-1" />
-            <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Payment Integration Coming Soon</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                We&apos;re currently integrating Paystack for secure payment processing. 
-                For now, plan changes are free for testing purposes. 
-                Once payment is live, you&apos;ll be charged automatically based on your selected plan.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Checkout Preview Modal - Shows discount breakdown */}
         {showPreviewModal && selectedPlan && (
           <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">

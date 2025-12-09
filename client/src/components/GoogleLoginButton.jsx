@@ -132,11 +132,36 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
     onError?.('Google login failed');
   };
 
+const decodeJwtPayload = (token) => {
+  if (!token) return null;
+  try {
+    const base64 = token.split('.')[1]
+      ?.replace(/-/g, '+')
+      ?.replace(/_/g, '/');
+    if (!base64) return null;
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (err) {
+    console.error('🔻 Failed to decode Google token payload:', err);
+    return null;
+  }
+};
+
   const handleNativeGoogleLogin = async () => {
-    if (!isNative) return;
+    if (!isNative) {
+      console.log('❌ Not native platform');
+      return;
+    }
     
+    console.log('🔵 Starting native Google login...');
     setLoading(true);
     try {
+      console.log('🔵 Calling GoogleAuth.signIn()...');
       const result = await GoogleAuth.signIn();
       console.log('✅ Native Google Auth result:', result);
       
@@ -148,6 +173,9 @@ const GoogleLoginButton = ({ role = 'buyer', onSuccess, onError }) => {
         setLoading(false);
         return;
       }
+
+      const decoded = decodeJwtPayload(token);
+      console.log('🧾 Decoded Google token payload:', decoded);
 
       setPendingToken(token);
 

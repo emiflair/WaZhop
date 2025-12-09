@@ -55,6 +55,141 @@ export const COUNTRY_REGION_MAP = {
       'Arusha','Dar es Salaam','Dodoma','Geita','Iringa','Kagera','Katavi','Kigoma','Kilimanjaro','Lindi','Manyara','Mara','Mbeya','Morogoro','Mtwara','Mwanza','Njombe','Pwani','Rukwa','Ruvuma','Shinyanga','Simiyu','Singida','Songwe','Tabora','Tanga'
     ],
     defaultRegion: 'Dar es Salaam'
+  },
+  EG: {
+    code: 'EG',
+    name: 'Egypt',
+    regionLabel: 'Governorate',
+    regions: [
+      'Alexandria','Aswan','Asyut','Beheira','Beni Suef','Cairo','Dakahlia','Damietta','Faiyum','Gharbia','Giza','Ismailia','Kafr El Sheikh','Luxor','Matrouh','Minya','Monufia','New Valley','North Sinai','Port Said','Qalyubia','Qena','Red Sea','Sharqia','Sohag','South Sinai','Suez'
+    ],
+    defaultRegion: 'Cairo'
+  },
+  MA: {
+    code: 'MA',
+    name: 'Morocco',
+    regionLabel: 'Region',
+    regions: [
+      'Beni Mellal-Khenifra','Casablanca-Settat','Dakhla-Oued Ed-Dahab','Draa-Tafilalet','Fes-Meknes','Guelmim-Oued Noun','Laayoune-Sakia El Hamra','Marrakesh-Safi','Oriental','Rabat-Sale-Kenitra','Souss-Massa','Tangier-Tetouan-Al Hoceima'
+    ],
+    defaultRegion: 'Casablanca-Settat'
+  },
+  ET: {
+    code: 'ET',
+    name: 'Ethiopia',
+    regionLabel: 'Regional State',
+    regions: [
+      'Addis Ababa','Afar','Amhara','Benishangul-Gumuz','Dire Dawa','Gambela','Harari','Oromia','Sidama','Somali','South West Ethiopia Peoples','Southern Nations, Nationalities, and Peoples','Tigray'
+    ],
+    defaultRegion: 'Addis Ababa'
+  },
+  RW: {
+    code: 'RW',
+    name: 'Rwanda',
+    regionLabel: 'Province',
+    regions: [
+      'Kigali','Eastern','Northern','Western','Southern'
+    ],
+    defaultRegion: 'Kigali'
+  },
+  SN: {
+    code: 'SN',
+    name: 'Senegal',
+    regionLabel: 'Region',
+    regions: [
+      'Dakar','Diourbel','Fatick','Kaffrine','Kaolack','Kedougou','Kolda','Louga','Matam','Saint-Louis','Sedhiou','Tambacounda','Thies','Ziguinchor'
+    ],
+    defaultRegion: 'Dakar'
+  },
+  CI: {
+    code: 'CI',
+    name: "Cote d'Ivoire",
+    regionLabel: 'District',
+    regions: [
+      'Abidjan','Bas-Sassandra','Comoe','Denguele','Goh-Djiboua','Lacs','Lagunes','Montagnes','Sassandra-Marahoue','Savanes','Vallee du Bandama','Woroba','Yamoussoukro','Zanzan'
+    ],
+    defaultRegion: 'Abidjan'
+  },
+  SL: {
+    code: 'SL',
+    name: 'Sierra Leone',
+    regionLabel: 'Province',
+    regions: [
+      'Eastern','Northern','North West','Southern','Western Area'
+    ],
+    defaultRegion: 'Western Area'
+  },
+  ML: {
+    code: 'ML',
+    name: 'Mali',
+    regionLabel: 'Region',
+    regions: [
+      'Bamako','Gao','Kayes','Kidal','Koulikoro','Menaka','Mopti','Segou','Sikasso','Taoudenit','Tombouctou'
+    ],
+    defaultRegion: 'Bamako'
+  },
+  NE: {
+    code: 'NE',
+    name: 'Niger',
+    regionLabel: 'Region',
+    regions: [
+      'Agadez','Diffa','Dosso','Maradi','Niamey','Tahoua','Tillaberi','Zinder'
+    ],
+    defaultRegion: 'Niamey'
+  },
+  BJ: {
+    code: 'BJ',
+    name: 'Benin',
+    regionLabel: 'Department',
+    regions: [
+      'Alibori','Atakora','Atlantique','Borgou','Collines','Couffo','Donga','Littoral','Mono','Oueme','Plateau','Zou'
+    ],
+    defaultRegion: 'Littoral'
+  },
+  TG: {
+    code: 'TG',
+    name: 'Togo',
+    regionLabel: 'Region',
+    regions: [
+      'Centrale','Kara','Maritime','Plateaux','Savanes'
+    ],
+    defaultRegion: 'Maritime'
+  },
+  LR: {
+    code: 'LR',
+    name: 'Liberia',
+    regionLabel: 'County',
+    regions: [
+      'Bomi','Bong','Gbarpolu','Grand Bassa','Grand Cape Mount','Grand Gedeh','Grand Kru','Lofa','Margibi','Maryland','Montserrado','Nimba','River Cess','River Gee','Sinoe'
+    ],
+    defaultRegion: 'Montserrado'
+  },
+  NA: {
+    code: 'NA',
+    name: 'Namibia',
+    regionLabel: 'Region',
+    regions: [
+      'Erongo','Hardap','Karas','Kavango East','Kavango West','Khomas','Kunene','Ohangwena','Omaheke','Omusati','Oshana','Oshikoto','Otjozondjupa','Zambezi'
+    ],
+    defaultRegion: 'Khomas'
+  },
+  BW: {
+    code: 'BW',
+    name: 'Botswana',
+    regionLabel: 'District',
+    regions: [
+      'Central','Chobe','Ghanzi','Kgalagadi','Kgatleng','Kweneng','North East','North West','South East','Southern'
+    ],
+    defaultRegion: 'South East'
+  },
+  LS: {
+    code: 'LS',
+    name: 'Lesotho',
+    regionLabel: 'District',
+    regions: [
+      'Berea','Butha-Buthe','Leribe','Mafeteng','Maseru','Mohale\'s Hoek','Mokhotlong','Qacha\'s Nek','Quthing','Thaba-Tseka'
+    ],
+    defaultRegion: 'Maseru'
   }
 };
 
@@ -67,6 +202,8 @@ const COUNTRY_DIAL_CODES = {
   ZA: ['27'],
   UG: ['256'],
   TZ: ['255'],
+  EG: ['20'],
+  MA: ['212'],
   CM: ['237'],
   CI: ['225'],
   SN: ['221'],

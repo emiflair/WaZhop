@@ -1,4 +1,11 @@
+import process from 'node:process';
 import { CapacitorConfig } from '@capacitor/cli';
+
+const WEB_GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID
+  || '782358027246-97lk9a4mgfgdaf9f2mrunibcg9ii8f2s.apps.googleusercontent.com';
+
+const IOS_GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_IOS_CLIENT_ID
+  || '782358027246-kar0nhpcqbe5hfnmp8j59abp18fka9vm.apps.googleusercontent.com';
 
 const config: CapacitorConfig = {
   appId: 'ng.wazhop.app',
@@ -27,8 +34,8 @@ const config: CapacitorConfig = {
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: '428698442868-b4f26t11d2l1rsmijqcv29mnn7itcrn8.apps.googleusercontent.com',
-      iosClientId: '782358027246-kar0nhpcqbe5hfnmp8j59abp18fka9vm.apps.googleusercontent.com',
+      serverClientId: WEB_GOOGLE_CLIENT_ID,
+      iosClientId: IOS_GOOGLE_CLIENT_ID,
       forceCodeForRefreshToken: true,
     },
     StatusBar: {

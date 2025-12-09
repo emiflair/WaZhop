@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiX, FiChevronLeft, FiChevronRight, FiImage } from 'react-icons/fi';
+import PriceTag from './PriceTag';
 import { formatPrice } from '../utils/currency';
 
 /**
@@ -11,6 +12,7 @@ import { formatPrice } from '../utils/currency';
 const ProductPreviewModal = ({ product, onClose }) => {
   const [index, setIndex] = useState(0);
   const images = product?.images || [];
+  const currency = product?.currency || 'NGN';
 
   const hasImages = images.length > 0;
 
@@ -84,10 +86,18 @@ const ProductPreviewModal = ({ product, onClose }) => {
             <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
 
             <div className="mb-4 flex items-baseline gap-3">
-              <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price, product.currency || 'NGN')}</p>
+              <PriceTag
+                price={product.price}
+                currency={currency}
+                priceUSD={product.priceUSD}
+                layout="inline"
+                className="flex items-baseline gap-2"
+                primaryClassName="text-3xl font-bold text-gray-900"
+                convertedClassName="text-sm text-gray-500 dark:text-gray-400"
+              />
               {product.comparePrice && product.comparePrice > product.price && (
                 <p className="text-gray-400 line-through">
-                  {formatPrice(product.comparePrice, product.currency || 'NGN')}
+                  {formatPrice(product.comparePrice, currency)}
                 </p>
               )}
             </div>

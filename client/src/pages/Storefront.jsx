@@ -8,7 +8,8 @@ import ProductDetailModal from '../components/ProductDetailModal';
 import CartSidebar from '../components/CartSidebar';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
-import { convertProductPrice, formatPrice } from '../utils/currency';
+import PriceTag from '../components/PriceTag';
+import { formatPrice, buildPriceDisplay } from '../utils/currency';
 import { CATEGORY_SUGGESTIONS, toLabel } from '../utils/categories';
 
 const Storefront = () => {
@@ -136,13 +137,14 @@ const Storefront = () => {
       products = [];
     }
 
-    const shopCurrency = shop.paymentSettings?.currency || 'NGN';
-    const convertedProducts = products.map((product) =>
-      convertProductPrice(product, shopCurrency)
-    );
+    const fallbackCurrency = shop.paymentSettings?.currency || 'NGN';
+    const normalizedProducts = (products || []).map((product) => ({
+      ...product,
+      currency: product?.currency || fallbackCurrency
+    }));
 
     setShop(shop);
-    setProducts(convertedProducts);
+    setProducts(normalizedProducts);
   };
 
   const fetchShopBySlug = async (slugParam) => {
@@ -176,8 +178,9 @@ const Storefront = () => {
       }
 
       // Prepare message first (match cart-style formatting)
-      const currency = shop.paymentSettings?.currency || 'NGN';
-      const formattedPrice = formatPrice(product.price, currency);
+      const currency = product?.currency || shop.paymentSettings?.currency || 'NGN';
+      const priceDisplay = buildPriceDisplay({ price: product.price, currency, priceUSD: product.priceUSD });
+      const formattedPrice = priceDisplay.combined || formatPrice(product.price, currency);
       const message = `Hello! I'd like to order the following item from ${shop.shopName}:\n\n1. ${product.name} - Qty: 1 - ${formattedPrice}\n\nTotal: ${formattedPrice}`;
       const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
@@ -362,16 +365,21 @@ const Storefront = () => {
           <p className="text-gray-600 dark:text-gray-300 text-[10px] sm:text-xs md:text-sm mb-2 sm:mb-3 line-clamp-2 min-h-[1.5rem] sm:min-h-[2rem] md:min-h-[2.5rem] hidden sm:block">{product.description}</p>
 
           <div className="mb-2 sm:mb-3 md:mb-4">
-            <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
-              <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold" style={{ color: primaryColor }}>
-                {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
+            <PriceTag
+              price={product.price}
+              currency={product.currency || shop.paymentSettings?.currency}
+              priceUSD={product.priceUSD}
+              layout="inline"
+              className="flex items-baseline gap-1 sm:gap-2 flex-wrap"
+              primaryClassName="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold"
+              primaryStyle={{ color: primaryColor }}
+              convertedClassName="text-[10px] sm:text-xs md:text-sm text-gray-500 dark:text-gray-400"
+            />
+            {product.comparePrice && product.comparePrice > product.price && (
+              <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 line-through">
+                {formatPrice(product.comparePrice, product.currency || shop.paymentSettings?.currency || 'NGN')}
               </p>
-              {product.comparePrice && product.comparePrice > product.price && (
-                <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 line-through">
-                  {formatPrice(product.comparePrice, shop.paymentSettings?.currency || 'NGN')}
-                </p>
-              )}
-            </div>
+            )}
             {product.variants && product.variants.length > 0 && (
               <p className="text-[9px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
                 {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
@@ -438,9 +446,16 @@ const Storefront = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <h3 className="font-semibold text-sm sm:text-base md:text-lg dark:text-white truncate">{product.name}</h3>
-            <p className="text-sm sm:text-lg md:text-xl font-bold" style={{ color: primaryColor }}>
-              {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
-            </p>
+            <PriceTag
+              price={product.price}
+              currency={product.currency || shop.paymentSettings?.currency}
+              priceUSD={product.priceUSD}
+              layout="inline"
+              className="flex flex-col items-end text-right"
+              primaryClassName="text-sm sm:text-lg md:text-xl font-bold"
+              primaryStyle={{ color: primaryColor }}
+              convertedClassName="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400"
+            />
           </div>
           {product.numReviews > 0 && (
             <div className="mt-1">
@@ -489,9 +504,16 @@ const Storefront = () => {
       </div>
       <div className="p-2 sm:p-3">
         <p className="font-medium text-xs sm:text-sm dark:text-white line-clamp-2">{product.name}</p>
-        <p className="text-sm sm:text-base font-semibold mt-1" style={{ color: primaryColor }}>
-          {formatPrice(product.price, shop.paymentSettings?.currency || 'NGN')}
-        </p>
+        <PriceTag
+          price={product.price}
+          currency={product.currency || shop.paymentSettings?.currency}
+          priceUSD={product.priceUSD}
+          className="mt-1"
+          layout="stack"
+          primaryClassName="text-sm sm:text-base font-semibold"
+          primaryStyle={{ color: primaryColor }}
+          convertedClassName="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400"
+        />
       </div>
     </div>
   );

@@ -3,11 +3,52 @@ import { IoLogoWhatsapp } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
-import { formatPrice } from '../utils/currency';
+import PriceTag from './PriceTag';
+import { formatPrice, buildPriceDisplay } from '../utils/currency';
 
 const CartSidebar = ({ isOpen, onClose, shop }) => {
   const navigate = useNavigate();
   const { cartItems, updateQuantity, removeFromCart, clearCart, getCartTotal, getItemsByShop } = useCart();
+
+  const computeUnitPriceUSD = (item, unitPrice) => {
+    if (!item) return null;
+
+    const numericUnitPrice = Number(unitPrice);
+    if (!Number.isFinite(numericUnitPrice)) {
+      return null;
+    }
+
+    const variantPriceUSD = Number(item.variant?.priceUSD);
+    if (Number.isFinite(variantPriceUSD)) {
+      return variantPriceUSD;
+    }
+
+    const basePriceUSD = Number(item.product?.priceUSD);
+    const basePrice = Number(item.product?.price);
+
+    if (Number.isFinite(basePriceUSD) && (!Number.isFinite(basePrice) || numericUnitPrice === basePrice)) {
+      return basePriceUSD;
+    }
+
+    if (Number.isFinite(basePriceUSD) && Number.isFinite(basePrice) && basePrice > 0) {
+      const rate = basePriceUSD / basePrice;
+      const converted = numericUnitPrice * rate;
+      return Number.isFinite(converted) ? converted : null;
+    }
+
+    return null;
+  };
+
+  const cartCurrency = shop?.paymentSettings?.currency || cartItems[0]?.product?.currency || 'NGN';
+  const cartTotalUSD = cartItems.reduce((sum, item) => {
+    const price = item.variant?.price || item.product.price;
+    const unitUSD = computeUnitPriceUSD(item, price);
+    if (!Number.isFinite(unitUSD) || unitUSD <= 0) {
+      return sum;
+    }
+    return sum + unitUSD * item.quantity;
+  }, 0);
+  const normalizedCartTotalUSD = cartTotalUSD > 0 ? cartTotalUSD : null;
 
   const handleWhatsAppCheckout = () => {
     const itemsByShop = getItemsByShop();
@@ -31,16 +72,23 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
         return;
       }
 
-      const currency = itemShop.paymentSettings?.currency || 'NGN';
+      const currency = itemShop.paymentSettings?.currency || items[0]?.product?.currency || 'NGN';
       let message = `Hello! I'd like to order the following items from ${itemShop.shopName}:\n\n`;
+      let shopTotalUSD = 0;
       
       items.forEach((item, idx) => {
         const price = item.variant?.price || item.product.price;
+        const unitPriceUSD = computeUnitPriceUSD(item, price);
+        if (Number.isFinite(unitPriceUSD) && unitPriceUSD > 0) {
+          shopTotalUSD += unitPriceUSD * item.quantity;
+        }
+        const priceDisplay = buildPriceDisplay({ price, currency, priceUSD: unitPriceUSD });
+        const priceLabel = priceDisplay.combined || formatPrice(price, currency);
         message += `${idx + 1}. ${item.product.name}`;
         if (item.variant) {
           message += ` (${Object.values(item.variant).join(', ')})`;
         }
-        message += ` - Qty: ${item.quantity} - ${formatPrice(price, currency)} each\n`;
+        message += ` - Qty: ${item.quantity} - ${priceLabel} each\n`;
       });
 
       const shopTotal = items.reduce((sum, item) => {
@@ -48,7 +96,13 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
         return sum + (price * item.quantity);
       }, 0);
 
-      message += `\nTotal: ${formatPrice(shopTotal, currency)}`;
+      const totalDisplay = buildPriceDisplay({
+        price: shopTotal,
+        currency,
+        priceUSD: shopTotalUSD > 0 ? shopTotalUSD : null
+      });
+      const totalLabel = totalDisplay.combined || formatPrice(shopTotal, currency);
+      message += `\nTotal: ${totalLabel}`;
 
       // Use setTimeout to stagger the window opens (prevents popup blockers)
       setTimeout(() => {
@@ -123,6 +177,8 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                     {/* Shop Items */}
                     {items.map((item, idx) => {
                       const price = item.variant?.price || item.product.price;
+                      const currencyCode = item.product?.currency || itemShop.paymentSettings?.currency || 'NGN';
+                      const priceUSD = computeUnitPriceUSD(item, price);
                       const image = item.product.images?.[0]?.url;
 
                       return (
@@ -152,9 +208,14 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
                                 ).filter(Boolean).join(', ')}
                               </p>
                             )}
-                            <p className="font-bold text-base text-gray-900 dark:text-gray-100">
-                              {formatPrice(price, itemShop.paymentSettings?.currency || 'NGN')}
-                            </p>
+                            <PriceTag
+                              price={price}
+                              currency={currencyCode}
+                              priceUSD={priceUSD}
+                              className="font-bold"
+                              primaryClassName="text-base font-bold text-gray-900 dark:text-gray-100"
+                              convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+                            />
 
                             {/* Quantity Controls */}
                             <div className="flex items-center gap-2 mt-2">
@@ -203,9 +264,15 @@ const CartSidebar = ({ isOpen, onClose, shop }) => {
 
               <div className="flex justify-between items-center mb-2">
                 <span className="text-lg font-semibold">Total:</span>
-                <span className="text-2xl font-bold">
-                  {formatPrice(getCartTotal(), shop?.paymentSettings?.currency || 'NGN')}
-                </span>
+                <PriceTag
+                  price={getCartTotal()}
+                  currency={cartCurrency}
+                  priceUSD={normalizedCartTotalUSD}
+                  layout="inline"
+                  className="flex flex-col items-end"
+                  primaryClassName="text-2xl font-bold"
+                  convertedClassName="text-sm text-gray-500 dark:text-gray-400"
+                />
               </div>
 
               {/* Check if any shop in cart has payment gateway configured */}

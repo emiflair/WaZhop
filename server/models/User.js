@@ -54,6 +54,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  profilePicPublicId: {
+    type: String,
+    default: null
+  },
+  country: {
+    type: String,
+    trim: true,
+    maxlength: [60, 'Country name cannot exceed 60 characters'],
+    default: null
+  },
+  favorites: {
+    type: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    }],
+    default: []
+  },
   // Verification flags
   emailVerified: {
     type: Boolean,

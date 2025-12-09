@@ -3,10 +3,11 @@ import { FiX, FiChevronLeft, FiChevronRight, FiPackage, FiShoppingCart, FiCredit
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { FaThumbsUp } from 'react-icons/fa';
 import StarRating from './StarRating';
+import PriceTag from './PriceTag';
 import { reviewAPI, productAPI } from '../utils/api';
 import { useCart } from '../hooks/useCart';
 import toast from 'react-hot-toast';
-import { formatPrice } from '../utils/currency';
+import { formatPrice, buildPriceDisplay } from '../utils/currency';
 
 const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppClick, onSelectProduct, showImageModal, setShowImageModal, modalImageIndex, setModalImageIndex }) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -31,6 +32,7 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
   });
 
   const primaryColor = shop?.theme?.primaryColor || '#000000';
+  const currency = product?.currency || shop?.paymentSettings?.currency || 'NGN';
   const images = Array.isArray(product?.images) ? product.images : [];
 
   // Reset selected image whenever the product changes to avoid index issues
@@ -141,8 +143,8 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
   };
 
   const handleShareToWhatsApp = () => {
-    const currency = shop?.paymentSettings?.currency || 'NGN';
-    const formattedPrice = formatPrice(product?.price, currency);
+    const priceDisplay = buildPriceDisplay({ price: product?.price, currency, priceUSD: product?.priceUSD });
+    const formattedPrice = priceDisplay.combined || formatPrice(product?.price, currency);
     const productUrl = window.location.href.split('?')[0]; // Get clean URL without query params
     const desc = typeof product?.description === 'string' ? product.description : '';
 
@@ -170,8 +172,8 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
         toast.error('Seller WhatsApp not available');
         return;
       }
-      const currency = shop?.paymentSettings?.currency || 'NGN';
-      const formattedPrice = formatPrice(product?.price, currency);
+      const priceDisplay = buildPriceDisplay({ price: product?.price, currency, priceUSD: product?.priceUSD });
+      const formattedPrice = priceDisplay.combined || formatPrice(product?.price, currency);
       const message = encodeURIComponent(
         `Hello! I'm interested in your product: ${product?.name}\nPrice: ${formattedPrice}`
       );
@@ -285,13 +287,20 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
             {/* Price */}
             <div className="mb-4 sm:mb-6">
               <div className="flex items-baseline gap-2 sm:gap-3 mb-2 flex-wrap">
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: primaryColor }}>
-                  {formatPrice(product.price, shop?.paymentSettings?.currency || 'NGN')}
-                </p>
+                <PriceTag
+                  price={product.price}
+                  currency={currency}
+                  priceUSD={product.priceUSD}
+                  layout="inline"
+                  className="flex items-baseline gap-2 flex-wrap"
+                  primaryClassName="text-2xl sm:text-3xl md:text-4xl font-bold"
+                  primaryStyle={{ color: primaryColor }}
+                  convertedClassName="text-sm sm:text-base text-gray-500 dark:text-gray-400"
+                />
                 {product.comparePrice && product.comparePrice > product.price && (
                   <>
                     <p className="text-base sm:text-xl text-gray-400 line-through">
-                      {formatPrice(product.comparePrice, shop?.paymentSettings?.currency || 'NGN')}
+                      {formatPrice(product.comparePrice, currency)}
                     </p>
                     <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded">
                       -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
@@ -393,7 +402,7 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
                         <div key={optIdx} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm">
                           <span className="font-medium">{option.value}</span>
                           {option.price && option.price !== product.price && (
-                            <span className="ml-2 text-gray-600 dark:text-gray-400">{formatPrice(option.price, shop?.paymentSettings?.currency || 'NGN')}</span>
+                            <span className="ml-2 text-gray-600 dark:text-gray-400">{formatPrice(option.price, currency)}</span>
                           )}
                           {option.stock !== undefined && option.stock === 0 && (
                             <span className="ml-2 text-red-500 text-xs">(Out of stock)</span>
@@ -452,7 +461,13 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
                   </div>
                   <div className="p-3">
                     <p className="font-medium text-sm line-clamp-2 mb-1">{rp.name}</p>
-                    <p className="text-primary-600 dark:text-primary-400 font-semibold">{formatPrice(rp.price, 'NGN')}</p>
+                    <PriceTag
+                      price={rp.price}
+                      currency={rp.currency || currency}
+                      priceUSD={rp.priceUSD}
+                      primaryClassName="text-primary-600 dark:text-primary-400 font-semibold"
+                      convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+                    />
                   </div>
                 </button>
               ))}

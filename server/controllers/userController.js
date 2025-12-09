@@ -3,6 +3,30 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const { asyncHandler, calculatePlanExpiry, normalizePhoneNumber } = require('../utils/helpers');
 
+const FAVORITES_POPULATE = {
+  path: 'favorites',
+  select: 'name price comparePrice currency images shop inStock averageRating numReviews views moderation status createdAt',
+  populate: {
+    path: 'shop',
+    select: 'shopName slug owner',
+    populate: {
+      path: 'owner',
+      select: 'plan'
+    }
+  }
+};
+
+const filterActiveFavorites = (favorites = []) => {
+  if (!Array.isArray(favorites)) return [];
+
+  return favorites.filter((product) => {
+    if (!product) return false;
+    const isRejected = product?.moderation?.status === 'rejected';
+    const isInactive = product?.isActive === false || product?.status === 'draft';
+    return !isRejected && !isInactive;
+  });
+};
+
 // @desc    Get subscription information
 // @route   GET /api/users/subscription
 // @access  Private
@@ -366,6 +390,115 @@ exports.downgradePlan = asyncHandler(async (req, res) => {
       }
     },
     message: `Successfully downgraded to ${plan} plan.${plan === 'free' && confirmLoss ? ' We removed extra shops/products and cleared images to fit Free plan limits.' : plan === 'free' ? ' Only your oldest shop remains active.' : ''} Some features have been restricted.`
+  });
+});
+
+// @desc    Get current user favorites
+// @route   GET /api/users/favorites
+// @access  Private
+exports.getFavorites = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id)
+    .select('favorites')
+    .populate(FAVORITES_POPULATE)
+    .lean();
+
+  const favorites = filterActiveFavorites(user?.favorites || []);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      favorites
+    }
+  });
+});
+
+// @desc    Add product to favorites
+// @route   POST /api/users/favorites/:productId
+// @access  Private
+exports.addFavorite = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return res.status(400).json({ success: false, message: 'Product is required' });
+  }
+
+  const product = await Product.findById(productId)
+    .populate({
+      path: 'shop',
+      select: 'shopName slug owner',
+      populate: {
+        path: 'owner',
+        select: 'plan'
+      }
+    });
+
+  if (!product || product.moderation?.status === 'rejected' || product.isActive === false) {
+    return res.status(404).json({ success: false, message: 'Product not available' });
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  const alreadyFavorited = user.favorites.some((fav) => fav.toString() === productId.toString());
+
+  if (!alreadyFavorited) {
+    user.favorites.push(product._id);
+    await user.save();
+  }
+
+  const hydratedUser = await User.findById(user._id)
+    .select('favorites')
+    .populate(FAVORITES_POPULATE)
+    .lean();
+
+  const favorites = filterActiveFavorites(hydratedUser?.favorites || []);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      favorites
+    },
+    message: alreadyFavorited ? 'Product already in favorites' : 'Product added to favorites'
+  });
+});
+
+// @desc    Remove product from favorites
+// @route   DELETE /api/users/favorites/:productId
+// @access  Private
+exports.removeFavorite = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+
+  if (!productId) {
+    return res.status(400).json({ success: false, message: 'Product is required' });
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  const originalCount = user.favorites.length;
+  user.favorites = user.favorites.filter((fav) => fav.toString() !== productId.toString());
+
+  if (user.favorites.length !== originalCount) {
+    await user.save();
+  }
+
+  const hydratedUser = await User.findById(user._id)
+    .select('favorites')
+    .populate(FAVORITES_POPULATE)
+    .lean();
+
+  const favorites = filterActiveFavorites(hydratedUser?.favorites || []);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      favorites
+    },
+    message: 'Product removed from favorites'
   });
 });
 

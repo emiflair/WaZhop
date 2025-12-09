@@ -1,6 +1,13 @@
 const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const {
+  getCountryMeta,
+  resolveCountryCode,
+  isSupportedCurrency,
+  DEFAULT_CURRENCY,
+  DEFAULT_COUNTRY_CODE
+} = require('../utils/currency');
 const { asyncHandler, generateSlug } = require('../utils/helpers');
 const { cloudinary } = require('../config/cloudinary');
 const { FREE_THEME, PRO_THEMES } = require('../config/themePresets');
@@ -227,6 +234,18 @@ exports.updateShop = asyncHandler(async (req, res) => {
   if (location !== undefined) shop.location = location;
   if (socialLinks) shop.socialLinks = { ...shop.socialLinks, ...socialLinks };
 
+  if (req.body.countryCode !== undefined || req.body.country !== undefined) {
+    const resolvedCode = resolveCountryCode(req.body.countryCode || req.body.country || DEFAULT_COUNTRY_CODE);
+    const meta = getCountryMeta(resolvedCode);
+    shop.countryCode = resolvedCode;
+    shop.countryName = meta.country;
+
+    // Align payment currency with country if no explicit override is provided
+    if (!paymentSettings || !isSupportedCurrency(paymentSettings.currency)) {
+      shop.paymentSettings.currency = meta.currency;
+    }
+  }
+
   // Update payment settings (Premium only)
   if (paymentSettings) {
     console.log('📥 Received paymentSettings:', JSON.stringify(paymentSettings, null, 2));
@@ -254,7 +273,16 @@ exports.updateShop = asyncHandler(async (req, res) => {
         paymentLink: paymentSettings.paystack?.paymentLink || null
       },
       allowWhatsAppNegotiation: paymentSettings.allowWhatsAppNegotiation ?? true,
-      currency: paymentSettings.currency || 'NGN'
+      currency: (() => {
+        const requestedCurrency = paymentSettings.currency
+          ? String(paymentSettings.currency).toUpperCase()
+          : null;
+        if (requestedCurrency && isSupportedCurrency(requestedCurrency)) {
+          return requestedCurrency;
+        }
+        const meta = getCountryMeta(shop.countryCode || DEFAULT_COUNTRY_CODE);
+        return meta.currency || DEFAULT_CURRENCY;
+      })()
     };
 
     console.log('💾 Saving shop.paymentSettings:', JSON.stringify(shop.paymentSettings, null, 2));

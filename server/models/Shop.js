@@ -1,4 +1,11 @@
 const mongoose = require('mongoose');
+const {
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_CURRENCY,
+  SUPPORTED_COUNTRY_CODES,
+  SUPPORTED_CURRENCIES,
+  getCountryMeta
+} = require('../utils/currency');
 
 const shopSchema = new mongoose.Schema({
   owner: {
@@ -62,6 +69,16 @@ const shopSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: [100, 'Location cannot exceed 100 characters']
+  },
+  countryCode: {
+    type: String,
+    uppercase: true,
+    enum: SUPPORTED_COUNTRY_CODES,
+    default: DEFAULT_COUNTRY_CODE
+  },
+  countryName: {
+    type: String,
+    default: getCountryMeta(DEFAULT_COUNTRY_CODE).country
   },
   theme: {
     name: {
@@ -296,8 +313,8 @@ const shopSchema = new mongoose.Schema({
     },
     currency: {
       type: String,
-      default: 'NGN',
-      enum: ['NGN', 'USD', 'GHS', 'KES', 'ZAR']
+      enum: SUPPORTED_CURRENCIES,
+      default: DEFAULT_CURRENCY
     }
   }
 }, {

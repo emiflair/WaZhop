@@ -1,19 +1,13 @@
 import { IoLogoWhatsapp } from 'react-icons/io5';
 import { FiEye } from 'react-icons/fi';
 import LazyImage from './LazyImage';
+import PriceTag from './PriceTag';
 import { formatWhatsAppNumber } from '../utils/helpers';
+import { formatPrice } from '../utils/currency';
 
 const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
   const settings = template?.settings || {};
   const { productCards, colors } = settings;
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
 
   const getDiscountPercentage = () => {
     if (product.comparePrice && product.comparePrice > product.price) {
@@ -149,12 +143,18 @@ const PremiumProductCard = ({ product, shop, template, onQuickView }) => {
 
         {/* Price */}
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold" style={{ color: colors?.primary }}>
-            {formatPrice(product.price)}
-          </span>
+          <PriceTag
+            price={product.price}
+            currency={product?.currency || shop?.paymentSettings?.currency}
+            priceUSD={product?.priceUSD}
+            layout="inline"
+            primaryClassName="text-2xl font-bold"
+            primaryStyle={{ color: colors?.primary }}
+            convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+          />
           {product.comparePrice && product.comparePrice > product.price && (
             <span className="text-sm line-through opacity-50" style={{ color: colors?.text }}>
-              {formatPrice(product.comparePrice)}
+              {formatPrice(product.comparePrice, product?.currency || shop?.paymentSettings?.currency || 'NGN')}
             </span>
           )}
         </div>

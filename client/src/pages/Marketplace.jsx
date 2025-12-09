@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid, FiMapPin, FiChevronDown, FiSearch, FiCamera, FiMenu } from 'react-icons/fi'
+import { AiFillHeart } from 'react-icons/ai'
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
-import { productAPI } from '../utils/api'
+import { productAPI, userAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { useDebounce } from '../hooks/useDebounce'
 import Navbar from '../components/Navbar'
@@ -13,6 +14,10 @@ import { useNavigate } from 'react-router-dom'
 import useDetectedCountry from '../hooks/useDetectedCountry'
 import { COUNTRY_REGION_MAP, getCountryMeta } from '../utils/location'
 import MarketplaceSearchScreen from '../components/mobile/MarketplaceSearchScreen'
+import { useAuth } from '../context/AuthContext'
+import { useImageSearch } from '../hooks/useImageSearch'
+import PriceTag from '../components/PriceTag'
+import { formatPrice } from '../utils/currency'
 
 const CATEGORY_OPTIONS = Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map((key) => ({
   key,
@@ -57,6 +62,9 @@ export default function Marketplace() {
   })
   const navigate = useNavigate()
   const cameraInputRef = useRef(null)
+  const { isAuthenticated, user, updateUser } = useAuth()
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set())
+  const { classifyImage, isClassifying } = useImageSearch()
 
   const {
     countryCode: detectedCountryCode,
@@ -118,6 +126,49 @@ export default function Marketplace() {
     return parts
   }, [area, ngState, selectedCountryName, detectedCountryName])
 
+  useEffect(() => {
+    if (!user?.favorites) {
+      setFavoriteIds(new Set())
+      return
+    }
+
+    const normalized = user.favorites.map((fav) => {
+      if (!fav) return null
+      if (typeof fav === 'string') return fav
+      return fav._id || fav.id
+    }).filter(Boolean)
+
+    setFavoriteIds(new Set(normalized))
+  }, [user?.favorites])
+
+  const syncFavorites = useCallback((favorites = []) => {
+    const normalized = favorites.map((fav) => (typeof fav === 'string' ? fav : fav?._id || fav?.id)).filter(Boolean)
+    setFavoriteIds(new Set(normalized))
+    updateUser({ favorites })
+  }, [updateUser])
+
+  const handleToggleFavorite = useCallback(async (product, isFavorited) => {
+    if (!isAuthenticated) {
+      toast.error('Create a free account to save favorites')
+      navigate('/login', { state: { from: `/product/${product._id}`, message: 'Please login or create an account to save favorites' } })
+      return
+    }
+
+    try {
+      const response = isFavorited
+        ? await userAPI.removeFavorite(product._id)
+        : await userAPI.addFavorite(product._id)
+
+      const favorites = response?.data?.favorites || []
+      syncFavorites(favorites)
+      toast.success(isFavorited ? 'Removed from favorites' : 'Saved to favorites')
+    } catch (error) {
+      console.error('Failed to toggle favorite', error)
+      const message = error?.response?.data?.message || 'Unable to update favorites right now'
+      toast.error(message)
+    }
+  }, [isAuthenticated, navigate, syncFavorites])
+
   const deliveryAddress = locationParts.join(', ')
   const hasDeliveryAddress = deliveryAddress.length > 0
   const deliverySubtitle = hasDeliveryAddress ? 'Tap to update your delivery location' : 'Tap to set your delivery location'
@@ -163,14 +214,24 @@ export default function Marketplace() {
       console.log('📦 Marketplace API response:', response)
       // Handle response format: response.data or direct array
       const items = response?.data || (Array.isArray(response) ? response : [])
+      const normalizedItems = (items || []).map((product) => {
+        const fallbackCurrency = product?.currency || product?.shop?.paymentSettings?.currency || 'NGN'
+        const currencyCode = typeof fallbackCurrency === 'string' ? fallbackCurrency.toUpperCase() : 'NGN'
+        return {
+          ...product,
+          currency: currencyCode,
+          priceUSD: typeof product?.priceUSD === 'number' ? product.priceUSD : null,
+          comparePriceUSD: typeof product?.comparePriceUSD === 'number' ? product.comparePriceUSD : null
+        }
+      })
       if (reset) {
-        setProducts(items)
+        setProducts(normalizedItems)
         setPage(1)
       } else {
-        setProducts(prev => [...prev, ...items])
+        setProducts(prev => [...prev, ...normalizedItems])
       }
       // Infer hasMore from page size
-      setHasMore(items.length === (params.limit || 24))
+      setHasMore(normalizedItems.length === (params.limit || 24))
     } catch (err) {
       console.error('❌ Marketplace fetch error:', err)
       console.error('Error details:', {
@@ -326,39 +387,103 @@ export default function Marketplace() {
     setShowDiscoveryPanel(false)
   }
 
+  const processImageSearch = useCallback(async (file) => {
+    if (!file) return
+
+    if (isClassifying) {
+      toast('Analyzing previous photo…', { icon: '⏳' })
+      return
+    }
+
+    const toastId = toast.loading('Analyzing your photo…')
+
+    try {
+      const predictions = await classifyImage(file, { maxResults: 5 })
+
+      toast.dismiss(toastId)
+
+      if (!predictions || predictions.length === 0) {
+        toast('No close matches found yet. Try another angle with good lighting.', { icon: '🤔' })
+        return
+      }
+
+      const candidateLabels = predictions
+        .map((prediction) => prediction?.className?.split(',')[0]?.trim())
+        .filter(Boolean)
+
+      const primaryQuery = candidateLabels[0]
+
+      if (!primaryQuery) {
+        toast('Couldn’t understand that photo. Try again with a clearer shot.', { icon: '🤔' })
+        return
+      }
+
+      setCategory('all')
+      setSearchInput(primaryQuery)
+      setPage(1)
+
+      setRecentSearches((prev) => {
+        const trimmed = primaryQuery.trim()
+        const updated = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(0, 5)
+        localStorage.setItem('recentSearches', JSON.stringify(updated))
+        return updated
+      })
+
+      fetchProducts(true, { search: primaryQuery, category: 'all' })
+
+      if (candidateLabels.length > 1) {
+        toast.success(`Searching for “${primaryQuery}”. Other matches: ${candidateLabels.slice(1, 3).join(', ')}`)
+      } else {
+        toast.success(`Searching for “${primaryQuery}”`)
+      }
+    } catch (error) {
+      toast.dismiss(toastId)
+      console.error('Image search failed', error)
+      toast.error('Unable to analyze that photo. Please retake it with better lighting.')
+    }
+  }, [classifyImage, fetchProducts, isClassifying])
+
   const handleCameraClick = (event) => {
     event.stopPropagation()
+    if (isClassifying) {
+      toast('Analyzing previous photo…', { icon: '⏳' })
+      return
+    }
     if (cameraInputRef.current) {
       cameraInputRef.current.click()
     }
   }
 
-  const handleCameraChange = (event) => {
+  const handleCameraChange = async (event) => {
     const [file] = event.target.files || []
     if (!file) return
 
-    toast.success('Photo captured — processing image search...')
-    // TODO: Implement image search API call
-    // For now, just show a message
-    setTimeout(() => {
-      toast('Image search feature coming soon!', { icon: '📷' })
-    }, 1000)
-
-    // Reset input
-    event.target.value = ''
+    try {
+      await processImageSearch(file)
+    } finally {
+      event.target.value = ''
+    }
   }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const handleOpenFilters = () => setShowDiscoveryPanel(true)
     const handleOpenSort = () => openDiscoveryPanelForSort()
+    const handlePhotoCapture = (event) => {
+      const file = event.detail?.file
+      if (file) {
+        processImageSearch(file)
+      }
+    }
     window.addEventListener('openMarketplaceFilters', handleOpenFilters)
     window.addEventListener('openMarketplaceSort', handleOpenSort)
+    window.addEventListener('marketplacePhotoCapture', handlePhotoCapture)
     return () => {
       window.removeEventListener('openMarketplaceFilters', handleOpenFilters)
       window.removeEventListener('openMarketplaceSort', handleOpenSort)
+      window.removeEventListener('marketplacePhotoCapture', handlePhotoCapture)
     }
-  }, [])
+  }, [processImageSearch])
 
   useEffect(() => {
     if (!showDiscoveryPanel || typeof window === 'undefined') return
@@ -728,6 +853,8 @@ export default function Marketplace() {
                       onOpen={() => navigate(`/product/${product._id}`, { 
                         state: { fromMarketplace: true }
                       })}
+                      isFavorited={favoriteIds.has(product._id)}
+                      onToggleFavorite={(isFavorited) => handleToggleFavorite(product, isFavorited)}
                     />
                   ))}
                 </div>
@@ -782,10 +909,11 @@ export default function Marketplace() {
   )
 }
 
-function ProductCard({ product, onOpen, index = 0 }) {
+function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggleFavorite }) {
   const image = product.images?.[0]?.url || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
   const [isHovered, setIsHovered] = useState(false)
+  const productCurrency = product.currency || product?.shop?.paymentSettings?.currency || 'NGN'
   
   // Eager load first 10 products (above the fold), lazy load the rest
   const shouldEagerLoad = index < 10
@@ -808,6 +936,11 @@ function ProductCard({ product, onOpen, index = 0 }) {
       hoverTimerRef.current = null;
     }
   };
+
+  const handleFavoriteClick = (event) => {
+    event?.stopPropagation()
+    onToggleFavorite?.(isFavorited)
+  }
 
   return (
     <div
@@ -878,15 +1011,6 @@ function ProductCard({ product, onOpen, index = 0 }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              toast.success('Added to favorites!');
-            }}
-            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-full hover:bg-primary-500 hover:text-white transition-colors shadow-lg"
-          >
-            <FiHeart className="w-5 h-5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
               onOpen();
             }}
             className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors shadow-lg font-semibold text-sm"
@@ -907,18 +1031,32 @@ function ProductCard({ product, onOpen, index = 0 }) {
 
       {/* Content - compact */}
       <div className="p-3 sm:p-3">
-        <h3 className="font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 mb-1.5 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
-          {product.name}
-        </h3>
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <h3 className="flex-1 font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
+            {product.name}
+          </h3>
+          <button
+            type="button"
+            onClick={handleFavoriteClick}
+            aria-label={isFavorited ? 'Remove from favorites' : 'Save to favorites'}
+            className={`shrink-0 rounded-full p-2 transition-colors ${isFavorited ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/30' : 'text-gray-500 hover:text-primary-600 bg-gray-100 dark:bg-gray-800/80 dark:hover:text-primary-400'}`}
+          >
+            {isFavorited ? <AiFillHeart className="w-4 h-4" /> : <FiHeart className="w-4 h-4" />}
+          </button>
+        </div>
 
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex-1">
-            <div className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400">
-              ₦{product.price?.toLocaleString()}
-            </div>
+            <PriceTag
+              price={product.price}
+              currency={productCurrency}
+              priceUSD={product.priceUSD}
+              primaryClassName="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400"
+              convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+            />
             {product.comparePrice && product.comparePrice > product.price && (
               <div className="text-xs text-gray-400 line-through">
-                ₦{product.comparePrice.toLocaleString()}
+                {formatPrice(product.comparePrice, productCurrency)}
               </div>
             )}
           </div>

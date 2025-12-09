@@ -83,18 +83,11 @@ export default function MobileBottomNav() {
 
   const handleProfileClick = () => {
     if (!isAuthenticated) {
-      // Redirect to login without showing popup
-      navigate('/login', { state: { from: '/dashboard', message: 'Please login or create an account to view your profile' } })
+      navigate('/login', { state: { from: '/profile', message: 'Please login or create an account to view your profile' } })
       return
     }
 
-    if (user?.role === 'seller') {
-      // Take seller to dashboard
-      navigate('/dashboard')
-    } else {
-      // Show upgrade modal for buyer
-      setShowUpgradeModal(true)
-    }
+    navigate('/profile')
   }
 
   const navItems = [
@@ -125,7 +118,7 @@ export default function MobileBottomNav() {
     {
       icon: FiUser,
       label: 'Profile',
-      path: null,
+      path: '/profile',
       onClick: handleProfileClick
     }
   ]

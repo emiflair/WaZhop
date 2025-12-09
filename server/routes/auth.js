@@ -6,6 +6,7 @@ const {
   login,
   getMe,
   updateProfile,
+  uploadProfilePhoto,
   upgradeToSeller,
   changePassword,
   requestEmailVerification,
@@ -31,6 +32,8 @@ const {
   disable2FA,
   get2FAStatus
 } = require('../middlewares/twoFactor');
+const { upload } = require('../config/cloudinary');
+const { validateImage } = require('../middlewares/imageOptimization');
 
 // Public routes with rate limiting
 router.post('/register', authRateLimiter, validateRegister, register);
@@ -45,6 +48,7 @@ router.post('/reset-password', strictRateLimiter, validatePasswordReset, resetPa
 // Protected routes
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.post('/profile/avatar', protect, upload.single('avatar'), validateImage, uploadProfilePhoto);
 router.put('/upgrade-to-seller', protect, upgradeToSeller);
 router.put('/change-password', protect, changePassword);
 router.post('/request-email-verification', protectAllowUnverified, requestEmailVerification);

@@ -41,7 +41,7 @@ const OrderTracking = lazy(() => import('./pages/OrderTracking'))
 
 // Lazy load dashboard pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
-const Profile = lazy(() => import('./pages/dashboard/Profile'))
+const DashboardProfile = lazy(() => import('./pages/dashboard/Profile'))
 const ShopSettings = lazy(() => import('./pages/dashboard/ShopSettings'))
 const Products = lazy(() => import('./pages/dashboard/Products'))
 const Subscription = lazy(() => import('./pages/dashboard/Subscription'))
@@ -71,6 +71,7 @@ const MobileResponsiveDemo = lazy(() => import('./pages/MobileResponsiveDemo'))
 // Lazy load storefront
 const Storefront = lazy(() => import('./pages/Storefront'))
 const ActivateStore = lazy(() => import('./pages/ActivateStore'))
+const AccountProfile = lazy(() => import('./pages/Profile'))
 
 // Protected Route Components
 import ProtectedRoute from './components/ProtectedRoute'
@@ -172,7 +173,8 @@ function AppRoutes() {
                 {/* Protected Dashboard Routes */}
                 {/* Allow buyers to access /dashboard so the upgrade modal can show */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/dashboard/profile" element={<ProtectedRoute sellerOnly><Profile /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><AccountProfile /></ProtectedRoute>} />
+                <Route path="/dashboard/profile" element={<ProtectedRoute sellerOnly><DashboardProfile /></ProtectedRoute>} />
                 <Route path="/dashboard/shops" element={<ProtectedRoute sellerOnly><ManageShops /></ProtectedRoute>} />
                 <Route path="/dashboard/shop" element={<ProtectedRoute sellerOnly><ShopSettings /></ProtectedRoute>} />
                 <Route path="/dashboard/products" element={<ProtectedRoute sellerOnly><Products /></ProtectedRoute>} />

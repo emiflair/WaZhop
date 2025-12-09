@@ -11,6 +11,14 @@ const {
   uploadImageBatch,
   deleteImageFromCloudinary
 } = require('../utils/imageProcessor');
+const {
+  getCountryMeta,
+  resolveCountryCode,
+  isSupportedCurrency,
+  DEFAULT_CURRENCY,
+  DEFAULT_COUNTRY_CODE
+} = require('../utils/currency');
+const { convertAmountToUSD } = require('../utils/exchangeRates');
 
 // Helper function to check storage limit before upload
 const checkStorageLimit = async (userId, newFileSize) => {
@@ -174,12 +182,14 @@ exports.createProduct = asyncHandler(async (req, res) => {
     description,
     price,
     comparePrice,
+    currency,
     category,
     subcategory,
     tags,
     inStock,
     sku,
     shopId,
+    locationCountry,
     locationState,
     locationArea
   } = req.body;
@@ -200,6 +210,9 @@ exports.createProduct = asyncHandler(async (req, res) => {
     const baseSlug = generateSlug(user.name);
     const uniqueSlug = await Shop.generateUniqueSlug(baseSlug);
 
+    const ownerCountryCode = resolveCountryCode(user?.country || DEFAULT_COUNTRY_CODE);
+    const ownerCountryMeta = getCountryMeta(ownerCountryCode);
+
     shop = await Shop.create({
       owner: user._id,
       shopName: `${user.name}'s Shop`,
@@ -210,6 +223,22 @@ exports.createProduct = asyncHandler(async (req, res) => {
         accentColor: '#FFD700',
         layout: 'grid',
         font: 'inter'
+      },
+      countryCode: ownerCountryCode,
+      countryName: ownerCountryMeta.country,
+      paymentSettings: {
+        enabled: false,
+        provider: null,
+        flutterwave: {
+          publicKey: null,
+          paymentLink: null
+        },
+        paystack: {
+          publicKey: null,
+          paymentLink: null
+        },
+        allowWhatsAppNegotiation: true,
+        currency: ownerCountryMeta.currency
       }
     });
 
@@ -280,12 +309,40 @@ exports.createProduct = asyncHandler(async (req, res) => {
   const normState = locationState ? locationState.toString().trim() : null;
   const normArea = locationArea ? locationArea.toString().trim() : null;
 
+  const numericPrice = Number(price);
+  if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a valid product price'
+    });
+  }
+
+  const numericComparePrice = comparePrice !== undefined && comparePrice !== null
+    ? Number(comparePrice)
+    : null;
+  if (numericComparePrice !== null && (!Number.isFinite(numericComparePrice) || numericComparePrice < 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Compare price must be a positive number'
+    });
+  }
+
+  const resolvedCountryCode = resolveCountryCode(locationCountry || shop.country || req.user.country || DEFAULT_COUNTRY_CODE);
+  const countryMeta = getCountryMeta(resolvedCountryCode);
+  const requestedCurrency = String(currency || '').toUpperCase();
+  const productCurrency = isSupportedCurrency(requestedCurrency) ? requestedCurrency : countryMeta.currency || DEFAULT_CURRENCY;
+
+  const priceUSD = await convertAmountToUSD(numericPrice, productCurrency);
+  const comparePriceUSD = numericComparePrice !== null
+    ? await convertAmountToUSD(numericComparePrice, productCurrency)
+    : null;
+
   const product = await Product.create({
     shop: shop._id,
     name,
     description,
-    price,
-    comparePrice,
+    price: numericPrice,
+    comparePrice: numericComparePrice,
     category,
     subcategory: subcategory || null,
     tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map((t) => t.trim())) : [],
@@ -294,7 +351,12 @@ exports.createProduct = asyncHandler(async (req, res) => {
     images,
     position,
     locationState: normState,
-    locationArea: normArea
+    locationArea: normArea,
+    currency: productCurrency,
+    priceUSD,
+    comparePriceUSD,
+    countryCode: resolvedCountryCode,
+    countryName: countryMeta.country
   });
 
   // Send minimal response for faster UI update
@@ -357,8 +419,31 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   // Explicitly map each field
   if (req.body.name !== undefined) updateData.name = req.body.name;
   if (req.body.description !== undefined) updateData.description = req.body.description;
-  if (req.body.price !== undefined) updateData.price = req.body.price;
-  if (req.body.comparePrice !== undefined) updateData.comparePrice = req.body.comparePrice;
+  if (req.body.price !== undefined) {
+    const numericPrice = Number(req.body.price);
+    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid product price'
+      });
+    }
+    updateData.price = numericPrice;
+  }
+  if (req.body.comparePrice !== undefined) {
+    if (req.body.comparePrice === null || req.body.comparePrice === '') {
+      updateData.comparePrice = null;
+      updateData.comparePriceUSD = null;
+    } else {
+      const numericCompare = Number(req.body.comparePrice);
+      if (!Number.isFinite(numericCompare) || numericCompare < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Compare price must be a positive number'
+        });
+      }
+      updateData.comparePrice = numericCompare;
+    }
+  }
   if (req.body.category !== undefined) updateData.category = req.body.category;
   if (req.body.subcategory !== undefined) updateData.subcategory = req.body.subcategory;
   if (req.body.inStock !== undefined) updateData.inStock = req.body.inStock;
@@ -378,6 +463,45 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   }
   if (req.body.locationArea !== undefined) {
     updateData.locationArea = req.body.locationArea ? req.body.locationArea.toString().trim() : null;
+  }
+
+  let updatedCountryCode;
+  if (req.body.locationCountry !== undefined) {
+    updatedCountryCode = resolveCountryCode(req.body.locationCountry || DEFAULT_COUNTRY_CODE);
+    const meta = getCountryMeta(updatedCountryCode);
+    updateData.countryCode = updatedCountryCode;
+    updateData.countryName = meta.country;
+    if (!isSupportedCurrency(req.body.currency)) {
+      updateData.currency = meta.currency;
+    }
+  }
+
+  if (req.body.currency !== undefined) {
+    const requestedCurrency = String(req.body.currency || '').toUpperCase();
+    if (isSupportedCurrency(requestedCurrency)) {
+      updateData.currency = requestedCurrency;
+    } else if (!updatedCountryCode) {
+      // Ignore invalid currency but ensure field doesn't carry invalid value
+      delete updateData.currency;
+    }
+  }
+
+  const targetCurrency = updateData.currency || product.currency || DEFAULT_CURRENCY;
+  const targetPrice = updateData.price !== undefined ? updateData.price : product.price;
+
+  if (updateData.price !== undefined || updateData.currency !== undefined) {
+    updateData.priceUSD = await convertAmountToUSD(targetPrice, targetCurrency);
+  }
+
+  if (updateData.comparePrice !== undefined) {
+    const compareValue = updateData.comparePrice;
+    if (compareValue === null) {
+      updateData.comparePriceUSD = null;
+    } else {
+      updateData.comparePriceUSD = await convertAmountToUSD(compareValue, targetCurrency);
+    }
+  } else if (updateData.currency && product.comparePrice !== null && product.comparePrice !== undefined) {
+    updateData.comparePriceUSD = await convertAmountToUSD(product.comparePrice, targetCurrency);
   }
   
 

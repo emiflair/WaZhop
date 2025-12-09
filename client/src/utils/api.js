@@ -325,6 +325,13 @@ export const authAPI = {
   requestEmailVerificationPublic: (email) => apiWrapper.post('/auth/request-email-verification-public', { email }),
   getMe: () => apiWrapper.get('/auth/me'),
   updateProfile: (data) => apiWrapper.put('/auth/profile', data),
+  uploadProfilePhoto: (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return apiWrapper.post('/auth/profile/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
   changePassword: (data) => apiWrapper.put('/auth/change-password', data),
   forgotPassword: (email) => apiWrapper.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => apiWrapper.post('/auth/reset-password', { token, password }),
@@ -429,7 +436,10 @@ export const userAPI = {
   disable2FA: (password, token) => apiWrapper.post('/auth/2fa/disable', { password, token }),
   get2FAStatus: () => apiWrapper.get('/auth/2fa/status'),
   getAdminUsers: () => apiWrapper.get('/users/admin/all'),
-  updateAdminUser: (userId, payload) => apiWrapper.patch(`/users/admin/${userId}`, payload)
+  updateAdminUser: (userId, payload) => apiWrapper.patch(`/users/admin/${userId}`, payload),
+  getFavorites: () => apiWrapper.get('/users/favorites'),
+  addFavorite: (productId) => apiWrapper.post(`/users/favorites/${productId}`),
+  removeFavorite: (productId) => apiWrapper.delete(`/users/favorites/${productId}`)
 };
 
 export const subscriptionAPI = {

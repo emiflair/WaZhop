@@ -4,9 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { shopAPI, productAPI } from '../../utils/api';
 import { FiShoppingBag, FiEye, FiMousePointer, FiExternalLink } from 'react-icons/fi';
 import { FaStore } from 'react-icons/fa';
+import { Capacitor } from '@capacitor/core';
 import DashboardLayout from '../../components/DashboardLayout';
 import InstallPWA from '../../components/InstallPWA';
 import BuyerToSellerUpgrade from '../../components/BuyerToSellerUpgrade';
+
+const DEFAULT_SHOP_DOMAIN = 'https://wazhop.ng';
+const RAW_BASE_SHOP_URL = (import.meta.env.VITE_PUBLIC_URL || '').trim();
+const BASE_SHOP_URL = (RAW_BASE_SHOP_URL || DEFAULT_SHOP_DOMAIN).replace(/\/$/, '');
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -81,18 +86,24 @@ const Dashboard = () => {
     localStorage.setItem('installPromptDismissed', 'true');
   };
 
+  const buildShopUrl = (slug) => {
+    const sanitizedSlug = (slug || '').replace(/^\/+/, '');
+    return `${BASE_SHOP_URL}/${sanitizedSlug}`;
+  };
+
   // Open shop link in browser (not within PWA)
   const openShopInBrowser = (slug) => {
     console.log('🏪 Opening shop with slug:', slug);
-    const url = `${window.location.origin}/${slug}`;
+    const url = buildShopUrl(slug);
     console.log('🔗 Shop URL:', url);
     
     // Check if running as PWA (standalone mode)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                         window.navigator.standalone ||
                         document.referrer.includes('android-app://');
+    const isNativeApp = Capacitor?.isNativePlatform?.() ? Capacitor.isNativePlatform() : false;
     
-    if (isStandalone) {
+    if (isStandalone || isNativeApp) {
       // Create a temporary anchor element to force external browser opening
       const a = document.createElement('a');
       a.href = url;
@@ -173,7 +184,7 @@ const Dashboard = () => {
               </div>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/${shop.slug}`);
+                  navigator.clipboard.writeText(buildShopUrl(shop.slug));
                   alert('Link copied!');
                 }}
                 className="btn bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 active:bg-primary-100 dark:active:bg-primary-900/50 w-full sm:w-auto text-sm sm:text-base touch-manipulation"
@@ -229,7 +240,7 @@ const Dashboard = () => {
                     </button>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/${shopItem.slug}`);
+                        navigator.clipboard.writeText(buildShopUrl(shopItem.slug));
                         alert('Link copied!');
                       }}
                       className="text-xs px-2 py-2 sm:py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 active:bg-gray-300 dark:active:bg-gray-500 rounded transition touch-manipulation min-h-[44px] sm:min-h-[32px] flex items-center"

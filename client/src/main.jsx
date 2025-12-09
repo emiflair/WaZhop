@@ -11,12 +11,18 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth'
 
 // Initialize GoogleAuth for native platforms - MUST be done before any GoogleAuth calls
 if (Capacitor.isNativePlatform()) {
+  const serverClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  if (!serverClientId) {
+    console.warn('⚠️ VITE_GOOGLE_CLIENT_ID missing; GoogleAuth will initialize without server client ID');
+  }
+
   GoogleAuth.initialize({
-    clientId: '782358027246-kar0nhpcqbe5hfnmp8j59abp18fka9vm.apps.googleusercontent.com',
+    clientId: '782358027246-kar0nhpcqbe5hfnmp8j59abp18fka9vm.apps.googleusercontent.com', // iOS client ID
+    ...(serverClientId ? { serverClientId } : {}),
     scopes: ['profile', 'email'],
     grantOfflineAccess: true,
   });
-  console.log('✅ GoogleAuth initialized for iOS');
+  console.log('✅ GoogleAuth initialized for iOS with iOS client ID', serverClientId ? 'and server client ID' : '(server client ID missing)');
 }
 
 // Debug: Log environment immediately
