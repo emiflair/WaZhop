@@ -20,6 +20,11 @@ const Navbar = () => {
   const overlayPaddingBase = isNativeApp ? 60 : 36;
   const overlayMarketplaceBase = isNativeApp ? 160 : 120;
   const safeAreaTop = 'env(safe-area-inset-top, 0px)';
+  const safeAreaLeft = isNativeApp ? 'env(safe-area-inset-left, 0px)' : '0px';
+  const safeAreaRight = isNativeApp ? 'env(safe-area-inset-right, 0px)' : '0px';
+  const mobileBrandOffset = isNativeApp
+    ? 'calc(-1 * env(safe-area-inset-left, 0px))'
+    : '-16px';
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -122,8 +127,15 @@ const Navbar = () => {
 
   return (
     <nav
-      className="nav-safe-area bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky-safe border-b border-gray-100 dark:border-gray-700 safe-left safe-right w-full overflow-x-hidden"
-      style={{ paddingTop: `calc(${safeAreaTop} + ${navPaddingBase}px)`, maxWidth: '100vw' }}
+      className="nav-safe-area bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/50 sticky-safe border-b border-gray-100 dark:border-gray-700 w-full overflow-x-hidden"
+      style={{
+        paddingTop: `calc(${safeAreaTop} + ${navPaddingBase}px)`,
+        paddingLeft: safeAreaLeft,
+        paddingRight: safeAreaRight,
+        marginLeft: isNativeApp ? 'calc(-1 * env(safe-area-inset-left, 0px))' : '0px',
+        marginRight: isNativeApp ? 'calc(-1 * env(safe-area-inset-right, 0px))' : '0px',
+        maxWidth: '100vw',
+      }}
     >
         {/* Hidden camera input */}
         <input
@@ -135,17 +147,17 @@ const Navbar = () => {
           className="hidden"
           aria-hidden="true"
         />
-        <div className={`w-full ${!isNativeApp ? 'max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8' : 'container-custom'}`}>
+        <div className={`w-full ${!isNativeApp ? 'max-w-[1440px] mx-auto px-0 md:px-6 lg:px-8' : 'container-custom'}`}>
           <div className="flex flex-nowrap justify-between items-center gap-2 sm:gap-3 min-h-[56px] md:h-20 w-full overflow-hidden">
             {/* Mobile brand (web only) */}
             {!isNativeApp && (
-              <div className="flex items-center md:hidden shrink-0">
+              <div className="flex items-center md:hidden shrink-0" style={{ marginLeft: mobileBrandOffset }}>
                 <Link
                   to="/"
                   className="flex items-center"
                   aria-label="WaZhop home"
                 >
-                  <img src={logoSrc} alt="WaZhop logo" className="h-14 sm:h-16 w-auto max-w-[120px] sm:max-w-[140px] object-contain" />
+                  <img src={logoSrc} alt="WaZhop logo" className="h-[4.5rem] sm:h-20 w-auto max-w-[160px] sm:max-w-[180px] object-contain" />
                 </Link>
               </div>
             )}
@@ -154,7 +166,7 @@ const Navbar = () => {
             {!isMarketplace && <div className="md:hidden flex-1" />}
 
             {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center flex-nowrap space-x-1 lg:space-x-2 xl:space-x-3">
+          <div className="hidden md:flex items-center flex-nowrap space-x-1 lg:space-x-2 xl:space-x-3 flex-1">
             {!isNativeApp && (
               <Link
                 to="/"
