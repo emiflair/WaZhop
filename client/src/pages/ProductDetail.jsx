@@ -317,13 +317,13 @@ export default function ProductDetail() {
         <div className="container-custom py-4 sm:py-6 md:py-8 px-4 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* Gallery */}
           <div>
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 h-64 sm:h-80 md:h-96 lg:h-[480px]">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square w-full max-w-[500px] mx-auto md:max-w-none">
               {images.length > 0 ? (
                 <>
                   <img 
                     src={(images[selectedImage]?.url || images[selectedImage]?.secure_url) || ''} 
                     alt={product.name} 
-                    className="w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     fetchPriority={selectedImage === 0 ? "high" : "auto"}
                     onClick={() => {
                       setModalImageIndex(selectedImage);
@@ -348,10 +348,10 @@ export default function ProductDetail() {
               )}
             </div>
             {images.length > 1 && (
-              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2 mt-3">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 sm:gap-2 mt-3 max-w-[500px] mx-auto md:max-w-none">
                 {images.map((img, idx) => (
-                  <button key={idx} onClick={() => setSelectedImage(idx)} className={`border-2 rounded-lg overflow-hidden ${selectedImage === idx ? 'border-blue-500' : 'border-gray-200'}`}>
-                    <img src={(img?.url || img?.secure_url) || ''} alt="" className="w-full h-16 sm:h-20 object-cover" />
+                  <button key={idx} onClick={() => setSelectedImage(idx)} className={`border-2 rounded-lg overflow-hidden aspect-square ${selectedImage === idx ? 'border-blue-500' : 'border-gray-200'}`}>
+                    <img src={(img?.url || img?.secure_url) || ''} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

@@ -211,7 +211,7 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
           <div>
             {/* Main Image */}
             <div 
-              className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-3 sm:mb-4 h-64 sm:h-80 md:h-96 cursor-pointer"
+              className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-3 sm:mb-4 aspect-square w-full cursor-pointer"
               onClick={() => {
                 if (images.length > 0 && setShowImageModal && setModalImageIndex) {
                   setModalImageIndex(selectedImage);
@@ -224,7 +224,7 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
                   <img
                     src={(images[selectedImage] && (images[selectedImage].url || images[selectedImage].secure_url)) || ''}
                     alt={product.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
                   {images.length > 1 && (
                     <>
@@ -257,11 +257,11 @@ const ProductDetailModal = ({ product, shop, shopProducts, onClose, onWhatsAppCl
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`border-2 rounded-lg overflow-hidden ${
+                    className={`border-2 rounded-lg overflow-hidden aspect-square ${
                       selectedImage === idx ? 'border-blue-500' : 'border-gray-200 dark:border-gray-700'
                     }`}
                   >
-                    <img src={(img && (img.url || img.secure_url)) || ''} alt="" className="w-full h-16 sm:h-20 object-cover" />
+                    <img src={(img && (img.url || img.secure_url)) || ''} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

@@ -294,14 +294,16 @@ const Storefront = () => {
           aria-label={`View details for ${product.name}`}
         >
           {product.images && product.images.length > 0 ? (
-            <img
-              src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
-              alt={product.name}
-              className="w-full h-36 sm:h-48 md:h-56 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
+            <div className="aspect-square w-full overflow-hidden">
+              <img
+                src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            </div>
           ) : (
-            <div className="w-full h-36 sm:h-48 md:h-56 lg:h-64 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <div className="aspect-square w-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
               <FiPackage size={32} className="sm:w-10 sm:h-10 md:w-12 md:h-12 text-gray-300 dark:text-gray-600" />
             </div>
           )}
@@ -427,7 +429,7 @@ const Storefront = () => {
     return (
       <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 flex gap-3 sm:gap-4">
         <div
-          className="w-28 sm:w-36 h-24 sm:h-28 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+          className="w-24 sm:w-28 aspect-square rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
           onClick={() => setSelectedProduct(product)}
         >
           {product.images?.length ? (
@@ -488,16 +490,16 @@ const Storefront = () => {
 
   const renderMinimalCard = (product) => (
     <div key={product._id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="cursor-pointer" onClick={() => setSelectedProduct(product)}>
+      <div className="cursor-pointer aspect-square w-full overflow-hidden" onClick={() => setSelectedProduct(product)}>
         {product.images?.length ? (
           <img
             src={product.images.find(img => img.isPrimary)?.url || product.images[0].url}
             alt={product.name}
-            className="w-full h-40 sm:h-44 object-cover"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-40 sm:h-44 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
             <FiPackage className="text-gray-300 dark:text-gray-600" />
           </div>
         )}

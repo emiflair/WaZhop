@@ -177,7 +177,7 @@ const Products = () => {
     setFilteredProducts(filtered);
   };
 
-  // Compress image before upload
+  // Compress image before upload - enforces 1:1 square aspect ratio
   const compressImage = async (file, maxSizeMB = 1) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -187,27 +187,27 @@ const Products = () => {
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Calculate new dimensions (max 1920px width, maintain aspect ratio)
-          const maxWidth = 1920;
-          const maxHeight = 1920;
           
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
+          // Force 1:1 square aspect ratio
+          const maxSize = 1200; // Max dimension for square
+          const size = Math.min(img.width, img.height, maxSize);
+          
+          canvas.width = size;
+          canvas.height = size;
 
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Calculate crop to center the image in square
+          const sourceSize = Math.min(img.width, img.height);
+          const sourceX = (img.width - sourceSize) / 2;
+          const sourceY = (img.height - sourceSize) / 2;
+          
+          // Draw cropped and centered image
+          ctx.drawImage(
+            img,
+            sourceX, sourceY, sourceSize, sourceSize, // source rectangle
+            0, 0, size, size // destination rectangle
+          );
 
           // Try different quality levels to hit target size
           let quality = 0.9;
