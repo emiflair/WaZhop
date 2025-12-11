@@ -91,13 +91,17 @@ const PWAInstallPrompt = () => {
     <>
       {/* iOS Guide Overlay */}
       {isIOS && showIOSGuide && (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex flex-col items-center justify-end pb-4 animate-fade-in">
+        <div 
+          className="fixed inset-0 bg-black/80 z-[60] flex flex-col items-center justify-end pb-4 animate-fade-in"
+          onClick={handleDismiss}
+        >
           <button
-            onClick={() => setShowIOSGuide(false)}
-            className="absolute top-4 right-4 text-white"
+            onClick={handleDismiss}
+            className="absolute top-4 right-4 text-white z-10"
           >
             <X className="w-6 h-6" />
           </button>
+          <div onClick={(e) => e.stopPropagation()}>
           
           <div className="text-center mb-8 px-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
@@ -107,7 +111,7 @@ const PWAInstallPrompt = () => {
                   <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0 text-white font-bold">1</div>
                   <div className="flex-1">
                     <p className="text-white font-medium">Tap the Share button</p>
-                    <p className="text-gray-300 text-sm">At the bottom of Safari</p>
+                    <p className="text-gray-300 text-sm">At the bottom of the browser</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -127,13 +131,6 @@ const PWAInstallPrompt = () => {
               </div>
             </div>
           </div>
-          
-          {/* Animated arrow pointing to share button */}
-          <div className="animate-bounce">
-            <div className="w-12 h-12 border-4 border-white rounded-full flex items-center justify-center">
-              <Share className="w-6 h-6 text-white" />
-            </div>
-            <p className="text-white font-semibold mt-2 text-sm">Tap here</p>
           </div>
         </div>
       )}
