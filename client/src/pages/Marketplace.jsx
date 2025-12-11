@@ -639,7 +639,7 @@ export default function Marketplace() {
           {/* Content stays below status bar */}
           <div className="relative">
             {/* Search bar */}
-            <div className="px-3 flex items-center gap-3" style={{ paddingTop: isNativeApp ? 'calc(env(safe-area-inset-top) + 65px)' : '65px', paddingBottom: '12px' }}>
+            <div className="px-3 flex items-center gap-3" style={{ paddingTop: isNativeApp ? 'calc(env(safe-area-inset-top) + 65px)' : '12px', paddingBottom: '12px' }}>
               <button
                 onClick={openDiscoveryPanel}
                 className="flex-1 flex items-center gap-3 h-11 rounded-md bg-gray-100 dark:bg-gray-800 px-3.5 shadow-sm active:bg-gray-200 dark:active:bg-gray-700 transition"
