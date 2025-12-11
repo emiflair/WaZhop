@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Share, Plus } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -9,6 +10,12 @@ const PWAInstallPrompt = () => {
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
+    // Don't show on native apps - only show on web/PWA
+    const isNativeApp = Capacitor.isNativePlatform();
+    if (isNativeApp) {
+      return;
+    }
+
     // Check if running as standalone PWA
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
                                window.navigator.standalone === true;
