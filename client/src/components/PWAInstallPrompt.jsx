@@ -22,9 +22,14 @@ const PWAInstallPrompt = () => {
     const dismissedTime = dismissed ? parseInt(dismissed) : 0;
     const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
 
-    // Show prompt if not standalone and not recently dismissed (wait 7 days)
+    // Show prompt after delay to avoid showing during app splash screen
     if (!isInStandaloneMode && daysSinceDismissed > 7) {
-      setShowPrompt(true);
+      // Wait 5 seconds after page load to ensure splash screen is done
+      const timer = setTimeout(() => {
+        setShowPrompt(true);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
 
     // Listen for the beforeinstallprompt event (Android/Desktop)
@@ -66,68 +71,49 @@ const PWAInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t-2 border-orange-500 shadow-2xl animate-slide-up">
-      <div className="max-w-md mx-auto p-4">
+    <div className="fixed bottom-20 left-4 right-4 z-50 animate-slide-up">
+      <div className="bg-white dark:bg-gray-900 border border-orange-500 shadow-lg rounded-lg max-w-sm mx-auto p-3 relative">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">W</span>
+        <div className="flex items-center gap-3 pr-6">
+          <div className="flex-shrink-0 w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+            <span className="text-lg font-bold text-white">W</span>
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              Install WaZhop App
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Install WaZhop
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              {isIOS 
-                ? 'Add to your home screen for quick access'
-                : 'Install the app for a better experience'
-              }
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Quick access from home
             </p>
-
-            {isIOS ? (
-              // iOS Instructions
-              <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-gray-800 p-3 rounded-lg">
-                <p className="font-medium flex items-center text-orange-600 dark:text-orange-400">
-                  <Share className="w-4 h-4 mr-2" />
-                  Tap the Share button below
-                </p>
-                <p className="flex items-center">
-                  <Plus className="w-4 h-4 mr-2 text-orange-500" />
-                  Then tap "Add to Home Screen"
-                </p>
-                <div className="pt-2 border-t border-orange-200 dark:border-gray-700">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    The Share button is at the bottom of Safari (or top-right in some browsers)
-                  </p>
-                </div>
-              </div>
-            ) : (
-              // Android/Desktop - Show install button
-              <button
-                onClick={handleInstallClick}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                <span>Install App</span>
-              </button>
-            )}
-
-            <button
-              onClick={handleDismiss}
-              className="mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
-            >
-              Maybe later
-            </button>
           </div>
+
+          {!isIOS && (
+            <button
+              onClick={handleInstallClick}
+              className="flex-shrink-0 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-3 rounded-lg flex items-center gap-1 transition-colors text-xs"
+            >
+              <Download className="w-4 h-4" />
+              <span>Add</span>
+            </button>
+          )}
         </div>
+
+        {isIOS && (
+          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+              <Share className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
+              Tap Share → Add to Home Screen
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
