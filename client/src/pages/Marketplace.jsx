@@ -779,52 +779,11 @@ export default function Marketplace() {
                 )
               })}
             </div>
-
-            {/* Mobile: Horizontal scroll with circular icons */}
-            <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-2 px-2">
-              <div className="flex gap-4 pb-2">
-                {trendingCategories.map((item, i) => {
-                  const Icon = item.icon
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => selectCategory(item.category)}
-                      className="flex flex-col items-center gap-2 flex-shrink-0"
-                    >
-                      <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
-                          category === item.category
-                            ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-lg shadow-primary-500/30 scale-105'
-                            : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10 dark:from-primary-500/20 dark:to-orange-500/20'
-                        }`}
-                      >
-                        <Icon
-                          className={`w-6 h-6 transition-colors duration-300 ${
-                            category === item.category
-                              ? 'text-white'
-                              : 'text-primary-600 dark:text-primary-400'
-                          }`}
-                        />
-                      </div>
-                      <span
-                        className={`text-[10px] font-medium text-center leading-tight max-w-[60px] transition-colors duration-300 ${
-                          category === item.category
-                            ? 'text-primary-600 dark:text-primary-400'
-                            : 'text-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Spacer for fixed header with categories */}
-        <div className="md:hidden" style={{ height: 'calc(env(safe-area-inset-top) + 120px)' }}></div>
+        <div className="md:hidden" style={{ height: 'calc(env(safe-area-inset-top) + 160px)' }}></div>
 
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
