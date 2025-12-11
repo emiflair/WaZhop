@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import VersionCheck from './components/VersionCheck'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
 import { useTheme } from './context/ThemeContext'
 // v2.0.1 - Free upgrade support
 
@@ -212,6 +213,7 @@ function App() {
                 <AuthProvider>
                   <CartProvider>
                     <VersionCheck />
+                    <PWAInstallPrompt />
                     <AppRoutes />
                   </CartProvider>
                 </AuthProvider>
@@ -224,6 +226,7 @@ function App() {
               <AuthProvider>
                 <CartProvider>
                   <VersionCheck />
+                  <PWAInstallPrompt />
                   <AppRoutes />
                 </CartProvider>
               </AuthProvider>

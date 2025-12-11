@@ -1,0 +1,32 @@
+{
+  "assets": [
+    {
+      "type": "icon",
+      "sources": ["assets/icon.png"],
+      "targets": [
+        {
+          "platform": "android",
+          "idiom": "universal"
+        },
+        {
+          "platform": "ios",
+          "idiom": "universal"
+        }
+      ]
+    },
+    {
+      "type": "splash",
+      "sources": ["assets/splash.png"],
+      "targets": [
+        {
+          "platform": "android",
+          "idiom": "universal"
+        },
+        {
+          "platform": "ios",
+          "idiom": "universal"
+        }
+      ]
+    }
+  ]
+}
