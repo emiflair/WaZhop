@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { FiShoppingBag, FiStar, FiTrendingUp, FiEye, FiHeart, FiZap, FiSmartphone, FiMonitor, FiGrid, FiMapPin, FiChevronDown, FiSearch, FiCamera, FiMenu } from 'react-icons/fi'
 import { AiFillHeart } from 'react-icons/ai'
 import { FaBaby, FaSpa, FaPaw, FaTools, FaTshirt, FaCouch, FaLeaf, FaDumbbell, FaCar, FaBriefcase } from 'react-icons/fa'
+import { Capacitor } from '@capacitor/core'
 import { productAPI, userAPI } from '../utils/api'
 import { CATEGORY_SUGGESTIONS, CATEGORIES_WITH_SUBCATEGORIES, getCategoryLabel } from '../utils/categories'
 import { useDebounce } from '../hooks/useDebounce'
@@ -26,6 +27,7 @@ const CATEGORY_OPTIONS = Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map((key) =>
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
+  const isNativeApp = Capacitor.isNativePlatform();
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -637,7 +639,7 @@ export default function Marketplace() {
           {/* Content stays below status bar */}
           <div className="relative">
             {/* Search bar */}
-            <div className="px-3 flex items-center gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 65px)', paddingBottom: '12px' }}>
+            <div className="px-3 flex items-center gap-3" style={{ paddingTop: isNativeApp ? 'calc(env(safe-area-inset-top) + 65px)' : '65px', paddingBottom: '12px' }}>
               <button
                 onClick={openDiscoveryPanel}
                 className="flex-1 flex items-center gap-3 h-11 rounded-md bg-gray-100 dark:bg-gray-800 px-3.5 shadow-sm active:bg-gray-200 dark:active:bg-gray-700 transition"
