@@ -563,73 +563,7 @@ export default function Marketplace() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
         <Navbar />
 
-        {/* Sticky Header that appears when scrolling stops */}
-        <div className={`md:hidden fixed left-0 right-0 z-40 transition-all duration-300 ${showStickyHeader ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`} style={{ top: 'calc(env(safe-area-inset-top) + 66px)' }}>
-          {/* Deliver To Section */}
-          <div className="bg-gradient-to-b from-[#37475A] to-[#232F3E] border-b border-gray-600/50 px-3 py-2">
-            <button
-              type="button"
-              onClick={openDiscoveryPanel}
-              className="w-full flex items-center justify-between rounded-lg bg-gray-600/30 px-3 py-2 text-left transition hover:bg-gray-600/40"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-500/40 text-white">
-                  <FiMapPin className="h-3 w-3" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-medium uppercase tracking-wider text-gray-300">Deliver to</span>
-                  <span className="text-xs font-bold text-white truncate max-w-[150px]">
-                    {hasDeliveryAddress ? deliveryAddress : 'Set address'}
-                  </span>
-                </div>
-              </div>
-              <FiChevronDown className="h-4 w-4 text-gray-400" />
-            </button>
-          </div>
 
-          {/* Categories */}
-          <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 py-2">
-            <div className="overflow-x-auto scrollbar-hide px-3">
-              <div className="flex gap-3 pb-1">
-                {trendingCategories.map((item, i) => {
-                  const Icon = item.icon
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => selectCategory(item.category)}
-                      className="flex flex-col items-center gap-1 flex-shrink-0"
-                    >
-                      <div
-                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${
-                          category === item.category
-                            ? 'bg-gradient-to-br from-primary-500 to-orange-500 shadow-md'
-                            : 'bg-gradient-to-br from-primary-500/10 to-orange-500/10'
-                        }`}
-                      >
-                        <Icon
-                          className={`w-5 h-5 transition-colors duration-300 ${
-                            category === item.category
-                              ? 'text-white'
-                              : 'text-primary-600 dark:text-primary-400'
-                          }`}
-                        />
-                      </div>
-                      <span
-                        className={`text-[9px] font-medium text-center leading-tight max-w-[50px] ${
-                          category === item.category
-                            ? 'text-primary-600 dark:text-primary-400'
-                            : 'text-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Fixed Search Bar + Categories as one unit */}
         <div className="md:hidden fixed top-0 left-0 right-0 z-50 -mt-safe pt-safe">
@@ -783,7 +717,7 @@ export default function Marketplace() {
         </div>
 
         {/* Spacer for fixed header with categories */}
-        <div className="md:hidden" style={{ height: 'calc(env(safe-area-inset-top) + 160px)' }}></div>
+        <div className="md:hidden" style={{ height: isNativeApp ? 'calc(env(safe-area-inset-top) + 180px)' : '170px' }}></div>
 
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
