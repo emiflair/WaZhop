@@ -17,29 +17,40 @@ const PWAInstallPrompt = () => {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(iOS);
 
+    // Don't proceed if already in standalone mode
+    if (isInStandaloneMode) {
+      return;
+    }
+
     // Check if user has dismissed the prompt before
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     const dismissedTime = dismissed ? parseInt(dismissed) : 0;
     const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
 
-    // Show prompt after delay to avoid showing during app splash screen
-    if (!isInStandaloneMode && daysSinceDismissed > 7) {
-      // Wait 5 seconds after page load to ensure splash screen is done
-      const timer = setTimeout(() => {
-        setShowPrompt(true);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-
     // Listen for the beforeinstallprompt event (Android/Desktop)
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowPrompt(true);
+      
+      // Only show if not recently dismissed
+      if (daysSinceDismissed > 7) {
+        setTimeout(() => setShowPrompt(true), 5000);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // For iOS, show prompt after delay if not recently dismissed
+    if (iOS && daysSinceDismissed > 7) {
+      const timer = setTimeout(() => {
+        setShowPrompt(true);
+      }, 5000);
+      
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
