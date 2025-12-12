@@ -327,10 +327,7 @@ const Navbar = () => {
                 {/* Quick Links section as boxes */}
                 <div className="pt-2">
                   <p className="px-1 text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 font-semibold">Quick Links</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Link to="/register" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
-                      Get Started
-                    </Link>
+                  <div className="grid grid-cols-2 gap-2">
                     <Link to="/privacy-policy" onClick={() => setIsOpen(false)} className="min-h-[44px] px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white text-center flex items-center justify-center text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition">
                       Privacy Policy
                     </Link>
