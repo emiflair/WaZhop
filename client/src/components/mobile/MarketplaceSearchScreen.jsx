@@ -36,23 +36,36 @@ export default function MarketplaceSearchScreen({
   }, [])
 
   return (
-    <div className="fixed inset-0 z-[1050] flex flex-col bg-white dark:bg-gray-950" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 60px)' }}>
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center justify-center rounded-full p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          aria-label="Close search"
-        >
-          <FiArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex-1">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Marketplace Search</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Filter by category, location, and keywords.</p>
-        </div>
-      </div>
+    <>
+      {/* Backdrop overlay */}
+      <div 
+        className="fixed inset-0 z-[1040] bg-black/5 dark:bg-black/10"
+        onClick={onClose}
+        style={{ marginTop: 'calc(env(safe-area-inset-top) + 60px)' }}
+      />
+      
+      {/* Dropdown panel */}
+      <div className="fixed left-0 right-0 z-[1050] mx-4 rounded-2xl shadow-2xl overflow-hidden" style={{ top: 'calc(env(safe-area-inset-top) + 70px)' }}>
+        {/* Glass effect container */}
+        <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-2xl border border-white/20 dark:border-gray-700/30">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-full p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition"
+              aria-label="Close search"
+            >
+              <FiX className="h-5 w-5" />
+            </button>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Marketplace Search</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Filter by category, location, and keywords.</p>
+            </div>
+          </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-36 sm:pb-10">
+          {/* Content - scrollable */}
+          <div className="max-h-[70vh] overflow-y-auto px-4 pb-4">
         <form onSubmit={onSubmit} className="space-y-5 pt-5">
           <div className="relative">
             <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
@@ -60,7 +73,7 @@ export default function MarketplaceSearchScreen({
               ref={searchRef}
               type="text"
               placeholder="Search products, categories..."
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-11 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+              className="w-full rounded-xl border border-gray-300/20 dark:border-gray-600/20 bg-white/30 dark:bg-gray-800/30 backdrop-blur-md pl-10 pr-11 py-3 text-sm text-gray-900 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:text-gray-100"
               style={{ fontSize: '16px' }}
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
@@ -86,7 +99,7 @@ export default function MarketplaceSearchScreen({
               <select
                 value={category}
                 onChange={(event) => onCategoryChange(event.target.value)}
-                className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+                className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
               >
                 <option value="all">All Categories</option>
                 {categories.map(({ key, label }) => (
@@ -100,7 +113,7 @@ export default function MarketplaceSearchScreen({
               <select
                 value={countryCode}
                 onChange={(event) => onCountryChange(event.target.value)}
-                className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+                className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
               >
                 <option value="">All Countries</option>
                 {supportedCountries.map(({ code, name }) => (
@@ -115,7 +128,7 @@ export default function MarketplaceSearchScreen({
                 <select
                   value={ngState}
                   onChange={(event) => onRegionChange(event.target.value)}
-                  className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+                  className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
                 >
                   <option value="">All Locations</option>
                   {regionOptions.map((region) => (
@@ -128,7 +141,7 @@ export default function MarketplaceSearchScreen({
                   value={ngState}
                   onChange={(event) => onRegionChange(event.target.value)}
                   placeholder={`State or region${selectedCountryName ? ` in ${selectedCountryName}` : ''}`}
-                  className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+                  className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
                   style={{ fontSize: '16px' }}
                 />
               )}
@@ -141,7 +154,7 @@ export default function MarketplaceSearchScreen({
               id="marketplace-sort-select"
               value={sortBy}
               onChange={(event) => onSortChange(event.target.value)}
-              className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+              className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
             >
               <option value="">Featured (Boosted first)</option>
               <option value="-createdAt">Newest First</option>
@@ -160,7 +173,7 @@ export default function MarketplaceSearchScreen({
                 value={area}
                 onChange={(event) => onAreaChange(event.target.value)}
                 placeholder={selectedCountryName ? `Area in ${selectedCountryName}` : 'City or area'}
-                className="input text-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
+                className="input text-sm bg-white/30 dark:bg-gray-800/30 border-gray-300/20 dark:border-gray-600/20 backdrop-blur-md"
                 style={{ fontSize: '16px' }}
               />
             </div>
@@ -203,7 +216,9 @@ export default function MarketplaceSearchScreen({
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
