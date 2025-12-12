@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiLogOut, FiSearch, FiCamera, FiFacebook, FiInstagram, FiMail } from 'react-icons/fi';
+import { FaTiktok } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
@@ -360,6 +361,9 @@ const Navbar = () => {
                     </a>
                     <a href="https://www.instagram.com/wazhop.ng?igsh=Z2Nqd2w3eTF0bHdo&utm_source=qr" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-pink-600 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
                       <FiInstagram size={24} className="text-gray-700 dark:text-white" />
+                    </a>
+                    <a href="https://www.tiktok.com/@wazhop.ng" target="_blank" rel="noopener noreferrer" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-black dark:hover:bg-white transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
+                      <FaTiktok size={24} className="text-gray-700 dark:text-white" />
                     </a>
                     <a href="mailto:support@wazhop.ng" className="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center" onClick={() => setIsOpen(false)}>
                       <FiMail size={24} className="text-gray-700 dark:text-white" />
