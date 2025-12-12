@@ -717,7 +717,7 @@ export default function Marketplace() {
         </div>
 
         {/* Spacer for fixed header with categories */}
-        <div className="md:hidden" style={{ height: isNativeApp ? 'calc(env(safe-area-inset-top) + 100px)' : '95px' }}></div>
+        <div className="md:hidden" style={{ height: isNativeApp ? 'calc(env(safe-area-inset-top) + 100px)' : '80px' }}></div>
 
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
