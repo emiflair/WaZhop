@@ -24,7 +24,7 @@ const Navbar = () => {
   const safeAreaRight = isNativeApp ? 'env(safe-area-inset-right, 0px)' : '0px';
   const mobileBrandOffset = isNativeApp
     ? 'calc(-1 * env(safe-area-inset-left, 0px))'
-    : '-48px';
+    : '-32px';
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
