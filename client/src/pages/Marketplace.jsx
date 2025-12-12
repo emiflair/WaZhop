@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 // Product details now open on a dedicated page, not a modal
 import { useNavigate } from 'react-router-dom'
 import useDetectedCountry from '../hooks/useDetectedCountry'
+import { generateCategorySEO } from '../utils/seoEngine'
 import { COUNTRY_REGION_MAP, getCountryMeta } from '../utils/location'
 import MarketplaceSearchScreen from '../components/mobile/MarketplaceSearchScreen'
 import { useAuth } from '../context/AuthContext'
@@ -35,6 +36,13 @@ export default function Marketplace() {
   const [searchInput, setSearchInput] = useState('') // Immediate UI update
   const debouncedSearch = useDebounce(searchInput, 300) // Debounced for API calls
   const [category, setCategory] = useState('all')
+  
+  // Generate dynamic SEO based on category
+  const seoData = useMemo(() => {
+    return category && category !== 'all' 
+      ? generateCategorySEO(getCategoryLabel(category))
+      : generateCategorySEO('All Products');
+  }, [category]);
   // Empty sort means backend default (featured: boosted first)
   const [sortBy, setSortBy] = useState('')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
@@ -547,8 +555,9 @@ export default function Marketplace() {
   return (
     <>
       <SEO
-        title="Marketplace - Discover Products from Top Sellers"
-        description="Browse thousands of products from verified sellers. Best prices, trusted reviews, instant WhatsApp orders."
+        title={seoData.title}
+        description={seoData.metaDescription}
+        keywords={seoData.keywords}
       />
       {/* Hidden camera input */}
       <input

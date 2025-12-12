@@ -5,11 +5,15 @@ import Navbar from '../components/Navbar';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
+import { generateSEO } from '../utils/seoEngine';
 
 const Home = () => {
   const { isAuthenticated, user, openSubscriptionModal, promptSellerUpgrade } = useAuth();
   const isSeller = isAuthenticated && (user?.role === 'seller' || user?.role === 'admin');
   const isBuyer = isAuthenticated && user?.role === 'buyer';
+  
+  // Generate SEO metadata
+  const seoData = generateSEO('Home', ['digital storefront', 'WhatsApp business']);
 
   const getStartedHref = () => {
     if (!isAuthenticated) return '/register?role=seller';
@@ -74,9 +78,9 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <SEO
-        title="Your Own Digital Shop in Minutes. Sell Anywhere, Anytime | Wazhop"
-        description="Wazhop gives you a fully customizable digital shop with your own brand, logo, and style. Reach customers instantly on WhatsApp and grow your business from home."
-        keywords="WhatsApp shop, online store, e-commerce, sell online, WhatsApp business, digital shop, custom storefront"
+        title={seoData.title}
+        description={seoData.metaDescription}
+        keywords={seoData.keywords}
         type="website"
       />
       <Navbar />
