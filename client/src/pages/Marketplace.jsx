@@ -604,7 +604,7 @@ export default function Marketplace() {
             </div>
 
             {/* Categories inside fixed header */}
-            <div className="px-3 pb-3">
+            <div className="px-3 pb-0">
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-4">
                   {trendingCategories.map((item, i) => {
@@ -717,7 +717,7 @@ export default function Marketplace() {
         </div>
 
         {/* Spacer for fixed header with categories */}
-        <div className="md:hidden" style={{ height: isNativeApp ? 'calc(env(safe-area-inset-top) + 180px)' : '170px' }}></div>
+        <div className="md:hidden" style={{ height: isNativeApp ? 'calc(env(safe-area-inset-top) + 100px)' : '95px' }}></div>
 
         {/* Filters & Sort Bar removed – combined into top search icon & full-screen panel */}
 
