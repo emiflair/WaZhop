@@ -934,9 +934,9 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
       </div>
 
       {/* Content - compact */}
-      <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
+      <div className="flex flex-col flex-1 p-3 sm:p-3 gap-1.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="flex-1 font-semibold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          <h3 className="flex-1 font-semibold text-[13px] text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             {product.name}
           </h3>
           <button
@@ -955,32 +955,32 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
               price={product.price}
               currency={productCurrency}
               priceUSD={product.priceUSD}
-              primaryClassName="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400"
-              convertedClassName="text-xs text-gray-500 dark:text-gray-400"
+              primaryClassName="text-sm sm:text-base font-bold text-primary-600 dark:text-primary-400"
+              convertedClassName="text-[11px] text-gray-500 dark:text-gray-400"
             />
             {product.comparePrice && product.comparePrice > product.price && (
-              <div className="text-xs text-gray-400 line-through">
+              <div className="text-[11px] text-gray-400 line-through">
                 {formatPrice(product.comparePrice, productCurrency)}
               </div>
             )}
           </div>
           {product.inStock ? (
-            <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
+            <span className="text-[11px] text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
               In Stock
             </span>
           ) : (
-            <span className="text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+            <span className="text-[11px] text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
               Out of Stock
             </span>
           )}
         </div>
 
         {/* Shop Info - tighter */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-1.5">
-          <FiShoppingBag className="shrink-0 w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-1">
+          <FiShoppingBag className="shrink-0 w-3 h-3" />
           <span className="truncate font-medium">{product.shop?.shopName || 'Shop'}</span>
           {(product.shop?.owner?.plan === 'pro' || product.shop?.owner?.plan === 'premium') && (
-            <svg className="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
           )}
@@ -992,7 +992,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
             e.stopPropagation();
             onOpen();
           }}
-          className="mt-auto w-full btn btn-primary text-sm py-2.5 font-semibold hover:shadow-lg transition-shadow"
+          className="mt-1 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
         >
           Price am
         </button>
