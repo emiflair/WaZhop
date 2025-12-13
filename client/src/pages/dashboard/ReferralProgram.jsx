@@ -10,7 +10,10 @@ import {
   FiShield,
   FiLayers,
   FiClock,
-  FiArrowRight
+  FiArrowRight,
+  FiUnlock,
+  FiBarChart2,
+  FiInfo
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
@@ -79,8 +82,8 @@ const payoutStatusStyles = {
 };
 
 const tabs = [
-  { id: 'rewards', label: 'Rewards Overview' },
-  { id: 'earnings', label: 'Earnings & Payouts' }
+  { id: 'rewards', label: 'Rewards' },
+  { id: 'earnings', label: 'Earnings' }
 ];
 
 const EarningsRewardsDashboard = () => {
@@ -92,6 +95,7 @@ const EarningsRewardsDashboard = () => {
   const [payoutNotes, setPayoutNotes] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [activeTab, setActiveTab] = useState('rewards');
+  const [calculatorReferrals, setCalculatorReferrals] = useState(5);
 
   useEffect(() => {
     fetchReferralStats();
@@ -270,6 +274,11 @@ const EarningsRewardsDashboard = () => {
   const payoutRequests = referralData?.earnings?.payoutRequests || [];
   const withdrawableBalance = earningsSummary.withdrawableBalance || 0;
   const canRequestPayout = withdrawableBalance >= (earningsSummary.minimumPayout || defaultEarnings.summary.minimumPayout);
+  const minimumPayout = earningsSummary.minimumPayout || defaultEarnings.summary.minimumPayout;
+  const perReferralCommissionValue = earningsSummary.perReferralCommission || defaultEarnings.summary.perReferralCommission;
+  const calculatorMonthly = calculatorReferrals * perReferralCommissionValue;
+  const calculatorYearly = calculatorMonthly * 12;
+  const calculatorPayoutMonths = calculatorMonthly > 0 ? Math.ceil(minimumPayout / calculatorMonthly) : null;
 
   const rewardHighlights = useMemo(() => ([
     {
@@ -307,8 +316,7 @@ const EarningsRewardsDashboard = () => {
             <p className="uppercase tracking-[0.35em] text-xs text-white/70 mb-2">Growth Hub</p>
             <h1 className="text-3xl sm:text-4xl font-semibold mb-4">Earnings & Rewards</h1>
             <p className="text-white/80 max-w-2xl">
-              Earn recurring cash commissions when your referrals stay premium, plus instant plan upgrades every five signups.
-              Share the same referral link—you now get both benefits in one place.
+              Invite friends and earn 5% every month. Earn recurring income from every Premium subscriber you refer — and keep stacking free Pro days with the very same link.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-white/70">
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur">
@@ -328,8 +336,9 @@ const EarningsRewardsDashboard = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Your Referral Link</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Invite sellers with one link. They register at `/register?ref=CODE`.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Invite friends and earn 5% every month. Earn recurring income from every Premium subscriber you refer — plus free Pro days.</p>
             </div>
+            <p className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Referral URL · https://wazhop.ng/register?ref=XXXX</p>
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex-1 bg-gray-50 dark:bg-gray-800/80 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 font-mono text-sm break-all">
                 {referralData.referralLink}
@@ -374,6 +383,11 @@ const EarningsRewardsDashboard = () => {
           <div className="p-6">
             {activeTab === 'rewards' ? (
               <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.35em] text-primary-500">Rewards</p>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">🎁 Free Pro Rewards</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Invite friends and earn free Pro plan days. Keep the existing progress bar, claim flow, and auto-upgrade behavior—now showcased beside cash earnings.</p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {rewardHighlights.map((item) => (
                     <div key={item.label} className="relative overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
@@ -463,45 +477,68 @@ const EarningsRewardsDashboard = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.35em] text-emerald-500">Premium earnings</p>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">💰 Earn 5% Every Month</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Get paid when your referrals subscribe to Premium. Commissions renew automatically each month as long as the subscription is active.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                   <div className="card">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Withdrawable balance</p>
-                    <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(withdrawableBalance, earningsSummary.currency)}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Excludes locked & already paid-out amounts.</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <span>Total earnings</span>
+                      <FiDollarSign className="text-primary-500" />
+                    </div>
+                    <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(earningsSummary.totalEarned, earningsSummary.currency)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Lifetime commissions generated by Premium referrals.</p>
                   </div>
                   <div className="card">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Locked (anti-fraud)</p>
-                    <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(earningsSummary.lockedAmount, earningsSummary.currency)}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Released 7 days after Premium activation.</p>
-                  </div>
-                  <div className="card">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Monthly recurring</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <span>Monthly earnings</span>
+                      <FiTrendingUp className="text-primary-500" />
+                    </div>
                     <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(earningsSummary.monthlyEarnings, earningsSummary.currency)}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">From {earningsSummary.activePremiumReferrals} active Premium sellers.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">5% of ₦18,000 per active Premium referral.</p>
+                  </div>
+                  <div className="card">
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <span>Active Premium referrals</span>
+                      <FiUsers className="text-primary-500" />
+                    </div>
+                    <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{earningsSummary.activePremiumReferrals}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Recurring earnings continue while they stay subscribed.</p>
+                  </div>
+                  <div className="card">
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <span>Withdrawable balance</span>
+                      <FiUnlock className="text-primary-500" />
+                    </div>
+                    <p className="text-3xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(withdrawableBalance, earningsSummary.currency)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Min payout {formatCurrency(minimumPayout, earningsSummary.currency)} · locked funds auto-release after 7 days.</p>
                   </div>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-6">
-                  <div className="card lg:col-span-2">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="card lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Premium earnings timeline</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">5% of ₦18k billed monthly per Premium referral.</p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Earnings pipeline</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Referral · Plan · Commission · Status · Lifetime earnings.</p>
                       </div>
-                      <span className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1"><FiDollarSign /> {earningsSummary.commissionPercent}% per renewal</span>
+                      <span className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1"><FiDollarSign /> {earningsSummary.commissionPercent}% recurring</span>
                     </div>
                     {earningsRecords.length === 0 ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No Premium referrals yet. Encourage sellers to upgrade to unlock commissions.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No Premium referrals yet. Share your link — every upgrade instantly locks in 5% of ₦18,000 per month.</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
-                              <th className="py-3">Seller</th>
+                              <th className="py-3">Referral</th>
+                              <th className="py-3">Plan</th>
+                              <th className="py-3">Commission</th>
                               <th className="py-3">Status</th>
-                              <th className="py-3">Monthly</th>
-                              <th className="py-3">Lifetime earned</th>
-                              <th className="py-3">Pending amount</th>
+                              <th className="py-3">Lifetime</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -512,13 +549,23 @@ const EarningsRewardsDashboard = () => {
                                   <p className="text-xs text-gray-500 dark:text-gray-400">{record.referredEmail || '—'}</p>
                                 </td>
                                 <td className="py-3">
+                                  <p className="text-gray-900 dark:text-gray-100 font-medium capitalize">{record.plan || 'premium'}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">₦18,000 / month</p>
+                                </td>
+                                <td className="py-3">
+                                  <p className="text-gray-900 dark:text-gray-100 font-semibold">{record.commissionPercent || earningsSummary.commissionPercent}%</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(record.monthlyCommissionValue, earningsSummary.currency)} / month</p>
+                                </td>
+                                <td className="py-3">
                                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[record.status] || 'bg-gray-100 text-gray-700'}`}>
                                     {record.status.replace('_', ' ')}
                                   </span>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Start {formatDate(record.earningsStartDate)}</p>
                                 </td>
-                                <td className="py-3 text-gray-900 dark:text-gray-100">{formatCurrency(record.monthlyCommissionValue, earningsSummary.currency)}</td>
-                                <td className="py-3 text-gray-900 dark:text-gray-100">{formatCurrency(record.totalEarned, earningsSummary.currency)}</td>
-                                <td className="py-3 text-gray-900 dark:text-gray-100">{formatCurrency(record.pendingAmount, earningsSummary.currency)}</td>
+                                <td className="py-3">
+                                  <p className="text-gray-900 dark:text-gray-100 font-semibold">{formatCurrency(record.totalEarned, earningsSummary.currency)}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Pending {formatCurrency(record.pendingAmount, earningsSummary.currency)}</p>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -529,17 +576,17 @@ const EarningsRewardsDashboard = () => {
 
                   <div className="card space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Request payout</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Withdraw available balance once you hit ₦20k. We manually verify each request.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Hit ₦20,000 withdrawable balance and submit a manual payout request. We review every request to keep the system fair.</p>
                     <form onSubmit={handlePayoutSubmit} className="space-y-3">
                       <div>
                         <label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Amount (NGN)</label>
                         <input
                           type="number"
-                          min={earningsSummary.minimumPayout}
+                          min={minimumPayout}
                           value={payoutAmount}
                           onChange={(e) => setPayoutAmount(e.target.value)}
                           className="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                          placeholder={earningsSummary.minimumPayout?.toString() || '20000'}
+                          placeholder={minimumPayout?.toString() || '20000'}
                         />
                       </div>
                       <div>
@@ -554,12 +601,17 @@ const EarningsRewardsDashboard = () => {
                       </div>
                       <button type="submit" disabled={!canRequestPayout || requesting} className="btn btn-primary w-full inline-flex items-center justify-center gap-2">
                         {requesting ? <LoadingSpinner size="sm" /> : <FiArrowRight size={18} />}
-                        {requesting ? 'Submitting...' : `Request ${formatCurrency(Number(payoutAmount) || earningsSummary.minimumPayout, earningsSummary.currency)}`}
+                        {requesting ? 'Submitting...' : `Request ${formatCurrency(Number(payoutAmount) || minimumPayout, earningsSummary.currency)}`}
                       </button>
                       {!canRequestPayout && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 text-center">Reach at least {formatCurrency(earningsSummary.minimumPayout, earningsSummary.currency)} withdrawable balance to unlock payouts.</p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 text-center">Reach {formatCurrency(minimumPayout, earningsSummary.currency)} withdrawable balance to unlock payouts.</p>
                       )}
                     </form>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-xs text-gray-600 dark:text-gray-300 space-y-1.5">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200">Payout flow</p>
+                      <p>Pending → Processing (14 days) → Paid</p>
+                      <p>Method: bank transfer (coming soon). We will email you during each step.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -590,10 +642,76 @@ const EarningsRewardsDashboard = () => {
 
                   <div className="card space-y-3">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Activation tracker</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{earningsSummary.pendingActivation} Premium referrals are in their 7-day verification window before commissions unlock.</p>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
-                      <p className="flex gap-2"><FiShield className="text-primary-500" /> We hold the first commission for 7 days to prevent fake upgrades.</p>
-                      <p className="mt-2 flex gap-2"><FiClock className="text-primary-500" /> Locked amounts auto-release once the activation window clears.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{earningsSummary.pendingActivation} Premium referrals are completing their 7-day anti-fraud window before commissions unlock.</p>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                      <p className="flex gap-2"><FiShield className="text-primary-500" /> No self-referrals. Locked amount releases once the Premium payment clears for 7 days.</p>
+                      <p className="flex gap-2"><FiClock className="text-primary-500" /> Earnings pause instantly if a subscription cancels, so you only get paid on real revenue.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <div className="card space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">How earnings & rewards work</h3>
+                    <div className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
+                      <FiInfo className="text-primary-500 mt-0.5" />
+                      <div className="space-y-2">
+                        <p>Share your referral link. When someone subscribes to Premium, you automatically earn 5% ({formatCurrency(perReferralCommissionValue, earningsSummary.currency)}) every month for as long as they stay subscribed.</p>
+                        <p>Free Pro rewards stay exactly the same: 5 total referrals unlock +30 days, Premium upgrades still grant +30 days instantly, and you still claim them manually.</p>
+                        <p>Earnings calculation, balance tracking, and subscription monitoring are automatic—only payout approval is manual.</p>
+                      </div>
+                    </div>
+                    <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                      <li>• One referral URL powers everything: rewards and recurring earnings.</li>
+                      <li>• Earnings stop the moment a Premium seller cancels.</li>
+                      <li>• Minimum payout remains {formatCurrency(minimumPayout, earningsSummary.currency)}.</li>
+                    </ul>
+                  </div>
+
+                  <div className="card space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FiBarChart2 className="text-primary-500" />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Example earnings calculator</h3>
+                      </div>
+                      <span className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{calculatorReferrals} Premium referrals</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="30"
+                      step="1"
+                      value={calculatorReferrals}
+                      onChange={(e) => setCalculatorReferrals(Number(e.target.value))}
+                      className="w-full accent-primary-600"
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Monthly income</p>
+                        <p className="text-xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(calculatorMonthly, earningsSummary.currency)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Yearly income</p>
+                        <p className="text-xl font-semibold text-gray-900 dark:text-gray-50">{formatCurrency(calculatorYearly, earningsSummary.currency)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Months to ₦20k payout</p>
+                        <p className="text-xl font-semibold text-gray-900 dark:text-gray-50">{calculatorPayoutMonths ? `${calculatorPayoutMonths} mo${calculatorPayoutMonths > 1 ? 's' : ''}` : '—'}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-gray-600 dark:text-gray-300">
+                      <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 p-3">
+                        <p className="font-semibold">5 referrals</p>
+                        <p>{formatCurrency(perReferralCommissionValue * 5, earningsSummary.currency)} / month · reach payout in {Math.ceil(minimumPayout / (perReferralCommissionValue * 5))} months.</p>
+                      </div>
+                      <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 p-3">
+                        <p className="font-semibold">10 referrals</p>
+                        <p>Steady {formatCurrency(perReferralCommissionValue * 10, earningsSummary.currency)} monthly income.</p>
+                      </div>
+                      <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 p-3">
+                        <p className="font-semibold">15+ referrals</p>
+                        <p>Unlock payouts almost every month and stack long-term income.</p>
+                      </div>
                     </div>
                   </div>
                 </div>

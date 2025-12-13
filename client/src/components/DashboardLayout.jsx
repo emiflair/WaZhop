@@ -38,7 +38,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Marketplace', href: '/', icon: FiShoppingBag, external: true },
     { name: 'Dashboard', href: '/dashboard', icon: FiHome },
     { name: 'My Shops', href: '/dashboard/shops', icon: FaStore },
-    { name: 'Earnings', href: '/dashboard/referrals', icon: FiGift },
+    { name: 'Earnings & Rewards', href: '/dashboard/referrals', icon: FiGift },
     { name: 'Products', href: '/dashboard/products', icon: FiShoppingBag },
     { name: 'Subscription', href: '/dashboard/subscription', icon: FiCreditCard },
     { name: 'Inventory', href: '/dashboard/inventory', icon: FiPackage },
