@@ -44,6 +44,19 @@ const defaultEarnings = {
   payoutRequests: []
 };
 
+const buildEmptyReferralState = (overrides = {}) => ({
+  referralCode: 'N/A',
+  referralLink: '',
+  stats: { ...defaultStats },
+  referredUsers: [],
+  earnings: {
+    summary: { ...defaultEarnings.summary },
+    records: [],
+    payoutRequests: []
+  },
+  ...overrides
+});
+
 const formatCurrency = (value = 0, currency = 'NGN') => new Intl.NumberFormat('en-NG', {
   style: 'currency',
   currency,
@@ -100,8 +113,8 @@ const EarningsRewardsDashboard = () => {
       }
 
       if (!data || Object.keys(data).length === 0) {
-        toast.error('No data received from server');
-        setReferralData(null);
+        toast.error('No data received from server, showing defaults');
+        setReferralData(buildEmptyReferralState());
         setLoading(false);
         return;
       }
@@ -133,17 +146,10 @@ const EarningsRewardsDashboard = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Network error';
       toast.error(`Failed to load: ${errorMsg}`);
-      setReferralData({
+      setReferralData(buildEmptyReferralState({
         referralCode: 'ERROR',
-        referralLink: `Error: ${errorMsg}`,
-        stats: { ...defaultStats },
-        referredUsers: [],
-        earnings: {
-          summary: { ...defaultEarnings.summary },
-          records: [],
-          payoutRequests: []
-        }
-      });
+        referralLink: `Error: ${errorMsg}`
+      }));
       setLoading(false);
     }
   };
