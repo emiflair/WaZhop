@@ -851,16 +851,16 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
       onClick={() => onOpen()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="product-card-border group bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2"
+      className="product-card-border group bg-white dark:bg-gray-800 rounded-2xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2 flex flex-col h-full"
     >
       {/* Image */}
       <div 
-        className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-900"
+        className="relative h-64 sm:h-72 md:h-80 overflow-hidden bg-gray-100 dark:bg-gray-900"
       >
         <img
           src={image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading={shouldEagerLoad ? "eager" : "lazy"}
           fetchPriority={shouldEagerLoad ? "high" : "auto"}
         />
@@ -934,9 +934,9 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
       </div>
 
       {/* Content - compact */}
-      <div className="p-3 sm:p-3">
-        <div className="flex items-start justify-between gap-2 mb-1.5">
-          <h3 className="flex-1 font-semibold text-sm sm:text-sm text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors min-h-[2.25rem]">
+      <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="flex-1 font-semibold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             {product.name}
           </h3>
           <button
@@ -949,7 +949,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
           </button>
         </div>
 
-        <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center justify-between">
           <div className="flex-1">
             <PriceTag
               price={product.price}
@@ -976,7 +976,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
         </div>
 
         {/* Shop Info - tighter */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-1.5 mt-1.5">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-1.5">
           <FiShoppingBag className="shrink-0 w-3.5 h-3.5" />
           <span className="truncate font-medium">{product.shop?.shopName || 'Shop'}</span>
           {(product.shop?.owner?.plan === 'pro' || product.shop?.owner?.plan === 'premium') && (
@@ -992,7 +992,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
             e.stopPropagation();
             onOpen();
           }}
-          className="mt-2 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
+          className="mt-auto w-full btn btn-primary text-sm py-2.5 font-semibold hover:shadow-lg transition-shadow"
         >
           Price am
         </button>
