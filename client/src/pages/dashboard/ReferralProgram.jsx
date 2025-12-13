@@ -13,7 +13,8 @@ import {
   FiArrowRight,
   FiUnlock,
   FiBarChart2,
-  FiInfo
+  FiInfo,
+  FiAlertCircle
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
@@ -88,7 +89,8 @@ const tabs = [
 
 const EarningsRewardsDashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [referralData, setReferralData] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [referralData, setReferralData] = useState(buildEmptyReferralState());
   const [copied, setCopied] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
@@ -96,6 +98,7 @@ const EarningsRewardsDashboard = () => {
   const [requesting, setRequesting] = useState(false);
   const [activeTab, setActiveTab] = useState('rewards');
   const [calculatorReferrals, setCalculatorReferrals] = useState(5);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     fetchReferralStats();
@@ -104,6 +107,7 @@ const EarningsRewardsDashboard = () => {
   const fetchReferralStats = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const response = await api.get('/referrals/stats', {
         headers: {
           'Cache-Control': 'no-cache',
@@ -147,14 +151,17 @@ const EarningsRewardsDashboard = () => {
       }
 
       setReferralData(data);
+      setHasLoaded(true);
       setLoading(false);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Network error';
       toast.error(`Failed to load: ${errorMsg}`);
+      setLoadError(errorMsg);
       setReferralData(buildEmptyReferralState({
         referralCode: 'ERROR',
         referralLink: `Error: ${errorMsg}`
       }));
+      setHasLoaded(true);
       setLoading(false);
     }
   };
@@ -230,37 +237,11 @@ const EarningsRewardsDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !hasLoaded) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center py-12">
           <LoadingSpinner />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!referralData) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto mt-12 text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
-            <div className="text-red-500 dark:text-red-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Oops! Something went wrong</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
-            </p>
-            <button
-              onClick={fetchReferralStats}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-            >
-              Try Again
-            </button>
-          </div>
         </div>
       </DashboardLayout>
     );
@@ -310,6 +291,25 @@ const EarningsRewardsDashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {loadError && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 text-amber-600 dark:text-amber-300"><FiAlertCircle size={20} /></div>
+              <div>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Showing cached referral data</p>
+                <p className="text-sm text-amber-700/90 dark:text-amber-200/80">{loadError}. We keep the page alive with your last known stats—tap refresh anytime to retry.</p>
+              </div>
+            </div>
+            <div>
+              <button
+                onClick={fetchReferralStats}
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 dark:text-amber-100 dark:border-amber-400/60 dark:hover:bg-amber-400/10"
+              >
+                <FiArrowRight size={16} /> Retry now
+              </button>
+            </div>
+          </div>
+        )}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900 via-gray-900 to-primary-900 text-white p-6">
           <div className="absolute inset-y-0 right-0 w-64 opacity-20 bg-[radial-gradient(circle_at_top,_#5eead4,_transparent_55%)]" />
           <div className="relative">
