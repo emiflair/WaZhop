@@ -57,13 +57,16 @@ app.use(compression()); // Compress all responses (10-70% size reduction)
 
 // Caching headers for better performance
 app.use((req, res, next) => {
-  // Enable ETag for conditional requests
-  res.set('ETag', 'weak');
+  const isStaticAsset = /\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$/.test(req.url);
 
-  // Cache static assets aggressively
-  if (req.url.match(/\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$/)) {
+  if (isStaticAsset) {
     res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else {
+    res.set('Cache-Control', 'no-store');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
   }
+
   next();
 });
 

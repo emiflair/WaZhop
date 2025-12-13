@@ -104,11 +104,12 @@ const EarningsRewardsDashboard = () => {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
-        }
+        },
+        params: { _t: Date.now() }
       });
 
-      let data = response.data || response;
-      if (data && data.status && data.config) {
+      let data = response?.data || response;
+      if (data && data.status && data.config && typeof data.data !== 'undefined') {
         data = data.data;
       }
 

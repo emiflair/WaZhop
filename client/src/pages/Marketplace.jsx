@@ -27,6 +27,8 @@ const CATEGORY_OPTIONS = Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map((key) =>
 }))
 
 const PRODUCT_PREFETCH_TTL = 1000 * 60 * 3 // 3 minutes
+const MAX_AUTO_PREFETCHES = 16
+const RATE_LIMIT_FALLBACK_MS = 1000 * 60 // 60 seconds
 
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
@@ -88,6 +90,11 @@ export default function Marketplace() {
   const manualCountrySelection = useRef(false)
   const manualRegionSelection = useRef(false)
   const productPrefetchCache = useRef(new Map())
+  const autoPrefetchCountRef = useRef(0)
+  const rateLimitToastShownRef = useRef(false)
+  const rateLimitTimerRef = useRef(null)
+  const [rateLimited, setRateLimited] = useState(false)
+  const [rateLimitResetTime, setRateLimitResetTime] = useState(null)
 
   useEffect(() => {
     if (!detectedCountryCode || manualCountrySelection.current) return
@@ -228,11 +235,18 @@ export default function Marketplace() {
     return Date.now() - entry.timestamp < PRODUCT_PREFETCH_TTL
   }, [])
 
-  const prefetchProductDetails = useCallback(async (productId) => {
+  const prefetchProductDetails = useCallback(async (productId, mode = 'auto') => {
     if (!productId) return null
+    if (mode === 'auto' && autoPrefetchCountRef.current >= MAX_AUTO_PREFETCHES) {
+      return null
+    }
     const cached = productPrefetchCache.current.get(productId)
     if (isCacheEntryFresh(cached)) {
       return cached.data
+    }
+
+    if (mode === 'auto') {
+      autoPrefetchCountRef.current += 1
     }
 
     try {
@@ -274,6 +288,16 @@ export default function Marketplace() {
   const deliverySubtitle = hasDeliveryAddress ? 'Tap to update your delivery location' : 'Tap to set your delivery location'
 
   const fetchProducts = useCallback(async (reset = false, overrides = {}) => {
+    if (rateLimited) {
+      if (!rateLimitToastShownRef.current) {
+        toast.error('Please wait a moment before loading more products')
+        rateLimitToastShownRef.current = true
+      }
+      return
+    }
+
+    const isPaginatedRequest = !reset
+
     try {
       setLoading(true)
       const {
@@ -312,7 +336,6 @@ export default function Marketplace() {
       console.log('🔍 Fetching products with params:', params)
       const response = await productAPI.getMarketplaceProducts(params)
       console.log('📦 Marketplace API response:', response)
-      // Handle response format: response.data or direct array
       const items = response?.data || (Array.isArray(response) ? response : [])
       const normalizedItems = (items || []).map((product) => {
         const fallbackCurrency = product?.currency || product?.shop?.paymentSettings?.currency || 'NGN'
@@ -330,8 +353,8 @@ export default function Marketplace() {
       } else {
         setProducts(prev => [...prev, ...normalizedItems])
       }
-      // Infer hasMore from page size
       setHasMore(normalizedItems.length === (params.limit || 24))
+      rateLimitToastShownRef.current = false
     } catch (err) {
       console.error('❌ Marketplace fetch error:', err)
       console.error('Error details:', {
@@ -340,16 +363,64 @@ export default function Marketplace() {
         request: err.request,
         config: err.config
       })
-      toast.error(err.userMessage || 'Failed to load products')
+
+      if (isPaginatedRequest) {
+        setPage(prev => Math.max(1, prev - 1))
+      }
+
+      if (err?.response?.status === 429) {
+        const retryAfterHeader = Number(err.response?.headers?.['retry-after'])
+        const cooldownDuration = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+          ? retryAfterHeader * 1000
+          : RATE_LIMIT_FALLBACK_MS
+        setRateLimited(true)
+        setRateLimitResetTime(Date.now() + cooldownDuration)
+        if (!rateLimitToastShownRef.current) {
+          toast.error('Too many shoppers at once. Please wait and try again.')
+          rateLimitToastShownRef.current = true
+        }
+      } else {
+        toast.error(err.userMessage || 'Failed to load products')
+      }
     } finally {
       setLoading(false)
     }
-  }, [page, category, debouncedSearch, sortBy, priceRange, ngState, area, countryCode])
+  }, [page, category, debouncedSearch, sortBy, priceRange, ngState, area, countryCode, rateLimited])
 
   useEffect(() => {
     fetchProducts(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, sortBy, debouncedSearch])
+
+  useEffect(() => {
+    if (!rateLimited || !rateLimitResetTime) return
+
+    const remaining = rateLimitResetTime - Date.now()
+    if (remaining <= 0) {
+      setRateLimited(false)
+      setRateLimitResetTime(null)
+      rateLimitToastShownRef.current = false
+      return
+    }
+
+    if (rateLimitTimerRef.current) {
+      clearTimeout(rateLimitTimerRef.current)
+    }
+
+    rateLimitTimerRef.current = setTimeout(() => {
+      setRateLimited(false)
+      setRateLimitResetTime(null)
+      rateLimitToastShownRef.current = false
+      rateLimitTimerRef.current = null
+    }, remaining)
+
+    return () => {
+      if (rateLimitTimerRef.current) {
+        clearTimeout(rateLimitTimerRef.current)
+        rateLimitTimerRef.current = null
+      }
+    }
+  }, [rateLimited, rateLimitResetTime])
 
   useEffect(() => {
     if (!regionOptions.length) {
@@ -374,7 +445,7 @@ export default function Marketplace() {
 
   // Infinite scroll: Auto-load more items when user scrolls near bottom
   useEffect(() => {
-    if (!hasMore || loading) return;
+    if (!hasMore || loading || rateLimited) return;
 
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -405,7 +476,7 @@ export default function Marketplace() {
       window.removeEventListener('scroll', throttledScroll);
       if (scrollTimeout) clearTimeout(scrollTimeout);
     };
-  }, [products, loading, page, sortBy, category, debouncedSearch, ngState, area, priceRange, hasMore]);
+  }, [products, loading, page, sortBy, category, debouncedSearch, ngState, area, priceRange, hasMore, rateLimited]);
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -452,7 +523,7 @@ export default function Marketplace() {
   }
 
   const loadMore = () => {
-    if (!loading && hasMore) {
+    if (!loading && hasMore && !rateLimited) {
       setPage(p => p + 1)
     }
   }
@@ -848,7 +919,7 @@ export default function Marketplace() {
                       isFavorited={favoriteIds.has(product._id)}
                       isFavoritePending={favoritePendingIds.has(product._id)}
                       onToggleFavorite={(isFavorited) => handleToggleFavorite(product, isFavorited)}
-                      onPrefetch={() => prefetchProductDetails(product._id)}
+                      onPrefetch={(mode) => prefetchProductDetails(product._id, mode)}
                     />
                   ))}
                 </div>
@@ -926,13 +997,13 @@ function ProductCard({
 
   // Smart prefetch: Only on long hover (user showing clear interest)
   const hoverTimerRef = useRef(null)
-  const triggerPrefetch = useCallback(() => {
+  const triggerPrefetch = useCallback((mode = 'auto') => {
     if (typeof onPrefetch === 'function') {
-      onPrefetch()
+      onPrefetch(mode)
     }
   }, [onPrefetch])
   const handleCardOpen = () => {
-    triggerPrefetch()
+    triggerPrefetch('intent')
     onOpen()
   }
   
@@ -942,7 +1013,7 @@ function ProductCard({
       clearTimeout(hoverTimerRef.current)
     }
     hoverTimerRef.current = setTimeout(() => {
-      triggerPrefetch()
+      triggerPrefetch('auto')
       hoverTimerRef.current = null
     }, 200)
   }
@@ -966,7 +1037,7 @@ function ProductCard({
   useEffect(() => {
     if (index > 7) return
     const timer = setTimeout(() => {
-      triggerPrefetch()
+      triggerPrefetch('auto')
     }, 300 + index * 40)
     return () => clearTimeout(timer)
   }, [index, triggerPrefetch])
@@ -982,7 +1053,6 @@ function ProductCard({
       onClick={handleCardOpen}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onTouchStart={triggerPrefetch}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-2xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2 flex flex-col h-full"
     >
       {/* Image */}
@@ -1047,7 +1117,7 @@ function ProductCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              triggerPrefetch();
+              triggerPrefetch('intent');
               onOpen();
             }}
             className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors shadow-lg font-semibold text-sm"
