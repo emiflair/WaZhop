@@ -239,6 +239,126 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  referralEarnings: {
+    lockedAmount: {
+      type: Number,
+      default: 0
+    },
+    records: {
+      type: [
+        {
+          referralId: {
+            type: String,
+            default: () => `REF-${Date.now().toString(36).toUpperCase()}`
+          },
+          referredUser: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+          },
+          referredEmail: {
+            type: String
+          },
+          referredName: {
+            type: String
+          },
+          plan: {
+            type: String,
+            default: 'premium'
+          },
+          commissionRate: {
+            type: Number,
+            default: 0.05
+          },
+          planAmount: {
+            type: Number,
+            default: 18000
+          },
+          status: {
+            type: String,
+            enum: ['pending_activation', 'active', 'cancelled'],
+            default: 'pending_activation'
+          },
+          activationDate: {
+            type: Date,
+            default: null
+          },
+          earningsStartDate: {
+            type: Date,
+            default: null
+          },
+          lastStatusChange: {
+            type: Date,
+            default: null
+          },
+          accruedAmount: {
+            type: Number,
+            default: 0
+          },
+          totalPaidOut: {
+            type: Number,
+            default: 0
+          },
+          lockedAmount: {
+            type: Number,
+            default: 0
+          },
+          lastPayoutDate: {
+            type: Date,
+            default: null
+          },
+          referralCodeUsed: {
+            type: String,
+            default: null
+          },
+          createdAt: {
+            type: Date,
+            default: Date.now
+          }
+        }
+      ],
+      default: []
+    },
+    payoutRequests: {
+      type: [
+        {
+          requestId: {
+            type: String,
+            default: () => `PAYOUT-${Date.now().toString(36).toUpperCase()}`
+          },
+          amount: {
+            type: Number,
+            default: 0
+          },
+          status: {
+            type: String,
+            enum: ['pending', 'processing', 'paid', 'cancelled'],
+            default: 'pending'
+          },
+          requestedAt: {
+            type: Date,
+            default: Date.now
+          },
+          processedAt: {
+            type: Date,
+            default: null
+          },
+          paidAt: {
+            type: Date,
+            default: null
+          },
+          estimatedPayoutDate: {
+            type: Date,
+            default: null
+          },
+          notes: {
+            type: String,
+            default: 'Manual payout request via dashboard'
+          }
+        }
+      ],
+      default: []
+    }
+  },
   shop: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shop'

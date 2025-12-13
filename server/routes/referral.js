@@ -5,7 +5,8 @@ const {
   getReferralStats,
   applyReferralCode,
   validateReferralCode,
-  claimRewards
+  claimRewards,
+  requestPayout
 } = require('../controllers/referralController');
 const { protect } = require('../middlewares/auth');
 const User = require('../models/User');
@@ -48,5 +49,6 @@ router.post('/apply', applyReferralCode);
 // Protected routes
 router.get('/stats', protect, getReferralStats);
 router.post('/claim', protect, claimRewards);
+router.post('/payout-request', protect, requestPayout);
 
 module.exports = router;

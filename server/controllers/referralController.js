@@ -1,11 +1,200 @@
 const User = require('../models/User');
 
+const PREMIUM_MONTHLY_PRICE = 18000;
+const COMMISSION_RATE = 0.05;
+const COMMISSION_PERCENT = Math.round(COMMISSION_RATE * 100);
+const MIN_PAYOUT_AMOUNT = 20000;
+const ACTIVATION_HOLD_DAYS = 7;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MONTH_IN_MS = 30 * DAY_IN_MS;
+
+const ensureReferralEarningsStructure = (user) => {
+  if (!user.referralEarnings) {
+    user.referralEarnings = {
+      lockedAmount: 0,
+      records: [],
+      payoutRequests: []
+    };
+    return;
+  }
+
+  user.referralEarnings.lockedAmount = user.referralEarnings.lockedAmount || 0;
+  user.referralEarnings.records = user.referralEarnings.records || [];
+  user.referralEarnings.payoutRequests = user.referralEarnings.payoutRequests || [];
+};
+
+const generateReferralId = () => `REF-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+const generatePayoutId = () => `PAYOUT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+
+const defaultEarningsSummary = () => ({
+  totalEarned: 0,
+  totalPaidOut: 0,
+  withdrawableBalance: 0,
+  lockedAmount: 0,
+  monthlyEarnings: 0,
+  activePremiumReferrals: 0,
+  pendingActivation: 0,
+  commissionPercent: COMMISSION_PERCENT,
+  perReferralCommission: Math.round(PREMIUM_MONTHLY_PRICE * COMMISSION_RATE),
+  minimumPayout: MIN_PAYOUT_AMOUNT,
+  currency: 'NGN'
+});
+
+const normalizePayoutRequests = (requests = []) => requests.map((request) => {
+  const normalized = request.toObject ? request.toObject() : request;
+  if (!normalized.estimatedPayoutDate && normalized.requestedAt) {
+    normalized.estimatedPayoutDate = new Date(new Date(normalized.requestedAt).getTime() + (14 * DAY_IN_MS));
+  }
+  return normalized;
+});
+
+const buildEarningsSnapshot = async (user) => {
+  ensureReferralEarningsStructure(user);
+
+  if (!user.referralEarnings.records.length && !user.referralEarnings.payoutRequests.length) {
+    return {
+      summary: defaultEarningsSummary(),
+      records: [],
+      payoutRequests: []
+    };
+  }
+
+  await user.populate({
+    path: 'referralEarnings.records.referredUser',
+    select: 'name email plan subscriptionStatus'
+  });
+
+  const now = Date.now();
+  let dirty = false;
+  let totalEarned = 0;
+  let totalPaidOut = 0;
+  let lockedAmount = user.referralEarnings.lockedAmount || 0;
+  let monthlyEarnings = 0;
+  let activePremiumReferrals = 0;
+  let pendingActivation = 0;
+
+  const records = user.referralEarnings.records.map((record) => {
+    const linkedUser = record.referredUser && record.referredUser._id ? record.referredUser : null;
+    const linkedPlan = linkedUser?.plan || record.plan || 'free';
+    const subscriptionStatus = linkedUser?.subscriptionStatus || 'inactive';
+    const monthlyCommission = Math.round((record.planAmount || PREMIUM_MONTHLY_PRICE) * (record.commissionRate || COMMISSION_RATE));
+    const activationTime = record.activationDate ? new Date(record.activationDate).getTime() : null;
+
+    const releaseLockedAmount = () => {
+      if (record.lockedAmount) {
+        user.referralEarnings.lockedAmount = Math.max(0, (user.referralEarnings.lockedAmount || 0) - record.lockedAmount);
+        lockedAmount = Math.max(0, lockedAmount - record.lockedAmount);
+        record.lockedAmount = 0;
+        dirty = true;
+      }
+    };
+
+    if (!record.referralId) {
+      record.referralId = generateReferralId();
+      dirty = true;
+    }
+
+    if (linkedUser && !record.referredName) {
+      record.referredName = linkedUser.name;
+      dirty = true;
+    }
+
+    if (linkedUser && !record.referredEmail) {
+      record.referredEmail = linkedUser.email;
+      dirty = true;
+    }
+
+    if (record.status === 'pending_activation') {
+      pendingActivation += 1;
+      if (activationTime && activationTime <= now) {
+        record.status = 'active';
+        record.earningsStartDate = record.earningsStartDate || record.activationDate || new Date(activationTime);
+        record.lastStatusChange = new Date(now);
+        releaseLockedAmount();
+        dirty = true;
+        pendingActivation -= 1;
+      }
+    }
+
+    const isPremiumActive = linkedPlan === 'premium' && subscriptionStatus !== 'cancelled';
+    if (record.status === 'active' && !isPremiumActive) {
+      record.status = 'cancelled';
+      record.lastStatusChange = new Date(now);
+      releaseLockedAmount();
+      dirty = true;
+    }
+
+    if (record.status === 'active' && isPremiumActive) {
+      activePremiumReferrals += 1;
+      monthlyEarnings += monthlyCommission;
+    }
+
+    const startDate = record.earningsStartDate ? new Date(record.earningsStartDate).getTime() : null;
+    if (record.status === 'active' && startDate && startDate <= now) {
+      const monthsElapsed = Math.floor((now - startDate) / MONTH_IN_MS);
+      const computed = Math.max(0, monthsElapsed) * monthlyCommission;
+      if (record.accruedAmount !== computed) {
+        record.accruedAmount = computed;
+        dirty = true;
+      }
+    }
+
+    const accruedAmount = record.accruedAmount || 0;
+    totalEarned += accruedAmount;
+    totalPaidOut += record.totalPaidOut || 0;
+
+    return {
+      referralId: record.referralId,
+      referredUserId: linkedUser?._id || record.referredUser || null,
+      referredName: record.referredName || linkedUser?.name || '—',
+      referredEmail: record.referredEmail || linkedUser?.email || null,
+      plan: linkedPlan,
+      commissionPercent: Math.round((record.commissionRate || COMMISSION_RATE) * 100),
+      monthlyCommissionValue: monthlyCommission,
+      status: record.status,
+      activationDate: record.activationDate,
+      earningsStartDate: record.earningsStartDate,
+      lastPayoutDate: record.lastPayoutDate,
+      totalEarned: accruedAmount,
+      totalPaidOut: record.totalPaidOut || 0,
+      pendingAmount: Math.max(0, accruedAmount - (record.totalPaidOut || 0) - (record.lockedAmount || 0)),
+      createdAt: record.createdAt
+    };
+  });
+
+  const withdrawableBalance = Math.max(0, totalEarned - totalPaidOut - lockedAmount);
+  const payoutRequests = normalizePayoutRequests(user.referralEarnings.payoutRequests);
+
+  if (dirty) {
+    user.markModified('referralEarnings');
+    await user.save();
+  }
+
+  return {
+    summary: {
+      totalEarned,
+      totalPaidOut,
+      withdrawableBalance,
+      lockedAmount,
+      monthlyEarnings,
+      activePremiumReferrals,
+      pendingActivation,
+      commissionPercent: COMMISSION_PERCENT,
+      perReferralCommission: Math.round(PREMIUM_MONTHLY_PRICE * COMMISSION_RATE),
+      minimumPayout: MIN_PAYOUT_AMOUNT,
+      currency: 'NGN'
+    },
+    records,
+    payoutRequests
+  };
+};
+
 // @desc    Get user's referral stats and code
 // @route   GET /api/referrals/stats
 // @access  Private
 exports.getReferralStats = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('referralCode referralStats plan planExpiry');
+    const user = await User.findById(req.user.id).select('referralCode referralStats plan planExpiry referralEarnings');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -61,13 +250,16 @@ exports.getReferralStats = async (req, res) => {
       ? process.env.CLIENT_URL.split(',')[0].trim()
       : 'http://localhost:5173';
 
+    const earnings = await buildEarningsSnapshot(user);
+
     const responseData = {
       referralCode: user.referralCode,
       referralLink: `${clientUrl}/register?ref=${user.referralCode}`,
       stats: user.referralStats,
       currentPlan: user.plan,
       planExpiry: user.planExpiry,
-      referredUsers
+      referredUsers,
+      earnings
     };
 
     console.log('📤 Sending referral data:', {
@@ -123,6 +315,11 @@ exports.applyReferralCode = async (req, res) => {
 
     console.log('✅ Found new user:', { id: newUser._id, email: newUser.email, name: newUser.name });
 
+    if (newUser._id.toString() === referrer._id.toString()) {
+      console.log('⚠️ Attempted self-referral');
+      return res.status(400).json({ message: 'You cannot use your own referral code' });
+    }
+
     // Check if user already has a referrer
     if (newUser.referredBy) {
       console.log('⚠️ User already has a referrer:', newUser.referredBy);
@@ -137,6 +334,17 @@ exports.applyReferralCode = async (req, res) => {
 
     // Update referrer stats - but DON'T award rewards yet
     // User must upgrade to Pro/Premium first
+    if (!referrer.referralStats) {
+      referrer.referralStats = {
+        totalReferrals: 0,
+        freeReferred: 0,
+        proReferred: 0,
+        premiumReferred: 0,
+        rewardsEarned: 0,
+        rewardsUsed: 0
+      };
+    }
+
     referrer.referralStats.totalReferrals += 1;
     referrer.referralStats.freeReferred += 1; // New user starts on free plan
 
@@ -235,6 +443,71 @@ exports.claimRewards = async (req, res) => {
   }
 };
 
+// @desc    Submit referral earnings payout request
+// @route   POST /api/referrals/payout-request
+// @access  Private
+exports.requestPayout = async (req, res) => {
+  try {
+    const amount = Number(req.body.amount || 0);
+    const notes = req.body.notes;
+
+    if (!amount || Number.isNaN(amount)) {
+      return res.status(400).json({ message: 'Valid payout amount is required' });
+    }
+
+    if (amount < MIN_PAYOUT_AMOUNT) {
+      return res.status(400).json({ message: `Minimum payout request is ₦${MIN_PAYOUT_AMOUNT.toLocaleString()}` });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    ensureReferralEarningsStructure(user);
+
+    const hasPendingRequest = (user.referralEarnings.payoutRequests || []).some((request) => request.status === 'pending' || request.status === 'processing');
+
+    if (hasPendingRequest) {
+      return res.status(400).json({ message: 'You already have a payout request in progress' });
+    }
+
+    const snapshot = await buildEarningsSnapshot(user);
+
+    if (amount > snapshot.summary.withdrawableBalance) {
+      return res.status(400).json({ message: 'Requested amount exceeds available balance' });
+    }
+
+    user.referralEarnings.lockedAmount = (user.referralEarnings.lockedAmount || 0) + amount;
+
+    const payoutRequest = {
+      requestId: generatePayoutId(),
+      amount,
+      status: 'pending',
+      requestedAt: new Date(),
+      estimatedPayoutDate: new Date(Date.now() + (14 * DAY_IN_MS)),
+      notes: notes || 'Manual payout request via dashboard'
+    };
+
+    user.referralEarnings.payoutRequests.push(payoutRequest);
+    user.markModified('referralEarnings');
+    await user.save();
+
+    const refreshedUser = await User.findById(req.user.id).select('referralEarnings');
+    const earnings = await buildEarningsSnapshot(refreshedUser);
+
+    res.json({
+      message: 'Payout request submitted successfully',
+      payoutRequest,
+      earnings
+    });
+  } catch (error) {
+    console.error('Request payout error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @desc    Update referrer stats when referred user upgrades
 // @route   POST /api/referrals/upgrade-notification
 // @access  Private (called internally when user upgrades)
@@ -256,6 +529,19 @@ exports.notifyReferrerOfUpgrade = async (upgradedUserId, newPlan) => {
 
     console.log(`📢 Notifying referrer ${referrer.name} of upgrade to ${newPlan}`);
 
+    if (!referrer.referralStats) {
+      referrer.referralStats = {
+        totalReferrals: 0,
+        freeReferred: 0,
+        proReferred: 0,
+        premiumReferred: 0,
+        rewardsEarned: 0,
+        rewardsUsed: 0
+      };
+    }
+
+    ensureReferralEarningsStructure(referrer);
+
     // Update referrer's stats based on upgrade
     // Decrease free count, increase paid count
     if (referrer.referralStats.freeReferred > 0) {
@@ -270,6 +556,48 @@ exports.notifyReferrerOfUpgrade = async (upgradedUserId, newPlan) => {
       referrer.referralStats.premiumReferred += 1;
       referrer.referralStats.rewardsEarned += 30; // 30 days for Premium upgrade
       console.log('✅ Referrer earned 30 days for Premium referral');
+
+      const monthlyCommission = Math.round(PREMIUM_MONTHLY_PRICE * COMMISSION_RATE);
+      const activationDate = new Date(Date.now() + (ACTIVATION_HOLD_DAYS * DAY_IN_MS));
+      const existingRecord = referrer.referralEarnings.records.find((record) => {
+        if (!record.referredUser) return false;
+        const recordUserId = record.referredUser._id ? record.referredUser._id.toString() : record.referredUser.toString();
+        return recordUserId === user._id.toString();
+      });
+
+      if (existingRecord) {
+        const currentLocked = existingRecord.lockedAmount || 0;
+        if (monthlyCommission > currentLocked) {
+          referrer.referralEarnings.lockedAmount = (referrer.referralEarnings.lockedAmount || 0) + (monthlyCommission - currentLocked);
+        }
+        existingRecord.lockedAmount = monthlyCommission;
+        existingRecord.status = 'pending_activation';
+        existingRecord.activationDate = activationDate;
+        existingRecord.earningsStartDate = null;
+        existingRecord.lastStatusChange = new Date();
+        existingRecord.referralCodeUsed = referrer.referralCode || existingRecord.referralCodeUsed || null;
+      } else {
+        referrer.referralEarnings.records.push({
+          referralId: generateReferralId(),
+          referredUser: user._id,
+          referredEmail: user.email,
+          referredName: user.name,
+          plan: 'premium',
+          planAmount: PREMIUM_MONTHLY_PRICE,
+          commissionRate: COMMISSION_RATE,
+          status: 'pending_activation',
+          activationDate,
+          earningsStartDate: null,
+          lastStatusChange: new Date(),
+          accruedAmount: 0,
+          totalPaidOut: 0,
+          lockedAmount: monthlyCommission,
+          referralCodeUsed: referrer.referralCode || null
+        });
+        referrer.referralEarnings.lockedAmount = (referrer.referralEarnings.lockedAmount || 0) + monthlyCommission;
+      }
+
+      referrer.markModified('referralEarnings');
     }
 
     await referrer.save();
