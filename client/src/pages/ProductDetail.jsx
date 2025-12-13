@@ -15,9 +15,10 @@ import SingleImageUpload from '../components/SingleImageUpload';
 export default function ProductDetail() {
   const { id } = useParams();
   const location = useLocation();
-  const [product, setProduct] = useState(null);
-  const [shop, setShop] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const prefetchedProduct = location.state?.prefetchedProduct;
+  const [product, setProduct] = useState(prefetchedProduct || null);
+  const [shop, setShop] = useState(prefetchedProduct?.shop || null);
+  const [loading, setLoading] = useState(!prefetchedProduct);
   const [error, setError] = useState(null);
   const [shopInactive, setShopInactive] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -55,49 +56,62 @@ export default function ProductDetail() {
   }, []);
 
   useEffect(() => {
+    if (prefetchedProduct && prefetchedProduct._id === id) {
+      setProduct(prefetchedProduct);
+      if (prefetchedProduct.shop) {
+        setShop(prefetchedProduct.shop);
+      }
+      setLoading(false);
+    } else if (!prefetchedProduct) {
+      setProduct((prev) => (prev?._id === id ? prev : null));
+      setShop(null);
+      setLoading(true);
+    }
+  }, [id, prefetchedProduct]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const hasWarmProduct = Boolean(prefetchedProduct && prefetchedProduct._id === id);
+
     const load = async () => {
       try {
-        setLoading(true);
+        if (!hasWarmProduct) {
+          setLoading(true);
+        }
         setError(null);
-        
-        // Fetch product directly
-        productAPI.getProduct(id).then(async (result) => {
-          const productData = result.data || result;
-          setProduct(productData);
-          setLoading(false);
-          
-          // Immediately set basic shop data from product (to avoid placeholder delay)
-          if (productData?.shop) {
-            setShop(productData.shop);
-          }
-          
-          // Then fetch complete shop data in background to update with full details
-          if (productData?.shop?.slug) {
-            shopAPI.getShopBySlug(productData.shop.slug)
-              .then(s => setShop(s?.shop || s?.data?.shop || s))
-              .catch(() => {}); // Already have basic shop data, so ignore error
-          }
-          
-          
-          // Check if shop is inactive
-          if (result?.shopInactive) {
-            setShopInactive(true);
-            toast.error(result.message || 'This shop is temporarily unavailable');
-          }
-          
-          // Fetch related products without blocking main content
-          fetchRelatedProducts(id).catch(() => {});
-        }).catch(error => {
-          setError(error.response?.data?.message || 'Product not found');
-          setLoading(false);
-        });
+        setShopInactive(false);
+
+        const result = await productAPI.getProduct(id);
+        if (!isMounted) return;
+        const productData = result.data || result;
+        setProduct(productData);
+        setLoading(false);
+
+        if (productData?.shop) {
+          setShop(productData.shop);
+        }
+
+        if (productData?.shop?.slug) {
+          shopAPI.getShopBySlug(productData.shop.slug)
+            .then((s) => {
+              if (!isMounted) return;
+              setShop(s?.shop || s?.data?.shop || s);
+            })
+            .catch(() => {});
+        }
+
+        if (result?.shopInactive) {
+          setShopInactive(true);
+          toast.error(result.message || 'This shop is temporarily unavailable');
+        }
+
+        fetchRelatedProducts(id).catch(() => {});
       } catch (e) {
+        if (!isMounted) return;
         console.error('Product load error:', e);
-        // Provide more specific error messages
         const errorMsg = e.response?.data?.message || e.userMessage || e.message || 'Failed to load product';
         setError(errorMsg);
-        
-        // If it's a network error, suggest checking connection
+
         if (!e.response && (e.message?.includes('network') || e.message?.includes('fetch'))) {
           setError('Network error. Please check your internet connection and try again.');
         }
@@ -105,9 +119,13 @@ export default function ProductDetail() {
         setLoadingRelated(false);
       }
     };
+
     load();
     setSelectedImage(0);
-  }, [fetchRelatedProducts, id]);
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchRelatedProducts, id, prefetchedProduct]);
 
   // Theme handling: Respect marketplace theme when coming from marketplace
   // Apply shop theme only when coming from shop's storefront

@@ -26,6 +26,8 @@ const CATEGORY_OPTIONS = Object.keys(CATEGORIES_WITH_SUBCATEGORIES).map((key) =>
   label: getCategoryLabel(key)
 }))
 
+const PRODUCT_PREFETCH_TTL = 1000 * 60 * 3 // 3 minutes
+
 export default function Marketplace() {
   // Marketplace respects user's theme preference (from ThemeContext/Navbar toggle)
   const isNativeApp = Capacitor.isNativePlatform();
@@ -74,6 +76,7 @@ export default function Marketplace() {
   const cameraInputRef = useRef(null)
   const { isAuthenticated, user, updateUser } = useAuth()
   const [favoriteIds, setFavoriteIds] = useState(() => new Set())
+  const [favoritePendingIds, setFavoritePendingIds] = useState(() => new Set())
   const { classifyImage, isClassifying } = useImageSearch()
 
   const {
@@ -84,6 +87,7 @@ export default function Marketplace() {
   const [countryCode, setCountryCode] = useState(detectedCountryCode || '')
   const manualCountrySelection = useRef(false)
   const manualRegionSelection = useRef(false)
+  const productPrefetchCache = useRef(new Map())
 
   useEffect(() => {
     if (!detectedCountryCode || manualCountrySelection.current) return
@@ -164,20 +168,106 @@ export default function Marketplace() {
       return
     }
 
+    const productId = product._id
+    let alreadyPending = false
+    setFavoritePendingIds((prev) => {
+      if (prev.has(productId)) {
+        alreadyPending = true
+        return prev
+      }
+      const updated = new Set(prev)
+      updated.add(productId)
+      return updated
+    })
+
+    if (alreadyPending) return
+
+    setFavoriteIds((prev) => {
+      const updated = new Set(prev)
+      if (isFavorited) {
+        updated.delete(productId)
+      } else {
+        updated.add(productId)
+      }
+      return updated
+    })
+
     try {
       const response = isFavorited
-        ? await userAPI.removeFavorite(product._id)
-        : await userAPI.addFavorite(product._id)
+        ? await userAPI.removeFavorite(productId)
+        : await userAPI.addFavorite(productId)
 
-      const favorites = response?.data?.favorites || []
+      const favorites = response?.data?.favorites || response?.favorites || []
       syncFavorites(favorites)
       toast.success(isFavorited ? 'Removed from favorites' : 'Saved to favorites')
     } catch (error) {
       console.error('Failed to toggle favorite', error)
-      const message = error?.response?.data?.message || 'Unable to update favorites right now'
+      setFavoriteIds((prev) => {
+        const updated = new Set(prev)
+        if (isFavorited) {
+          updated.add(productId)
+        } else {
+          updated.delete(productId)
+        }
+        return updated
+      })
+      const message = error?.response?.data?.message || error?.userMessage || 'Unable to update favorites right now'
       toast.error(message)
+    } finally {
+      setFavoritePendingIds((prev) => {
+        if (!prev.has(productId)) return prev
+        const updated = new Set(prev)
+        updated.delete(productId)
+        return updated
+      })
     }
   }, [isAuthenticated, navigate, syncFavorites])
+
+  const isCacheEntryFresh = useCallback((entry) => {
+    if (!entry) return false
+    return Date.now() - entry.timestamp < PRODUCT_PREFETCH_TTL
+  }, [])
+
+  const prefetchProductDetails = useCallback(async (productId) => {
+    if (!productId) return null
+    const cached = productPrefetchCache.current.get(productId)
+    if (isCacheEntryFresh(cached)) {
+      return cached.data
+    }
+
+    try {
+      const response = await productAPI.getProduct(productId)
+      const data = response?.data || response
+      productPrefetchCache.current.set(productId, { data, timestamp: Date.now() })
+      return data
+    } catch (error) {
+      console.warn('Failed to prefetch product detail', productId, error)
+      productPrefetchCache.current.delete(productId)
+      return null
+    }
+  }, [isCacheEntryFresh])
+
+  const getPrefetchedProduct = useCallback((productId) => {
+    if (!productId) return null
+    const cached = productPrefetchCache.current.get(productId)
+    if (isCacheEntryFresh(cached)) {
+      return cached.data
+    }
+    if (cached) {
+      productPrefetchCache.current.delete(productId)
+    }
+    return null
+  }, [isCacheEntryFresh])
+
+  const openProductDetail = useCallback((product) => {
+    const prefetchedProduct = getPrefetchedProduct(product._id)
+    navigate(`/product/${product._id}`, {
+      state: {
+        fromMarketplace: true,
+        prefetchedProduct: prefetchedProduct || null
+      }
+    })
+  }, [getPrefetchedProduct, navigate])
 
   const deliveryAddress = locationParts.join(', ')
   const hasDeliveryAddress = deliveryAddress.length > 0
@@ -754,11 +844,11 @@ export default function Marketplace() {
                       key={product._id} 
                       product={product}
                       index={index}
-                      onOpen={() => navigate(`/product/${product._id}`, { 
-                        state: { fromMarketplace: true }
-                      })}
+                      onOpen={() => openProductDetail(product)}
                       isFavorited={favoriteIds.has(product._id)}
+                      isFavoritePending={favoritePendingIds.has(product._id)}
                       onToggleFavorite={(isFavorited) => handleToggleFavorite(product, isFavorited)}
+                      onPrefetch={() => prefetchProductDetails(product._id)}
                     />
                   ))}
                 </div>
@@ -813,7 +903,15 @@ export default function Marketplace() {
   )
 }
 
-function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggleFavorite }) {
+function ProductCard({
+  product,
+  onOpen,
+  index = 0,
+  isFavorited = false,
+  onToggleFavorite,
+  onPrefetch,
+  isFavoritePending = false
+}) {
   const image = product.images?.[0]?.url || '/placeholder.png'
   const rating = product.reviewStats?.avgRating || 0
   const [isHovered, setIsHovered] = useState(false)
@@ -827,30 +925,64 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
   const isHot = product.clicks > 50 // Very popular
 
   // Smart prefetch: Only on long hover (user showing clear interest)
-  const hoverTimerRef = useRef(null);
+  const hoverTimerRef = useRef(null)
+  const triggerPrefetch = useCallback(() => {
+    if (typeof onPrefetch === 'function') {
+      onPrefetch()
+    }
+  }, [onPrefetch])
+  const handleCardOpen = () => {
+    triggerPrefetch()
+    onOpen()
+  }
   
   const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
+    setIsHovered(true)
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+    }
+    hoverTimerRef.current = setTimeout(() => {
+      triggerPrefetch()
+      hoverTimerRef.current = null
+    }, 200)
+  }
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
+    setIsHovered(false)
     if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
     }
-  };
+  }
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (index > 7) return
+    const timer = setTimeout(() => {
+      triggerPrefetch()
+    }, 300 + index * 40)
+    return () => clearTimeout(timer)
+  }, [index, triggerPrefetch])
 
   const handleFavoriteClick = (event) => {
     event?.stopPropagation()
+    if (isFavoritePending) return
     onToggleFavorite?.(isFavorited)
   }
 
   return (
     <div
-      onClick={() => onOpen()}
+      onClick={handleCardOpen}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={triggerPrefetch}
       className="product-card-border group bg-white dark:bg-gray-800 rounded-2xl shadow-md dark:shadow-gray-900/50 overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-1 dark:hover:shadow-gray-900 transition-all duration-300 border-2 flex flex-col h-full"
     >
       {/* Image */}
@@ -915,6 +1047,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
           <button
             onClick={(e) => {
               e.stopPropagation();
+              triggerPrefetch();
               onOpen();
             }}
             className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors shadow-lg font-semibold text-sm"
@@ -943,9 +1076,16 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
             type="button"
             onClick={handleFavoriteClick}
             aria-label={isFavorited ? 'Remove from favorites' : 'Save to favorites'}
-            className={`shrink-0 rounded-full p-2 transition-colors ${isFavorited ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/30' : 'text-gray-500 hover:text-primary-600 bg-gray-100 dark:bg-gray-800/80 dark:hover:text-primary-400'}`}
+            disabled={isFavoritePending}
+            className={`shrink-0 rounded-full p-2 transition-colors ${isFavoritePending ? 'opacity-60 cursor-wait' : ''} ${isFavorited ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/30' : 'text-gray-500 hover:text-primary-600 bg-gray-100 dark:bg-gray-800/80 dark:hover:text-primary-400'}`}
           >
-            {isFavorited ? <AiFillHeart className="w-4 h-4" /> : <FiHeart className="w-4 h-4" />}
+            {isFavoritePending ? (
+              <span className="block h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
+            ) : isFavorited ? (
+              <AiFillHeart className="w-4 h-4" />
+            ) : (
+              <FiHeart className="w-4 h-4" />
+            )}
           </button>
         </div>
 
@@ -990,6 +1130,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
         <button
           onClick={(e) => {
             e.stopPropagation();
+            triggerPrefetch();
             onOpen();
           }}
           className="mt-1 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
