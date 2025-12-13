@@ -732,9 +732,9 @@ export default function Marketplace() {
 
         {/* Products Grid */}
         <div className="flex-1 pt-0 sm:pt-4 pb-24 md:pb-8">
-          <div className="container-custom">
+          <div className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8">
             {loading && page === 1 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-3 lg:gap-4">
                 {Array(10).fill(0).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
@@ -748,7 +748,7 @@ export default function Marketplace() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-3 lg:gap-4">
                   {products.map((product, index) => (
                     <ProductCard 
                       key={product._id} 
@@ -994,7 +994,7 @@ function ProductCard({ product, onOpen, index = 0, isFavorited = false, onToggle
           }}
           className="mt-1 w-full btn btn-primary text-sm py-2 font-semibold hover:shadow-lg transition-shadow"
         >
-          Price am
+          Buy Now
         </button>
       </div>
     </div>
